@@ -1,9 +1,28 @@
 services:
   client:
-    build: 
+    build:
       context: ./client
       dockerfile: DockerFile
+    image: powerbidz-client
+    working_dir: /app
     ports:
       - "5173:5173"
-    container_name: vite-client
-    restart: always
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: powerbidz-server
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      - PORT=8080
