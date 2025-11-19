@@ -24,5 +24,28 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
+    depends_on:
+      - db
     environment:
       - PORT=8080
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=powerbidz
+      - DB_PASSWORD=powerbidzpassword
+      - DB_NAME=powerbidz_db
+
+  db:
+    image: postgres:16
+    container_name: powerbidz-db
+    restart: always
+    environment:
+      POSTGRES_USER: powerbidz
+      POSTGRES_PASSWORD: powerbidzpassword
+      POSTGRES_DB: powerbidz_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
