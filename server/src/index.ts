@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { query } from "./db";
 import { authRouter } from "./routes/authRoutes";
-
+import vehicleRouter from "./routes/vehicleRoutes";
 
 
 const app = express();
@@ -36,6 +36,7 @@ app.get("/api/db-health", async (req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+app.use("/api/vehicles", vehicleRouter);
 
 // Sample API endpoint
 app.get('/api/data', (req, res) => {

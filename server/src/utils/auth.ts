@@ -1,3 +1,4 @@
+// utility module that provides all authentication-related helper functions for backend
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
