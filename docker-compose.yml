@@ -1,5 +1,6 @@
 services:
   client:
+    container_name: powerbidz-client
     build:
       context: ./client
       dockerfile: DockerFile
@@ -14,6 +15,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
 
   server:
+    container_name: powerbidz-server
     build:
       context: ./server
       dockerfile: Dockerfile
