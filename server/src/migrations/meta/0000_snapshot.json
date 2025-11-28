@@ -52,12 +52,8 @@
           "name": "bids_listing_id_listings_id_fk",
           "tableFrom": "bids",
           "tableTo": "listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -65,12 +61,8 @@
           "name": "bids_bidder_id_users_id_fk",
           "tableFrom": "bids",
           "tableTo": "users",
-          "columnsFrom": [
-            "bidder_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["bidder_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -180,12 +172,8 @@
           "name": "listings_vehicle_id_vehicles_id_fk",
           "tableFrom": "listings",
           "tableTo": "vehicles",
-          "columnsFrom": [
-            "vehicle_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["vehicle_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -193,12 +181,8 @@
           "name": "listings_seller_id_users_id_fk",
           "tableFrom": "listings",
           "tableTo": "users",
-          "columnsFrom": [
-            "seller_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seller_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -265,12 +249,8 @@
           "name": "transactions_buyer_id_users_id_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "buyer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["buyer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -278,12 +258,8 @@
           "name": "transactions_seller_id_users_id_fk",
           "tableFrom": "transactions",
           "tableTo": "users",
-          "columnsFrom": [
-            "seller_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["seller_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -291,12 +267,8 @@
           "name": "transactions_listing_id_listings_id_fk",
           "tableFrom": "transactions",
           "tableTo": "listings",
-          "columnsFrom": [
-            "listing_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["listing_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -358,9 +330,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -453,12 +423,8 @@
           "name": "vehicles_user_id_users_id_fk",
           "tableFrom": "vehicles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -474,55 +440,32 @@
     "public.listing_status": {
       "name": "listing_status",
       "schema": "public",
-      "values": [
-        "active",
-        "ended",
-        "sold",
-        "cancelled"
-      ]
+      "values": ["active", "ended", "sold", "cancelled"]
     },
     "public.listing_type": {
       "name": "listing_type",
       "schema": "public",
-      "values": [
-        "auction",
-        "fixed"
-      ]
+      "values": ["auction", "fixed"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "paid",
-        "failed"
-      ]
+      "values": ["pending", "paid", "failed"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "buyer",
-        "seller",
-        "admin"
-      ]
+      "values": ["buyer", "seller", "admin"]
     },
     "public.vehicle_condition": {
       "name": "vehicle_condition",
       "schema": "public",
-      "values": [
-        "new",
-        "used"
-      ]
+      "values": ["new", "used"]
     },
     "public.vehicle_status": {
       "name": "vehicle_status",
       "schema": "public",
-      "values": [
-        "available",
-        "sold",
-        "pending"
-      ]
+      "values": ["available", "sold", "pending"]
     }
   },
   "schemas": {},

@@ -18,8 +18,10 @@ export const RegisterPage: React.FC = () => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (!form.firstName || !form.lastName || !form.email || !form.password) {
       setError("Please fill in all fields");
       return;
@@ -29,8 +31,30 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
-    // fake register
-    navigate("/login");
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          name: `${form.firstName} ${form.lastName}`,
+          role: "buyer", // default role
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Registration response:", data);
+      if (!response.ok) {
+        setError(data.message || "Registration failed");
+        return;
+      }
+
+      navigate("/login");
+    } catch (err) {
+      setError("Server error");
+      console.error(err);
+    }
   };
 
   return (
@@ -71,11 +95,14 @@ export const RegisterPage: React.FC = () => {
             value={form.confirmPassword}
             onChange={handleChange}
           />
+
           {error && <p className="form-error">{error}</p>}
+
           <Button type="submit" className="auth-submit">
             Sign up
           </Button>
         </form>
+
         <p className="auth-switch">
           Already have an account? <Link to="/login">Log in</Link>
         </p>

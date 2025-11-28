@@ -30,11 +30,7 @@ services:
       - db
     environment:
       - PORT=8080
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=powerbidz
-      - DB_PASSWORD=powerbidzpassword
-      - DB_NAME=powerbidz_db
+      - DATABASE_URL=postgres://powerbidz:powerbidzpassword@db:5432/powerbidz_db
 
   db:
     image: postgres:16

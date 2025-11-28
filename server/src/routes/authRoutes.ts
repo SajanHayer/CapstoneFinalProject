@@ -4,18 +4,17 @@ import { hashPassword, comparePassword, signToken } from "../utils/auth";
 
 export const authRouter = Router();
 
-// POST /api/auth/register
 authRouter.post("/register", async (req, res) => {
   try {
-    const { email, password, name, role, city, province } = req.body;
+    const { email, password, name, role } = req.body;
 
-    if (!email || !password || !role) {
-      return res
-        .status(400)
-        .json({ message: "email, password, role are required" });
+    if (!email || !password || !role || !name) {
+      return res.status(400).json({
+        message: "email, password, role, and name are required",
+      });
     }
 
-    // check if email already exists
+    // check for existing user
     const existing = await query("SELECT id FROM users WHERE email = $1", [
       email,
     ]);
@@ -25,22 +24,21 @@ authRouter.post("/register", async (req, res) => {
 
     const password_hash = await hashPassword(password);
 
+    // Insert using correct schema fields
     const result = await query(
-      `INSERT INTO users (email, password_hash, name, role, city, province)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [
-        email,
-        password_hash,
-        name || null,
-        role,
-        city || null,
-        province || null,
-      ],
+      `
+        INSERT INTO users (email, password_hash, name, role)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `,
+      [email, password_hash, name, role],
     );
 
     const user = result.rows[0];
     const token = signToken({ id: user.id, role: user.role });
+
+    // Never send password hash to client
+    delete user.password_hash;
 
     res.status(201).json({ user, token });
   } catch (err) {
