@@ -1,6 +1,6 @@
 // server/src/db/seed.ts
-import { db } from "./db"; // unified Drizzle client
-import { users, vehicles, listings, transactions, bids } from "./schema";
+import { db } from "./db";
+import { users, vehicles } from "./schema";
 
 async function seed() {
   try {
@@ -32,6 +32,128 @@ async function seed() {
       .returning({ id: users.id });
 
     const [user1, user2, user3] = insertedUsers;
+
+// ---------------- Vehicles (Powersports + Motorcycles) ----------------
+const insertedVehicles = await db
+  .insert(vehicles)
+  .values([
+    {
+      user_id: user2.id,
+      make: "Honda",
+      model: "CRF250R",
+      year: 2021,
+      price: "7899.00",
+      mileage_hours: 120,
+      condition: "used",
+      status: "available",
+      description: "High-performance dirt bike perfect for off-road and motocross riding.",
+      image_url: [
+        "https://loremflickr.com/800/600/dirtbike",
+        "https://loremflickr.com/800/600/motocross",
+        "https://loremflickr.com/800/600/motorcycle"
+      ]
+    },
+    {
+      user_id: user2.id,
+      make: "Yamaha",
+      model: "YZ450F",
+      year: 2022,
+      price: "9499.00",
+      mileage_hours: 80,
+      condition: "used",
+      status: "available",
+      description: "Race-ready motocross bike with power and precision.",
+      image_url: [
+        "https://loremflickr.com/800/600/motocross",
+        "https://loremflickr.com/800/600/dirt-bike",
+        "https://loremflickr.com/800/600/yamaha"
+      ]
+    },
+    {
+      user_id: user3.id,
+      make: "Polaris",
+      model: "Sportsman 570",
+      year: 2020,
+      price: "6999.00",
+      mileage_hours: 200,
+      condition: "used",
+      status: "available",
+      description: "Reliable ATV built for trail riding and utility tasks.",
+      image_url: [
+        "https://loremflickr.com/800/600/atv",
+        "https://loremflickr.com/800/600/quad",
+        "https://loremflickr.com/800/600/powersports"
+      ]
+    },
+    {
+      user_id: user2.id,
+      make: "Can-Am",
+      model: "Maverick X3",
+      year: 2019,
+      price: "18999.00",
+      mileage_hours: 350,
+      condition: "used",
+      status: "available",
+      description: "High-performance UTV with excellent suspension and handling.",
+      image_url: [
+        "https://loremflickr.com/800/600/utv",
+        "https://loremflickr.com/800/600/offroad",
+        "https://loremflickr.com/800/600/canam"
+      ]
+    },
+    {
+      user_id: user3.id,
+      make: "Kawasaki",
+      model: "Ninja 650",
+      year: 2021,
+      price: "8499.00",
+      mileage_hours: 4500,
+      condition: "used",
+      status: "available",
+      description: "Sport motorcycle ideal for beginners and experienced riders alike.",
+      image_url: [
+        "https://loremflickr.com/800/600/motorcycle",
+        "https://loremflickr.com/800/600/sportbike",
+        "https://loremflickr.com/800/600/kawasaki"
+      ]
+    },
+    {
+      user_id: user2.id,
+      make: "Harley-Davidson",
+      model: "Street Glide",
+      year: 2018,
+      price: "21999.00",
+      mileage_hours: 14000,
+      condition: "used",
+      status: "available",
+      description: "Classic touring motorcycle built for long-distance comfort.",
+      image_url: [
+        "https://loremflickr.com/800/600/harley",
+        "https://loremflickr.com/800/600/cruiser",
+        "https://loremflickr.com/800/600/motorbike"
+      ]
+    },
+    {
+      user_id: user3.id,
+      make: "Ski-Doo",
+      model: "MXZ X-RS 850",
+      year: 2020,
+      price: "12999.00",
+      mileage_hours: 90,
+      condition: "used",
+      status: "available",
+      description: "High-performance snowmobile designed for aggressive trail riding.",
+      image_url: [
+        "https://loremflickr.com/800/600/snowmobile",
+        "https://loremflickr.com/800/600/snow",
+        "https://loremflickr.com/800/600/powersport"
+      ]
+    }
+  ])
+  .returning({ id: vehicles.id });
+
+console.log("Inserted vehicles:", insertedVehicles);
+
 
     console.log("Database seeded successfully!");
   } catch (err) {

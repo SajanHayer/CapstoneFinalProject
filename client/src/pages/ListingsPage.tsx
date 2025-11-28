@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ListingCard } from "../components/listings/ListingCard";
 import { ListingFilters } from "../components/listings/ListingFilters";
 
@@ -17,54 +17,56 @@ export interface Listing {
   bids: number;
 }
 
-const MOCK_LISTINGS: Listing[] = [
-  {
-    id: "1",
-    title: "2019 Ford Mustang GT Fastback",
-    thumbnailUrl:
-      "https://images.pexels.com/photos/210019/pexels-photo-210019.jpeg",
-    currentPrice: 30600,
-    location: "Calgary, AB",
-    mileage: 75216,
-    year: 2019,
-    status: "ACTIVE",
-    endsAt: "2025-12-01T18:00:00Z",
-    bids: 37,
-  },
-  {
-    id: "2",
-    title: "2018 Toyota Tacoma TRD Off-Road",
-    thumbnailUrl:
-      "https://images.pexels.com/photos/1149831/pexels-photo-1149831.jpeg",
-    currentPrice: 41250,
-    location: "Vancouver, BC",
-    mileage: 89500,
-    year: 2018,
-    status: "UPCOMING",
-    endsAt: "2025-12-10T18:00:00Z",
-    bids: 0,
-  },
-  {
-    id: "3",
-    title: "2016 Subaru WRX STI",
-    thumbnailUrl:
-      "https://images.pexels.com/photos/919073/pexels-photo-919073.jpeg",
-    currentPrice: 25500,
-    location: "Toronto, ON",
-    mileage: 120430,
-    year: 2016,
-    status: "EXPIRED",
-    endsAt: "2025-10-10T18:00:00Z",
-    bids: 19,
-  },
-];
-
 export const ListingsPage: React.FC = () => {
   const [status, setStatus] = useState<ListingStatus>("ACTIVE");
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const visibleListings = MOCK_LISTINGS.filter(
-    (l) => l.status === status
-  );
+  // Fetch listings from backend
+  useEffect(() => {
+    const fetchListings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch("http://localhost:8080/api/vehicles");
+        if (!res.ok) throw new Error("Failed to fetch listings");
+
+        const data = await res.json();
+
+        // Map backend data to Listing type
+        const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
+          id: v.id.toString(),
+          title: `${v.year} ${v.make} ${v.model}`,
+          thumbnailUrl: Array.isArray(v.image_url) ? v.image_url[0] : v.image_url,
+          currentPrice: Number(v.price),
+          location: v.location || "Unknown",
+          mileage: Number(v.mileage_hours ?? 0),
+          year: Number(v.year),
+          status:
+            v.status === "available"
+              ? "ACTIVE"
+              : v.status === "pending"
+              ? "UPCOMING"
+              : "EXPIRED",
+          endsAt: v.end_time ?? new Date().toISOString(),
+          bids: v.bids_count ?? 0,
+        }));
+
+        setListings(mappedListings);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, []);
+
+  // Filter listings based on selected tab
+  const visibleListings = listings.filter((l) => l.status === status);
 
   return (
     <section className="listings-page">
@@ -86,12 +88,14 @@ export const ListingsPage: React.FC = () => {
       <ListingFilters />
 
       <div className="listings-grid">
-        {visibleListings.map((l) => (
-          <ListingCard key={l.id} listing={l} />
-        ))}
-        {visibleListings.length === 0 && (
+        {loading && <p>Loading listings...</p>}
+        {error && <p className="error">{error}</p>}
+        {!loading && !error && visibleListings.length === 0 && (
           <p>No listings in this category yet.</p>
         )}
+        {!loading &&
+          !error &&
+          visibleListings.map((l) => <ListingCard key={l.id} listing={l} />)}
       </div>
     </section>
   );

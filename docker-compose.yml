@@ -36,7 +36,7 @@ services:
     image: postgres:16
     container_name: powerbidz-db
     restart: always
-    environment:
+    environment:  
       POSTGRES_USER: powerbidz
       POSTGRES_PASSWORD: powerbidzpassword
       POSTGRES_DB: powerbidz_db
