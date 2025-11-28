@@ -1,9 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import { query } from "./db";
+import express from "express";
+import cors from "cors";
+import { db, query } from "./db/db";
 import { authRouter } from "./routes/authRoutes";
 import vehicleRouter from "./routes/vehicleRoutes";
-
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -12,10 +11,9 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
-
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running!' });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "Server is running!" });
 });
 
 // Database health check
@@ -39,10 +37,10 @@ app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 
 // Sample API endpoint
-app.get('/api/data', (req, res) => {
+app.get("/api/data", (req, res) => {
   res.json({
-    message: 'Welcome to the PowerBiDz API',
-    timestamp: new Date().toISOString()
+    message: "Welcome to the PowerBiDz API",
+    timestamp: new Date().toISOString(),
   });
 });
 

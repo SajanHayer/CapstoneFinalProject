@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query } from "../db";
+import { query } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
 
 export const authRouter = Router();
@@ -10,11 +10,15 @@ authRouter.post("/register", async (req, res) => {
     const { email, password, name, role, city, province } = req.body;
 
     if (!email || !password || !role) {
-      return res.status(400).json({ message: "email, password, role are required" });
+      return res
+        .status(400)
+        .json({ message: "email, password, role are required" });
     }
 
     // check if email already exists
-    const existing = await query("SELECT id FROM users WHERE email = $1", [email]);
+    const existing = await query("SELECT id FROM users WHERE email = $1", [
+      email,
+    ]);
     if (existing.rows.length > 0) {
       return res.status(409).json({ message: "Email already exists" });
     }
@@ -25,7 +29,14 @@ authRouter.post("/register", async (req, res) => {
       `INSERT INTO users (email, password_hash, name, role, city, province)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [email, password_hash, name || null, role, city || null, province || null,]
+      [
+        email,
+        password_hash,
+        name || null,
+        role,
+        city || null,
+        province || null,
+      ],
     );
 
     const user = result.rows[0];

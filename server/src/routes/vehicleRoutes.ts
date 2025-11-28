@@ -1,12 +1,26 @@
 import { Router } from "express";
-import { query } from "../db";
+import { query } from "../db/db";
 
 const vehicleRouter = Router();
 
 // POST /api/vehicles
 vehicleRouter.post("/", async (req, res) => {
   try {
-    const {seller_id, seller_type, dealership_name, make, model, year, color, mileage, engine_type, transmission, fuel_type, price, city, province,
+    const {
+      seller_id,
+      seller_type,
+      dealership_name,
+      make,
+      model,
+      year,
+      color,
+      mileage,
+      engine_type,
+      transmission,
+      fuel_type,
+      price,
+      city,
+      province,
     } = req.body;
 
     // validation
@@ -20,7 +34,22 @@ vehicleRouter.post("/", async (req, res) => {
       `INSERT INTO vehicles ( seller_id, seller_type, dealership_name, make, model, year, color, mileage, engine_type, transmission, fuel_type, price, city, province)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
-      [seller_id, seller_type, dealership_name || null, make, model, year || null, color || null, mileage || null, engine_type || null, transmission || null, fuel_type || null, price || null, city || null, province || null,]
+      [
+        seller_id,
+        seller_type,
+        dealership_name || null,
+        make,
+        model,
+        year || null,
+        color || null,
+        mileage || null,
+        engine_type || null,
+        transmission || null,
+        fuel_type || null,
+        price || null,
+        city || null,
+        province || null,
+      ],
     );
 
     const vehicle = result.rows[0];
@@ -34,7 +63,17 @@ vehicleRouter.post("/", async (req, res) => {
 // GET /api/vehicles  → Search / filter vehicles
 vehicleRouter.get("/", async (req, res) => {
   try {
-    const {make, year, min_year, max_year, min_mileage, max_mileage, min_price, max_price, seller_type, city
+    const {
+      make,
+      year,
+      min_year,
+      max_year,
+      min_mileage,
+      max_mileage,
+      min_price,
+      max_price,
+      seller_type,
+      city,
     } = req.query;
 
     // Start base SQL
@@ -100,6 +139,5 @@ vehicleRouter.get("/", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 export default vehicleRouter;
