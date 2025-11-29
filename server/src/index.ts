@@ -1,8 +1,11 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { db, query } from "./db/db";
 import { authRouter } from "./routes/authRoutes";
 import vehicleRouter from "./routes/vehicleRoutes";
+import { assistantRouter } from "./routes/assistantRoutes";
+
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -35,11 +38,12 @@ app.get("/api/db-health", async (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
+app.use("/api/assistant", assistantRouter);
 
 // Sample API endpoint
 app.get("/api/data", (req, res) => {
   res.json({
-    message: "Welcome to the PowerBiDz API",
+    message: "Welcome to the Let\'s Ride Canada API",
     timestamp: new Date().toISOString(),
   });
 });

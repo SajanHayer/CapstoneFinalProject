@@ -16,7 +16,7 @@ export const Navbar: React.FC = () => {
       <div className="navbar-left">
         <button className="navbar-logo-btn" onClick={() => navigate("/")}>
           <img src={logo} alt="Let's Ride Canada" className="navbar-logo" />
-          <span className="navbar-title">Power BIDZ</span>
+          <span className="navbar-title">Let's Ride Canada!</span>
         </button>
       </div>
 

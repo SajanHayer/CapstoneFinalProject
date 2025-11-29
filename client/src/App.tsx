@@ -2,6 +2,7 @@ import React from "react";
 import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { AppRouter } from "./router/AppRouter";
+import { ChatWidget } from "./components/ChatWidget";
 
 const App: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ const App: React.FC = () => {
         <AppRouter />
       </main>
       <Footer />
+      <ChatWidget />
     </div>
   );
 };
