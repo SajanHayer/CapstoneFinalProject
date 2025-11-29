@@ -33,6 +33,9 @@ export const Navbar: React.FC = () => {
         <NavLink to="/account" className="nav-link">
           Account
         </NavLink>
+        <NavLink to="/add-vehicle" className="nav-link">
+          Add Vehicle
+        </NavLink>
       </nav>
 
       <div className="navbar-right">

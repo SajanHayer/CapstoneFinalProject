@@ -34,6 +34,7 @@ export const ListingsPage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch listings");
 
         const data = await res.json();
+        console.log("Raw fetched data:", data);
 
         // Map backend data to Listing type
         const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
