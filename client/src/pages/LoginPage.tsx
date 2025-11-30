@@ -37,9 +37,9 @@ export const LoginPage: React.FC = () => {
         return;
       }
 
-      // Save token + user info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // // Save token + user info
+      // localStorage.setItem("token", data.token);
+      // localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate("/listings");
     } catch (err) {

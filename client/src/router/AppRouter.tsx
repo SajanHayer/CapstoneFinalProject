@@ -7,6 +7,7 @@ import { AccountPage } from "../pages/AccountPage";
 import { ListingsPage } from "../pages/ListingsPage";
 import { ListingDetailPage } from "../pages/ListingDetailPage";
 import { FavouritesPage } from "../pages/FavouritesPage";
+import { AddVehiclePage } from "../pages/AddVehiclePage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ export const AppRouter: React.FC = () => {
       <Route path="/listings" element={<ListingsPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
       <Route path="/favourites" element={<FavouritesPage />} />
+      <Route path="/add-vehicle" element={<AddVehiclePage />} />
     </Routes>
   );
 };

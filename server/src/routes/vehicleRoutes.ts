@@ -2,14 +2,22 @@ import { Router } from "express";
 import { db } from "../db/db";
 import { vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
-
+import { supabase } from "../supabase/supabase";
 
 const vehicleRouter = Router();
+const SUPABASE_BUCKET = "vehicle-images";
+
+//function to send image to supabase storage and get url
+
+
 
 /* ----------------------------------------------
-   POST /api/vehicles  → Create a vehicle
+   POST /api/vehicles/create  → Create a vehicle
 ------------------------------------------------ */
-vehicleRouter.post("/", async (req, res) => {
+
+
+
+vehicleRouter.post("/create", async (req, res) => {
   try {
     const {
       user_id,
@@ -30,21 +38,26 @@ vehicleRouter.post("/", async (req, res) => {
       });
     }
 
-    const [newVehicle] = await db
-      .insert(vehicles)
-      .values({
-        user_id,
-        make,
-        model,
-        year,
-        price,
-        mileage_hours: mileage_hours ?? 0,
-        condition,
-        status,
-        description,
-        image_url,
-      })
-      .returning();
+    // call supabase funntion return url or path or whatever
+    // db functino 
+    
+
+    const [newVehicle] = 'test';
+    // const [newVehicle] = await db
+    //   .insert(vehicles)
+    //   .values({
+    //     user_id,
+    //     make,
+    //     model,
+    //     year,
+    //     price,
+    //     mileage_hours: mileage_hours ?? 0,
+    //     condition,
+    //     status,
+    //     description,
+    //     image_url,
+    //   })
+    //   .returning();
 
     res.status(201).json({ vehicle: newVehicle });
   } catch (err) {
@@ -52,6 +65,8 @@ vehicleRouter.post("/", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
 
 /* ----------------------------------------------
    GET /api/vehicles  → Get all vehicles
@@ -90,3 +105,5 @@ vehicleRouter.get("/:id", async (req, res) => {
 });
 
 export default vehicleRouter;
+
+
