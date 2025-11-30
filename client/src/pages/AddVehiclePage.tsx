@@ -15,7 +15,7 @@ type AddVehicleProps = {
     condition: "new" | "used";
     status: "available" | "pending" | "sold";
     description: string | "";
-    image_url: string[]; // array of image URLs or path to image or img
+    image_url: File[]; // array of image URLs or path to image or img
 };
 
 // Change image upload to be of of actual file types
@@ -28,42 +28,46 @@ type AddVehicleProps = {
 
 export const AddVehiclePage: React.FC = () => {
     const [imageUrls, setImageUrls] = React.useState<string[]>([]);
+    const [imageFiles, setImages] = React.useState<File[]>([]);
     const { register, handleSubmit } = useForm<AddVehicleProps>();
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
+              if (e.target.files.length + imageUrls.length > 15) {
+                alert("Maximum 15 images allowed.");
+                return;}
             const filesArray = Array.from(e.target.files);
+            setImages([...imageFiles, ...filesArray]);
             const newImageUrls = filesArray.map((file) => URL.createObjectURL(file));
             setImageUrls([...imageUrls, ...newImageUrls]);
         }
     }
     const onSubmit = async (data: AddVehicleProps) => {
-    console.log(data);
-    try{
+        const formData = new FormData();
+        formData.append("user_id", "1");
+        formData.append("make", data.make);
+        formData.append("model", data.model);
+        formData.append("year", data.year.toString());
+        formData.append("price", data.price.toString());
+        formData.append("mileage_hours", data.mileage_hours.toString());
+        formData.append("condition", data.condition);
+        formData.append("status", data.status);
+        formData.append("description", data.description);
+
+        // Append each image file
+        imageFiles.forEach((file) => {
+            formData.append("images", file);
+        });
+
+        console.log("Submitting form data:", formData.getAll("make"));
         const res = await fetch("http://localhost:8080/api/vehicles/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id: 1, // hardcoded for now
-          make: data.make,
-          model: data.model,
-          year: data.year,
-          price: data.price,
-          mileage_hours: data.mileage_hours,
-          condition: data.condition,
-          status: data.status,
-          description: data.description,
-          image_url: data.image_url,
-        }),
-      });
-      const result = await res.json();
-      console.log("Result:", result);
-    } catch (err) {
-        console.error("Add vehicle error:", err);
-    }
-  };
+            method: "POST",
+            body: formData, 
+        });
+        const result = await res.json();
+        console.log("Result:", result);
+    };
+
     return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Input label="Make" {...register("make", {required: true})}/>

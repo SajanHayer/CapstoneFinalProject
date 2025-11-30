@@ -3,6 +3,7 @@ import { db } from "../db/db";
 import { vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { supabase } from "../supabase/supabase";
+import multer from "multer";
 
 const vehicleRouter = Router();
 const SUPABASE_BUCKET = "vehicle-images";
@@ -15,57 +16,76 @@ const SUPABASE_BUCKET = "vehicle-images";
    POST /api/vehicles/create  → Create a vehicle
 ------------------------------------------------ */
 
+const upload = multer({ storage: multer.memoryStorage() });
 
+vehicleRouter.post("/create", 
+                    upload.array("images", 15), async (req, res) => {
+    try {
+      const {
+        user_id,
+        make,
+        model,
+        year,
+        price,
+        mileage_hours,
+        condition,
+        status,
+        description
+      } = req.body;
 
-vehicleRouter.post("/create", async (req, res) => {
-  try {
-    const {
-      user_id,
-      make,
-      model,
-      year,
-      price,
-      mileage_hours,
-      condition,
-      status,
-      description,
-      image_url,
-    } = req.body;
+      const files = req.files as Express.Multer.File[];
+      const fileNames = files.map((file) => file.originalname);
 
-    if (!user_id || !make || !model || !year || !price) {
-      return res.status(400).json({
-        message: "user_id, make, model, year, and price are required",
-      });
+      if (!user_id || !make || !model || !Number(year) || !price) {
+        return res.status(400).json({
+          message: "user_id, make, model, year, and price are required",
+        });
+      }
+
+      // Upload each file to Supabase
+      // const uploadedUrls: string[] = [];
+
+      // for (const file of files) {
+      //   const fileName = `${Date.now()}-${file.originalname}`;
+      //   const { data, error } = await supabase.storage
+      //     .from("vehicle-images")
+      //     .upload(fileName, file.buffer, {
+      //       contentType: file.mimetype,
+      //     });
+
+      //   if (error) throw error;
+
+      //   const {
+      //     data: { publicUrl },
+      //   } = supabase.storage.from("vehicle-images").getPublicUrl(fileName);
+
+      //   uploadedUrls.push(publicUrl);
+      // }
+
+      // Insert into DB
+      const [newVehicle] = await db
+        .insert(vehicles)
+        .values({
+          user_id: Number(user_id),
+          make,
+          model,
+          year: Number(year),
+          price,
+          mileage_hours: Number(mileage_hours),
+          condition,
+          status,
+          description,
+          image_url: fileNames, 
+        })
+        .returning();
+
+      res.status(201).json({ vehicle: newVehicle });
+    } catch (err) {
+      console.error("Create vehicle error:", err);
+      res.status(500).json({ message: "Server error" });
     }
-
-    // call supabase funntion return url or path or whatever
-    // db functino 
-    
-
-    const [newVehicle] = 'test';
-    // const [newVehicle] = await db
-    //   .insert(vehicles)
-    //   .values({
-    //     user_id,
-    //     make,
-    //     model,
-    //     year,
-    //     price,
-    //     mileage_hours: mileage_hours ?? 0,
-    //     condition,
-    //     status,
-    //     description,
-    //     image_url,
-    //   })
-    //   .returning();
-
-    res.status(201).json({ vehicle: newVehicle });
-  } catch (err) {
-    console.error("Create vehicle error:", err);
-    res.status(500).json({ message: "Server error" });
   }
-});
-
+);
 
 
 /* ----------------------------------------------
