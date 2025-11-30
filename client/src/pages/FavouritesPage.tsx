@@ -11,8 +11,8 @@ export const FavouritesPage: React.FC = () => {
         />
       </header>
       <p>
-        This will show favourite vehicles in cards, similar to the
-        listings grid, once we connect it to real data.
+        This will show favourite vehicles in cards, similar to the listings
+        grid, once we connect it to real data.
       </p>
     </section>
   );

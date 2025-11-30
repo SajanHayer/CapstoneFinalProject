@@ -11,8 +11,8 @@ export const ListingDetailPage: React.FC = () => {
       </Link>
       <h1>Listing #{id}</h1>
       <p>
-        This page will show full vehicle details, bidding history, and
-        action buttons once we hook it to the backend.
+        This page will show full vehicle details, bidding history, and action
+        buttons once we hook it to the backend.
       </p>
     </section>
   );

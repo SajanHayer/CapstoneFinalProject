@@ -12,5 +12,5 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input ref={ref} className="input-control" {...rest} />
       {error && <span className="input-error">{error}</span>}
     </label>
-  )
+  ),
 );

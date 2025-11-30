@@ -34,12 +34,14 @@ export const ListingsPage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch listings");
 
         const data = await res.json();
-        
+
         // Map backend data to Listing type
         const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
           id: v.id.toString(),
           title: `${v.year} ${v.make} ${v.model}`,
-          thumbnailUrl: Array.isArray(v.image_url) ? v.image_url[0] : v.image_url,
+          thumbnailUrl: Array.isArray(v.image_url)
+            ? v.image_url[0]
+            : v.image_url,
           currentPrice: Number(v.price),
           location: v.location || "Unknown",
           mileage: Number(v.mileage_hours ?? 0),
@@ -48,8 +50,8 @@ export const ListingsPage: React.FC = () => {
             v.status === "available"
               ? "ACTIVE"
               : v.status === "pending"
-              ? "UPCOMING"
-              : "EXPIRED",
+                ? "UPCOMING"
+                : "EXPIRED",
           endsAt: v.end_time ?? new Date().toISOString(),
           bids: v.bids_count ?? 0,
         }));

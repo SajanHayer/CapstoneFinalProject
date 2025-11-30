@@ -32,7 +32,6 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     } = req.body;
 
     const files = req.files as Express.Multer.File[];
-    const fileNames = files.map((file) => file.originalname);
 
     if (!user_id || !make || !model || !Number(year) || !price) {
       return res.status(400).json({
@@ -40,7 +39,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
       });
     }
 
-    // Upload each file to Supabase
+    // Compression for images if needed 
     // try {
     //   const compressedFile = await imageCompression(file, {
     //     maxSizeMB: 1
@@ -49,6 +48,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     //   console.error(error);
     //   return { imageUrl: "", error: "Image compression failed" };
     // }
+
     console.log("Uploading files to Supabase:", supabase);
     const uploadedUrls: string[] = [];
     for (const file of files) {
@@ -69,7 +69,6 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     }
 
     // Insert into DB
-    // const newVehicle = 'lol'
     const [newVehicle] = await db
       .insert(vehicles)
       .values({
