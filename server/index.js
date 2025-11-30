@@ -19,7 +19,7 @@ app.get('/api/health', (req, res) => {
 // Sample API endpoint
 app.get('/api/data', (req, res) => {
   res.json({
-    message: 'Welcome to the PowerBiDz API',
+    message: 'Welcome to the Let\'s Ride Canada API',
     timestamp: new Date().toISOString()
   });
 });
