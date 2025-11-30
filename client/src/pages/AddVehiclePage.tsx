@@ -4,6 +4,8 @@ import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useForm } from "react-hook-form";
 import { useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 type AddVehicleProps = {
   user_id: number;
@@ -28,6 +30,9 @@ export const AddVehiclePage: React.FC = () => {
   const [imageFiles, setImages] = React.useState<File[]>([]);
   const { register, handleSubmit } = useForm<AddVehicleProps>();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
+
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       if (e.target.files.length + imageUrls.length > 15) {
@@ -62,8 +67,14 @@ export const AddVehiclePage: React.FC = () => {
       body: formData,
     });
     const result = await res.json();
-    if (result.console.error()) alert("Error uploading vehicle");
-    else alert("Vehicle added successfully!");
+    // if (!res.ok || result.error) {
+    //   // res.ok is false if status >= 400
+    //   alert(result.message || "Error uploading vehicle");
+    // } else {
+    //   alert("Vehicle added successfully!");
+    // }
+      // Reset the form (if using react-hook-form)
+     navigate("/listings");
   };
 
   return (
