@@ -4,13 +4,12 @@ import { vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { supabase } from "../supabase/supabase";
 import multer from "multer";
+import imageCompression from "browser-image-compression";
 
 const vehicleRouter = Router();
-const SUPABASE_BUCKET = "vehicle-images";
+const SUPABASE_BUCKET = "powerbidz-images";
 
 //function to send image to supabase storage and get url
-
-
 
 /* ----------------------------------------------
    POST /api/vehicles/create  → Create a vehicle
@@ -18,75 +17,81 @@ const SUPABASE_BUCKET = "vehicle-images";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-vehicleRouter.post("/create", 
-                    upload.array("images", 15), async (req, res) => {
-    try {
-      const {
-        user_id,
+vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
+  try {
+    const {
+      user_id,
+      make,
+      model,
+      year,
+      price,
+      mileage_hours,
+      condition,
+      status,
+      description,
+    } = req.body;
+
+    const files = req.files as Express.Multer.File[];
+    const fileNames = files.map((file) => file.originalname);
+
+    if (!user_id || !make || !model || !Number(year) || !price) {
+      return res.status(400).json({
+        message: "user_id, make, model, year, and price are required",
+      });
+    }
+
+    // Upload each file to Supabase
+    // try {
+    //   const compressedFile = await imageCompression(file, {
+    //     maxSizeMB: 1
+    //   });
+    // } catch (error) {
+    //   console.error(error);
+    //   return { imageUrl: "", error: "Image compression failed" };
+    // }
+    console.log("Uploading files to Supabase:", supabase);
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const { data, error } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) throw error;
+
+      const {data: { publicUrl }, } = supabase.storage
+                                              .from(SUPABASE_BUCKET)
+                                              .getPublicUrl(fileName);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    // Insert into DB
+    // const newVehicle = 'lol'
+    const [newVehicle] = await db
+      .insert(vehicles)
+      .values({
+        user_id: Number(user_id),
         make,
         model,
-        year,
+        year: Number(year),
         price,
-        mileage_hours,
+        mileage_hours: Number(mileage_hours),
         condition,
         status,
-        description
-      } = req.body;
+        description,
+        image_url: uploadedUrls,
+      })
+      .returning();
 
-      const files = req.files as Express.Multer.File[];
-      const fileNames = files.map((file) => file.originalname);
-
-      if (!user_id || !make || !model || !Number(year) || !price) {
-        return res.status(400).json({
-          message: "user_id, make, model, year, and price are required",
-        });
-      }
-
-      // Upload each file to Supabase
-      // const uploadedUrls: string[] = [];
-
-      // for (const file of files) {
-      //   const fileName = `${Date.now()}-${file.originalname}`;
-      //   const { data, error } = await supabase.storage
-      //     .from("vehicle-images")
-      //     .upload(fileName, file.buffer, {
-      //       contentType: file.mimetype,
-      //     });
-
-      //   if (error) throw error;
-
-      //   const {
-      //     data: { publicUrl },
-      //   } = supabase.storage.from("vehicle-images").getPublicUrl(fileName);
-
-      //   uploadedUrls.push(publicUrl);
-      // }
-
-      // Insert into DB
-      const [newVehicle] = await db
-        .insert(vehicles)
-        .values({
-          user_id: Number(user_id),
-          make,
-          model,
-          year: Number(year),
-          price,
-          mileage_hours: Number(mileage_hours),
-          condition,
-          status,
-          description,
-          image_url: fileNames, 
-        })
-        .returning();
-
-      res.status(201).json({ vehicle: newVehicle });
-    } catch (err) {
-      console.error("Create vehicle error:", err);
-      res.status(500).json({ message: "Server error" });
-    }
+    res.status(201).json({ vehicle: newVehicle });
+  } catch (err) {
+    console.error("Create vehicle error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-);
-
+});
 
 /* ----------------------------------------------
    GET /api/vehicles  → Get all vehicles
@@ -109,11 +114,11 @@ vehicleRouter.get("/:id", async (req, res) => {
     const id = Number(req.params.id);
 
     const [vehicle] = await db
-          .select()
-          .from(vehicles)
-          .where(eq(vehicles.id, id));
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.id, id));
 
-    if (!vehicle) { 
+    if (!vehicle) {
       return res.status(404).json({ message: "Vehicle not found" });
     }
 
@@ -125,5 +130,3 @@ vehicleRouter.get("/:id", async (req, res) => {
 });
 
 export default vehicleRouter;
-
-

@@ -65,7 +65,7 @@ export const AddVehiclePage: React.FC = () => {
             body: formData, 
         });
         const result = await res.json();
-        console.log("Result:", result);
+        // console.log("Result:", result);
     };
 
     return (
