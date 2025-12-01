@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../db/db";
 import { vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { supabase } from "../supabase/supabase";
+import { supabase } from "../services/supabase";
 import multer from "multer";
 import imageCompression from "browser-image-compression";
 
@@ -39,7 +39,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
       });
     }
 
-    // Compression for images if needed 
+    // Compression for images if needed
     // try {
     //   const compressedFile = await imageCompression(file, {
     //     maxSizeMB: 1
@@ -61,9 +61,9 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
 
       if (error) throw error;
 
-      const {data: { publicUrl }, } = supabase.storage
-                                              .from(SUPABASE_BUCKET)
-                                              .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(fileName);
 
       uploadedUrls.push(publicUrl);
     }

@@ -13,8 +13,7 @@ const PORT = process.env.PORT || 8080;
 app.use(cors());
 app.use(express.json());
 
-
-app.use("/api/health", healthRouter)
+app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);

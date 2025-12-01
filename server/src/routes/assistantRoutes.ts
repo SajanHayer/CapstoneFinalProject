@@ -1,15 +1,8 @@
 // server/src/routes/assistantRoutes.ts
 import { Router } from "express";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { model } from "../services/googleapi";
 
 export const assistantRouter = Router();
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// Use a current, supported Gemini model
-const model = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-});
 
 // POST /api/assistant/chat
 assistantRouter.post("/chat", async (req, res) => {
