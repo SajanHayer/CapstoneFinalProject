@@ -12,6 +12,7 @@
     "seed": "npx tsx src/db/seed.ts",
     "generate": "drizzle-kit generate",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "studio": "drizzle-kit studio",
     "test": "vitest"
   },
   "dependencies": {
