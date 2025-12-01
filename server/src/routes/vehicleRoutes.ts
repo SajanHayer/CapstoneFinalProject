@@ -6,11 +6,10 @@ import { supabase } from "../supabase/supabase";
 import multer from "multer";
 import imageCompression from "browser-image-compression";
 
-const vehicleRouter = Router();
+export const vehicleRouter = Router();
 const SUPABASE_BUCKET = "powerbidz-images";
 
 //function to send image to supabase storage and get url
-
 /* ----------------------------------------------
    POST /api/vehicles/create  → Create a vehicle
 ------------------------------------------------ */
@@ -18,6 +17,7 @@ const SUPABASE_BUCKET = "powerbidz-images";
 const upload = multer({ storage: multer.memoryStorage() });
 
 vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
+  // Get Request body parameters
   try {
     const {
       user_id,
@@ -49,6 +49,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     //   return { imageUrl: "", error: "Image compression failed" };
     // }
 
+    // Upload images to Supabase Storage
     const uploadedUrls: string[] = [];
     for (const file of files) {
       const fileName = `${Date.now()}-${file.originalname}`;
@@ -126,5 +127,3 @@ vehicleRouter.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-export default vehicleRouter;

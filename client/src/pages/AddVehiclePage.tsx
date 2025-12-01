@@ -20,10 +20,6 @@ type AddVehicleProps = {
   image_url: File[]; // array of image URLs or path to image or img
 };
 
-// Change image upload to be of of actual file types
-// handle multiple images
-// change these image to a file
-// send this array of files to backend
 
 export const AddVehiclePage: React.FC = () => {
   const [imageUrls, setImageUrls] = React.useState<string[]>([]);
