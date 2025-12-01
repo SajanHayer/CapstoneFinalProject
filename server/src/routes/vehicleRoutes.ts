@@ -49,7 +49,6 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     //   return { imageUrl: "", error: "Image compression failed" };
     // }
 
-    console.log("Uploading files to Supabase:", supabase);
     const uploadedUrls: string[] = [];
     for (const file of files) {
       const fileName = `${Date.now()}-${file.originalname}`;

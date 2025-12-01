@@ -8,7 +8,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-console.log("Database connected successfully", process.env.DATABASE_URL);
+// console.log("Database connected successfully", process.env.DATABASE_URL);
 // Drizzle ORM client
 export const db = drizzle(pool);
 
