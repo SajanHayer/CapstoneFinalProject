@@ -6,16 +6,14 @@ type ChatMessage = {
   text: string;
 };
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: "assistant",
-      text:
-        "Hi! I’m your Let's Ride Canada assistant. Ask me anything about browsing, bidding, or your account.",
+      text: "Hi! I’m your Let's Ride Canada assistant. Ask me anything about browsing, bidding, or your account.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -126,9 +124,7 @@ export const ChatWidget: React.FC = () => {
 
                 <div
                   className={`chat-bubble ${
-                    msg.sender === "user"
-                      ? "bubble-user"
-                      : "bubble-assistant"
+                    msg.sender === "user" ? "bubble-user" : "bubble-assistant"
                   }`}
                 >
                   {msg.text}
@@ -163,7 +159,11 @@ export const ChatWidget: React.FC = () => {
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}
             />
-            <button type="submit" aria-label="Send message" disabled={isLoading}>
+            <button
+              type="submit"
+              aria-label="Send message"
+              disabled={isLoading}
+            >
               <svg viewBox="0 0 24 24" width="18" height="18">
                 <path
                   d="M4.5 20.25L19.5 12 4.5 3.75 4.5 10.5 13.5 12 4.5 13.5z"
