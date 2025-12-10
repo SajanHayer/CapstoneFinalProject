@@ -1,7 +1,8 @@
 // server/src/db/seed.ts
 import { db } from "./db";
 import { users, vehicles } from "./schema";
-
+import { hashPassword} from "../utils/auth";
+ 
 async function seed() {
   try {
     console.log("Seeding database...");
@@ -13,19 +14,19 @@ async function seed() {
         {
           name: "Alice",
           email: "alice@example.com",
-          password_hash: "hashed_password1",
+          password_hash: await hashPassword("alice123"),
           role: "buyer",
         },
         {
           name: "Bob",
           email: "bob@example.com",
-          password_hash: "hashed_password2",
+          password_hash: await hashPassword("bob123"),
           role: "seller",
         },
         {
           name: "Charlie",
           email: "charlie@example.com",
-          password_hash: "hashed_password3",
+          password_hash: await hashPassword("charlie123"),
           role: "admin",
         },
       ])

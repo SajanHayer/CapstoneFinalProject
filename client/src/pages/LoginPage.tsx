@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
+import { useAuth } from "../context/authcontext";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const {login} = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +33,9 @@ export const LoginPage: React.FC = () => {
       });
 
       const data = await response.json();
-
+      const userEmail = data.user.email;
+      const userRole = data.user.role;
+      
       if (!response.ok) {
         setError(data.message || "Login failed");
         return;
@@ -40,6 +44,8 @@ export const LoginPage: React.FC = () => {
       // // Save token + user info
       // localStorage.setItem("token", data.token);
       // localStorage.setItem("user", JSON.stringify(data.user));
+      login({email: userEmail,
+            role: userRole})
 
       navigate("/listings");
     } catch (err) {
