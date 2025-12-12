@@ -9,7 +9,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const {login} = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,14 +36,13 @@ export const LoginPage: React.FC = () => {
       const data = await response.json();
       const userEmail = data.user.email;
       const userRole = data.user.role;
-      
+
       if (!response.ok) {
         setError(data.message || "Login failed");
         return;
       }
-      
-      login({email: userEmail,
-            role: userRole})
+
+      login({ email: userEmail, role: userRole });
 
       navigate("/listings");
     } catch (err) {

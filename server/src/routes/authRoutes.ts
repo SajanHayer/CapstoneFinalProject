@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { query } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
+import { requireAuth } from "../middleware/requireAuth";
 
 export const authRouter = Router();
 
@@ -66,7 +67,7 @@ authRouter.post("/login", async (req, res) => {
     // don’t send hash to client
     delete (user as any).password_hash;
 
-        // Use signToken() to generate JWT
+    // Use signToken() to generate JWT
     const token = signToken({
       id: user.id,
       email: user.email,
@@ -86,4 +87,21 @@ authRouter.post("/login", async (req, res) => {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+// /api/auth/logout
+authRouter.post("/logout", async (_req, res) => {
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    path: "/",
+  });
+
+  res.json({ message: "Logged out" });
+});
+
+authRouter.get("/check", requireAuth, (req, res) => {
+  const user = (req as any).user;
+  res.json({ user: user });
 });

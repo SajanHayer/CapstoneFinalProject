@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 type AddVehicleProps = {
   user_id: number;
   make: string;
@@ -20,14 +19,12 @@ type AddVehicleProps = {
   image_url: File[]; // array of image URLs or path to image or img
 };
 
-
 export const AddVehiclePage: React.FC = () => {
   const [imageUrls, setImageUrls] = React.useState<string[]>([]);
   const [imageFiles, setImages] = React.useState<File[]>([]);
   const { register, handleSubmit } = useForm<AddVehicleProps>();
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
-
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -69,8 +66,8 @@ export const AddVehiclePage: React.FC = () => {
     // } else {
     //   alert("Vehicle added successfully!");
     // }
-      // Reset the form (if using react-hook-form)
-     navigate("/listings");
+    // Reset the form (if using react-hook-form)
+    navigate("/listings");
   };
 
   return (

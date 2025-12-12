@@ -31,13 +31,12 @@ export const ListingsPage: React.FC = () => {
         setError(null);
 
         const res = await fetch("http://localhost:8080/api/vehicles", {
-          credentials: "include"
+          credentials: "include",
         });
-        
+
         if (!res.ok) throw new Error("Failed to fetch listings");
 
         const data = await res.json();
-        console.log(data)
         // Map backend data to Listing type
         const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
           id: v.id.toString(),

@@ -1,14 +1,14 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo-letsrcanada.png";
+import { useAuth } from "../../context/authcontext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem("fakeToken"); // temporary fake auth
-
-  const handleLogout = () => {
-    localStorage.removeItem("fakeToken");
-    navigate("/");
+  const { user, isLoggedIn, logout } = useAuth();
+  const handleLogout = async () => {
+    await logout();
+    navigate("/"); // send user home
   };
 
   return (
