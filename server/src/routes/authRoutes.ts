@@ -63,12 +63,25 @@ authRouter.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = signToken({ id: user.id, role: user.role });
-
     // don’t send hash to client
     delete (user as any).password_hash;
 
-    res.json({ user, token });
+        // Use signToken() to generate JWT
+    const token = signToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+
+    // Store token in HTTP-only cookie
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+      maxAge: 3600000, // 1 hour
+    });
+
+    res.json({ user });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });

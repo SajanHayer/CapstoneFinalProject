@@ -23,6 +23,7 @@ export const LoginPage: React.FC = () => {
     try {
       const response = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -40,10 +41,7 @@ export const LoginPage: React.FC = () => {
         setError(data.message || "Login failed");
         return;
       }
-
-      // // Save token + user info
-      // localStorage.setItem("token", data.token);
-      // localStorage.setItem("user", JSON.stringify(data.user));
+      
       login({email: userEmail,
             role: userRole})
 

@@ -1,8 +1,8 @@
 // server/src/db/seed.ts
 import { db } from "./db";
 import { users, vehicles } from "./schema";
-import { hashPassword} from "../utils/auth";
- 
+import { hashPassword } from "../utils/auth";
+
 async function seed() {
   try {
     console.log("Seeding database...");

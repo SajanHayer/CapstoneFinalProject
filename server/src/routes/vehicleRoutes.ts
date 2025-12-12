@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { supabase } from "../services/supabase";
 import multer from "multer";
 import imageCompression from "browser-image-compression";
+import { requireAuth} from "../middleware/requireAuth";
 
 export const vehicleRouter = Router();
 const SUPABASE_BUCKET = "powerbidz-images";
@@ -16,7 +17,7 @@ const SUPABASE_BUCKET = "powerbidz-images";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
+vehicleRouter.post("/create", requireAuth, upload.array("images", 15), async (req, res) => {
   // Get Request body parameters
   try {
     const {
@@ -95,7 +96,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
 /* ----------------------------------------------
    GET /api/vehicles  → Get all vehicles
 ------------------------------------------------ */
-vehicleRouter.get("/", async (_req, res) => {
+vehicleRouter.get("/", requireAuth, async (_req, res) => {
   try {
     const result = await db.select().from(vehicles);
     res.json({ vehicles: result });
