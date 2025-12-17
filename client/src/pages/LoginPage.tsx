@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
-import { useAuth } from "../context/authcontext";
+import { useAuth } from "../context/AuthContext";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");

@@ -14,9 +14,7 @@ export const LandingPage: React.FC = () => {
           Canada.
         </p>
         <div className="landing-actions">
-          <Link to="/listings">
-            <Button>Browse Auctions</Button>
-          </Link>
+            <Button>Join as a Buyer</Button>
           <Link to="/register">
             <Button variant="outline">Join as a Seller</Button>
           </Link>

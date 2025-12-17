@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo-letsrcanada.png";
-import { useAuth } from "../../context/authcontext";
+import { useAuth } from "../../context/AuthContext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +24,8 @@ export const Navbar: React.FC = () => {
         <NavLink to="/" className="nav-link">
           Home
         </NavLink>
+        {isLoggedIn ? (
+          <>
         <NavLink to="/listings" className="nav-link">
           Browse
         </NavLink>
@@ -36,6 +38,10 @@ export const Navbar: React.FC = () => {
         <NavLink to="/add-vehicle" className="nav-link">
           Add Vehicle
         </NavLink>
+        </>):(
+          <text>Not Logged In </text>
+        )}
+
       </nav>
 
       <div className="navbar-right">
