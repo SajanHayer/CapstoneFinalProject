@@ -26,22 +26,22 @@ export const Navbar: React.FC = () => {
         </NavLink>
         {isLoggedIn ? (
           <>
-        <NavLink to="/listings" className="nav-link">
-          Browse
-        </NavLink>
-        <NavLink to="/favourites" className="nav-link">
-          Favourites
-        </NavLink>
-        <NavLink to="/account" className="nav-link">
-          Account
-        </NavLink>
-        <NavLink to="/add-vehicle" className="nav-link">
-          Add Vehicle
-        </NavLink>
-        </>):(
+            <NavLink to="/listings" className="nav-link">
+              Browse
+            </NavLink>
+            <NavLink to="/favourites" className="nav-link">
+              Favourites
+            </NavLink>
+            <NavLink to="/account" className="nav-link">
+              Account
+            </NavLink>
+            <NavLink to="/add-vehicle" className="nav-link">
+              Add Vehicle
+            </NavLink>
+          </>
+        ) : (
           <text>Not Logged In </text>
         )}
-
       </nav>
 
       <div className="navbar-right">

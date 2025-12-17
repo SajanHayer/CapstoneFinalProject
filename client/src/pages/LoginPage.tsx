@@ -34,14 +34,14 @@ export const LoginPage: React.FC = () => {
       });
 
       const data = await response.json();
-      const userEmail = data.user.email;
-      const userRole = data.user.role;
-
+  
       if (!response.ok) {
         setError(data.message || "Login failed");
         return;
       }
 
+      const userEmail = data.user.email;
+      const userRole = data.user.role;
       login({ email: userEmail, role: userRole });
 
       navigate("/listings");

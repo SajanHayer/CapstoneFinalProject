@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { query } from "../db/db";
+import { query, db } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export const authRouter = Router();
 
@@ -16,32 +18,27 @@ authRouter.post("/register", async (req, res) => {
     }
 
     // check for existing user
-    const existing = await query("SELECT id FROM users WHERE email = $1", [
-      email,
-    ]);
-    if (existing.rows.length > 0) {
-      return res.status(409).json({ message: "Email already exists" });
-    }
+    const existing = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email));
 
+    if (existing) {
+      return res.status(409).json({ message: "User already Exists" });
+    }
     const password_hash = await hashPassword(password);
 
-    // Insert using correct schema fields
-    const result = await query(
-      `
-        INSERT INTO users (email, password_hash, name, role)
-        VALUES ($1, $2, $3, $4)
-        RETURNING *
-      `,
-      [email, password_hash, name, role],
-    );
+    const [user] = await db
+      .insert(users)
+      .values({ email, password_hash, name, role })
+      .returning({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+      });
 
-    const user = result.rows[0];
-    const token = signToken({ id: user.id, role: user.role });
-
-    // Never send password hash to client
-    delete user.password_hash;
-
-    res.status(201).json({ user, token });
+    res.status(201).json({ user });
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ message: "Server error" });
@@ -52,16 +49,17 @@ authRouter.post("/register", async (req, res) => {
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const result = await query("SELECT * FROM users WHERE email = $1", [email]);
-    if (result.rows.length === 0) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
 
-    const user = result.rows[0];
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+
+    if (!user) {
+      console.log("user");
+      return res.status(401).json({ message: "User does not exist" });
+    }
 
     const ok = await comparePassword(password, user.password_hash);
     if (!ok) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "Invalid Password" });
     }
 
     // don’t send hash to client

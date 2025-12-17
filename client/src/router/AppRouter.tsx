@@ -8,16 +8,16 @@ import { ListingsPage } from "../pages/ListingsPage";
 import { ListingDetailPage } from "../pages/ListingDetailPage";
 import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
-import { ProtectedRoute  } from "../context/ProtectedRoute"
+import { ProtectedRoute } from "../context/ProtectedRoute";
 
 export const AppRouter: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
 
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-      <Route element={<ProtectedRoute/>}>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
         <Route path="/listings" element={<ListingsPage />} />
         <Route path="/listings/:id" element={<ListingDetailPage />} />
