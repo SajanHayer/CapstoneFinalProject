@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../components/common/Button";
+// import { Button } from "../components/common/Button";
+import { Button } from "@/components/ui/button"
 
 export const LandingPage: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ export const LandingPage: React.FC = () => {
         <div className="landing-actions">
           <Button>Join as a Buyer</Button>
           <Link to="/register">
-            <Button variant="outline">Join as a Seller</Button>
+            <Button variant="secondary">Join as a Seller</Button>
           </Link>
         </div>
       </div>
