@@ -19,7 +19,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 vehicleRouter.post(
   "/create",
-  requireAuth,
   upload.array("images", 15),
   async (req, res) => {
     // Get Request body parameters

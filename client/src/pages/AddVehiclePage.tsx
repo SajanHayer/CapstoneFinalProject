@@ -60,14 +60,13 @@ export const AddVehiclePage: React.FC = () => {
       body: formData,
     });
     const result = await res.json();
-    // if (!res.ok || result.error) {
-    //   // res.ok is false if status >= 400
-    //   alert(result.message || "Error uploading vehicle");
-    // } else {
-    //   alert("Vehicle added successfully!");
-    // }
-    // Reset the form (if using react-hook-form)
-    navigate("/listings");
+    if (!res.ok || result.error) {
+      // res.ok is false if status >= 400
+      alert(result.message || "Error uploading vehicle");
+    } else {
+      alert("Vehicle added successfully!");
+      navigate("/listings");
+    }
   };
 
   return (

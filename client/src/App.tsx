@@ -8,7 +8,7 @@ const App: React.FC = () => {
   return (
     <div className="app-root">
       <Navbar />
-      <main className="app-main">
+      <main className="app-main pt-24">
         <AppRouter />
       </main>
       <Footer />
