@@ -6,9 +6,9 @@ type InfoItemProps = {
 
 export const InfoItem = ({ title, value, subValue }: InfoItemProps) => {
   return (
-    <div>
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="font-semibold">{value}</p>
+    <div className="flex flex-col">
+      <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-3">{title}</p>
+      <p className="font-black text-xl text-gray-900 leading-tight">{value}</p>
       {subValue && (
         <p className="text-sm text-blue-600">{subValue}</p>
       )}
