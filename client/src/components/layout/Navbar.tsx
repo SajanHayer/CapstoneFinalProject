@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
             </NavLink>
           </>
         ) : (
-          <text>Not Logged In </text>
+          <div>Not Logged In </div>
         )}
       </nav>
 
