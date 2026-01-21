@@ -97,9 +97,6 @@ export const ListingDetailPage: React.FC = () => {
                 <span className="bg-white/20 px-3 py-1 rounded text-sm font-mono text-neutral-100">VIN: TBD</span>
               </div>
             </div>
-            <button className="bg-white text-neutral-900 px-6 py-2 rounded-lg font-bold hover:bg-neutral-100 transition-colors">
-              Gallery
-            </button>
           </div>
         </Card>
 
