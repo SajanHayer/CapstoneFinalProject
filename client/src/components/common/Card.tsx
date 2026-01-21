@@ -9,10 +9,7 @@ type CardProps = {
 export const Card = ({ children, className }: CardProps) => {
   return (
     <div
-      className={clsx(
-        "rounded-lg border bg-white p-4 shadow-sm",
-        className
-      )}
+      className={clsx("rounded-lg border bg-white p-4 shadow-sm", className)}
     >
       {children}
     </div>

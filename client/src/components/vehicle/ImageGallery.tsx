@@ -6,13 +6,18 @@ type ImageGalleryProps = {
   title?: string;
 };
 
-export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, title = "Gallery" }) => {
+export const ImageGallery: React.FC<ImageGalleryProps> = ({
+  images,
+  title = "Gallery",
+}) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (!images || images.length === 0) {
     return (
       <Card className="bg-white">
-        <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-3">{title}</p>
+        <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-3">
+          {title}
+        </p>
         <p className="text-neutral-500">No images available</p>
       </Card>
     );
@@ -21,8 +26,16 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, title = "Gal
   return (
     <>
       <Card className="bg-white">
-        <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-4">{title}</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "12px" }}>
+        <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-4">
+          {title}
+        </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            gap: "12px",
+          }}
+        >
           {images.map((url, index) => (
             <div
               key={index}
@@ -35,11 +48,14 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, title = "Gal
                 transition: "transform 0.2s, box-shadow 0.2s",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "scale(1.05)";
-                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+                (e.currentTarget as HTMLDivElement).style.transform =
+                  "scale(1.05)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow =
+                  "0 4px 12px rgba(0,0,0,0.15)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.transform = "scale(1)";
+                (e.currentTarget as HTMLDivElement).style.transform =
+                  "scale(1)";
                 (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
               }}
             >

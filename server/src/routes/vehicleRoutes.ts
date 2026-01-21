@@ -17,85 +17,81 @@ const SUPABASE_BUCKET = "powerbidz-images";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-vehicleRouter.post(
-  "/create",
-  upload.array("images", 15),
-  async (req, res) => {
-    // Get Request body parameters
-    try {
+vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
+  // Get Request body parameters
+  try {
+    const {
+      user_id,
+      make,
+      model,
+      year,
+      price,
+      mileage_hours,
+      condition,
+      status,
+      description,
+    } = req.body;
+
+    const files = req.files as Express.Multer.File[];
+
+    if (!user_id || !make || !model || !Number(year) || !price) {
+      return res.status(400).json({
+        message: "user_id, make, model, year, and price are required",
+      });
+    }
+
+    // Compression for images if needed
+    // try {
+    //   const compressedFile = await imageCompression(file, {
+    //     maxSizeMB: 1
+    //   });
+    // } catch (error) {
+    //   console.error(error);
+    //   return { imageUrl: "", error: "Image compression failed" };
+    // }
+
+    // Upload images to Supabase Storage
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const { data, error } = await supabase.storage
+        .from(SUPABASE_BUCKET)
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) throw error;
+
       const {
-        user_id,
+        data: { publicUrl },
+      } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(fileName);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    // Insert into DB
+    const [newVehicle] = await db
+      .insert(vehicles)
+      .values({
+        user_id: Number(user_id),
         make,
         model,
-        year,
+        year: Number(year),
         price,
-        mileage_hours,
+        mileage_hours: Number(mileage_hours),
         condition,
         status,
         description,
-      } = req.body;
+        image_url: uploadedUrls,
+      })
+      .returning();
 
-      const files = req.files as Express.Multer.File[];
-
-      if (!user_id || !make || !model || !Number(year) || !price) {
-        return res.status(400).json({
-          message: "user_id, make, model, year, and price are required",
-        });
-      }
-
-      // Compression for images if needed
-      // try {
-      //   const compressedFile = await imageCompression(file, {
-      //     maxSizeMB: 1
-      //   });
-      // } catch (error) {
-      //   console.error(error);
-      //   return { imageUrl: "", error: "Image compression failed" };
-      // }
-
-      // Upload images to Supabase Storage
-      const uploadedUrls: string[] = [];
-      for (const file of files) {
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const { data, error } = await supabase.storage
-          .from(SUPABASE_BUCKET)
-          .upload(fileName, file.buffer, {
-            contentType: file.mimetype,
-          });
-
-        if (error) throw error;
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(fileName);
-
-        uploadedUrls.push(publicUrl);
-      }
-
-      // Insert into DB
-      const [newVehicle] = await db
-        .insert(vehicles)
-        .values({
-          user_id: Number(user_id),
-          make,
-          model,
-          year: Number(year),
-          price,
-          mileage_hours: Number(mileage_hours),
-          condition,
-          status,
-          description,
-          image_url: uploadedUrls,
-        })
-        .returning();
-
-      res.status(201).json({ vehicle: newVehicle });
-    } catch (err) {
-      console.error("Create vehicle error:", err);
-      res.status(500).json({ message: "Server error" });
-    }
-  },
-);
+    res.status(201).json({ vehicle: newVehicle });
+  } catch (err) {
+    console.error("Create vehicle error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 /* ----------------------------------------------
    GET /api/vehicles  → Get all vehicles
