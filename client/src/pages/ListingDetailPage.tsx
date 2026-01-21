@@ -2,6 +2,7 @@ import React, {useState, useEffect} from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card } from "../components/common/Card";
 import { VehicleHighlights } from "../components/vehicle/VehicleHighlight";
+import { ImageGallery } from "../components/vehicle/ImageGallery";
 
 type VechileInfo = {
   user_id: number;
@@ -13,7 +14,7 @@ type VechileInfo = {
   condition: "new" | "used";
   status: "available" | "pending" | "sold";
   description: string | "";
-  image_url: File[]; // array of image URLs or path to image or img
+  image_url: string[] | File[]; // array of image URLs or path to image or img
 };
 
 
@@ -85,15 +86,6 @@ export const ListingDetailPage: React.FC = () => {
           ← Back to listings
         </Link>
 
-        {/* Title */}
-        {/* <div className="mb-8">
-          <h1 className="text-4xl font-black text-neutral-900 mb-2">
-            {vehicle.year} {vehicle.make} {vehicle.model}
-          </h1>
-          <p className="text-neutral-600">Listing #{id}</p>
-        </div> */}
-
-        {/* Title Card */}
         <Card className="bg-gradient-to-r from-neutral-800 to-neutral-900 text-white p-8">
           <div className="flex items-center justify-between">
             <div>
@@ -110,6 +102,16 @@ export const ListingDetailPage: React.FC = () => {
             </button>
           </div>
         </Card>
+
+        {/* Image Gallery */}
+        {vehicle.image_url && Array.isArray(vehicle.image_url) && vehicle.image_url.length > 0 && (
+          <ImageGallery 
+            images={vehicle.image_url.map(img => 
+              typeof img === 'string' ? img : URL.createObjectURL(img)
+            )} 
+            title="Gallery"
+          />
+        )}
 
         {/* Vehicle Basics Card */}
         <VehicleHighlights items={vehicleBasics} />

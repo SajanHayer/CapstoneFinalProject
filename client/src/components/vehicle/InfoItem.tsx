@@ -7,10 +7,18 @@ type InfoItemProps = {
 export const InfoItem = ({ title, value, subValue }: InfoItemProps) => {
   return (
     <div className="flex flex-col">
-      <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-3">{title}</p>
-      <p className="font-black text-xl text-gray-900 leading-tight">{value}</p>
+      <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#4b5563" }}>
+        {title}
+      </p>
+      <div className="px-4 py-3 rounded-lg border-2" style={{ backgroundColor: "#f3f4f6", borderColor: "#d1d5db" }}>
+        <p className="font-black text-3xl lg:text-4xl" style={{ color: "#111827" }}>
+          {value}
+        </p>
+      </div>
       {subValue && (
-        <p className="text-sm text-blue-600">{subValue}</p>
+        <p className="text-sm mt-2" style={{ color: "#dc2626" }}>
+          {subValue}
+        </p>
       )}
     </div>
   );
