@@ -6,6 +6,9 @@ import { authRouter } from "./routes/authRoutes";
 import { vehicleRouter } from "./routes/vehicleRoutes";
 import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
+import { Server } from "socket.io";
+import http from "http";
+import { registerAuctionSockets } from "./sockets/auction.socket.ts";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -34,7 +37,31 @@ app.get("/api/data", (req, res) => {
   });
 });
 
+const httpServer = http.createServer(app);
+
+export const io = new Server(httpServer,{
+  cors:{
+    origin: "http://localhost:5173",
+    credentials: true,
+  },
+})
+
+// io.on("connection", (socket) => {
+//   console.log("🔌 Socket connected:", socket.id);
+
+//   socket.on("disconnect", () => {
+//     console.log("❌ Socket disconnected:", socket.id);
+//   });
+// });
+
+registerAuctionSockets();
 // Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+// app.listen(PORT, () => {
+//   console.log(`✅ Server running on http://localhost:${PORT}`);
+// });
+
+httpServer.listen(PORT, () => {
+  console.log(`✅ Server and Socket running on http://localhost:${PORT}`);
 });
+
+
