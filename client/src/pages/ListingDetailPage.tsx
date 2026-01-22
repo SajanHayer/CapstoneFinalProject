@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Card } from "../components/common/Card";
 import { VehicleHighlights } from "../components/vehicle/VehicleHighlight";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
+import { socket } from "../lib/socket";
 
 type VechileInfo = {
   user_id: number;
@@ -38,6 +39,16 @@ export const ListingDetailPage: React.FC = () => {
       }
     };
     fetchVehicle();
+  }, [id]); // when id changes, refetch vehicle
+
+  useEffect(() => {
+    if (!id) return;
+    // join room
+    socket.emit("join_auction", id);
+    return () => {
+      socket.emit("leave_auction", id);
+    };
+
   }, [id]);
 
   if (loading) {
