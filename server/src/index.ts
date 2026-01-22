@@ -39,12 +39,12 @@ app.get("/api/data", (req, res) => {
 
 const httpServer = http.createServer(app);
 
-export const io = new Server(httpServer,{
-  cors:{
+export const io = new Server(httpServer, {
+  cors: {
     origin: "http://localhost:5173",
     credentials: true,
   },
-})
+});
 
 // io.on("connection", (socket) => {
 //   console.log("🔌 Socket connected:", socket.id);
@@ -63,5 +63,3 @@ registerAuctionSockets();
 httpServer.listen(PORT, () => {
   console.log(`✅ Server and Socket running on http://localhost:${PORT}`);
 });
-
-
