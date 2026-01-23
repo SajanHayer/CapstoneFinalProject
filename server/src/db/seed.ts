@@ -1,9 +1,12 @@
 // server/src/db/seed.ts
 import { db } from "./db";
-import { users, vehicles } from "./schema";
+import { users, vehicles, listings } from "./schema";
 import { hashPassword } from "../utils/auth";
 
 async function seed() {
+  const secondsFromNow = (seconds: number) =>
+    new Date(Date.now() + seconds * 1000);
+
   try {
     console.log("Seeding database...");
 
@@ -160,6 +163,115 @@ async function seed() {
 
     console.log("Inserted vehicles:", insertedVehicles);
 
+    const [v1, v2, v3, v4, v5, v6, v7] = insertedVehicles;
+    // ---------------- Listings ----------------
+    const now = new Date();
+
+    const insertedListings = await db
+      .insert(listings)
+      .values([
+        {
+          vehicle_id: v1.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "5000.00",
+          reserve_price: "7000.00",
+          buy_now_price: "8200.00",
+          current_price: "5000.00",
+          start_time: now,
+          end_time: secondsFromNow(30), // 30s
+          status: "active" as const,
+          views_count: 12,
+          location: "Calgary, AB",
+        },
+        {
+          vehicle_id: v2.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "7000.00",
+          reserve_price: "9000.00",
+          buy_now_price: "9800.00",
+          current_price: "7400.00",
+          start_time: now,
+          end_time: secondsFromNow(60), // 1m
+          status: "active" as const,
+          views_count: 21,
+          location: "Edmonton, AB",
+        },
+        {
+          vehicle_id: v3.id,
+          seller_id: user3.id,
+          type: "fixed" as const,
+          start_price: "6500.00",
+          reserve_price: "6500.00",
+          buy_now_price: "6999.00",
+          current_price: "6500.00",
+          start_time: now,
+          end_time: secondsFromNow(300), // 5m
+          status: "active" as const,
+          views_count: 9,
+          location: "Red Deer, AB",
+        },
+        {
+          vehicle_id: v4.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "15000.00",
+          reserve_price: "18000.00",
+          buy_now_price: "19500.00",
+          current_price: "16200.00",
+          start_time: now,
+          end_time: secondsFromNow(600), // 10m
+          status: "active" as const,
+          views_count: 33,
+          location: "Vancouver, BC",
+        },
+        {
+          vehicle_id: v5.id,
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "6000.00",
+          reserve_price: "8000.00",
+          buy_now_price: "8800.00",
+          current_price: "6750.00",
+          start_time: now,
+          end_time: secondsFromNow(90), // 1.5m
+          status: "active" as const,
+          views_count: 41,
+          location: "Toronto, ON",
+        },
+        {
+          vehicle_id: v6.id,
+          seller_id: user2.id,
+          type: "fixed" as const,
+          start_price: "20000.00",
+          reserve_price: "20000.00",
+          buy_now_price: "21999.00",
+          current_price: "20000.00",
+          start_time: now,
+          end_time: secondsFromNow(120), // 2m
+          status: "active" as const,
+          views_count: 18,
+          location: "Kelowna, BC",
+        },
+        {
+          vehicle_id: v7.id,
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "10000.00",
+          reserve_price: "12000.00",
+          buy_now_price: "13500.00",
+          current_price: "10800.00",
+          start_time: now,
+          end_time: secondsFromNow(45), // 45s
+          status: "active" as const,
+          views_count: 27,
+          location: "Banff, AB",
+        },
+      ])
+      .returning({ id: listings.id });
+
+    console.log("Inserted listings:", insertedListings);
     console.log("Database seeded successfully!");
   } catch (err) {
     console.error("Error seeding database:", err);
