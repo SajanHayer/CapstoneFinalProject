@@ -28,19 +28,23 @@ interface BidCardProps {
   buyNowPrice?: number;
 }
 
-export const BidCard: React.FC<BidCardProps> = ({ 
-  auctionId, 
-  minimumPrice, 
+export const BidCard: React.FC<BidCardProps> = ({
+  auctionId,
+  minimumPrice,
   currentPrice = 0,
   reservePrice = 0,
-  buyNowPrice = 0
+  buyNowPrice = 0,
 }) => {
   const [bidAmount, setBidAmount] = useState<number>(0);
-  const [currentHighestBid, setCurrentHighestBid] = useState<number>(currentPrice || minimumPrice);
+  const [currentHighestBid, setCurrentHighestBid] = useState<number>(
+    currentPrice || minimumPrice,
+  );
   const [listing, setListing] = useState<BiddingInfo | null>(null);
   const [buyNowPriceValue, setBuyNowPriceValue] = useState<number>(buyNowPrice);
-  const [reservePriceValue, setReservePriceValue] = useState<number>(reservePrice);
-  const [currentPriceValue, setCurrentPriceValue] = useState<number>(currentPrice);
+  const [reservePriceValue, setReservePriceValue] =
+    useState<number>(reservePrice);
+  const [currentPriceValue, setCurrentPriceValue] =
+    useState<number>(currentPrice);
   const [status, setStatus] = useState<string>("");
   const [location, setLocation] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
@@ -53,7 +57,7 @@ export const BidCard: React.FC<BidCardProps> = ({
     const fetchListingDetails = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/listings/${auctionId}`
+          `http://localhost:8080/api/listings/${auctionId}`,
         );
         const data = await res.json();
         setListing(data.listing);
@@ -104,7 +108,7 @@ export const BidCard: React.FC<BidCardProps> = ({
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     };
 
@@ -128,14 +132,14 @@ export const BidCard: React.FC<BidCardProps> = ({
     <Card className="bg-white sticky top-24 p-6">
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-neutral-800">Place Your Bid</h2>
-        
+
         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
           <p className="text-xs text-red-600 mb-1">Time Remaining</p>
           <p className="text-2xl font-mono font-bold text-red-700">
             {timeRemaining}
           </p>
         </div>
-        
+
         <div className="space-y-2 pb-4 border-b border-neutral-200">
           <div className="flex justify-between">
             <p className="text-xs text-neutral-600">Current Price</p>

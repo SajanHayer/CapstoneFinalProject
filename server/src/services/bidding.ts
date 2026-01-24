@@ -30,7 +30,6 @@ export async function placeBid({
       listing_id: listingId,
       bidder_id: bidderId,
       bid_amount: bidAmount,
-      
     });
 
     const [updatedListing] = await tx
