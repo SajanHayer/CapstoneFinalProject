@@ -6,10 +6,11 @@ import { authRouter } from "./routes/authRoutes";
 import { vehicleRouter } from "./routes/vehicleRoutes";
 import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
+import { auctionRouter } from "./routes/auctionRoutes.ts";
+
 import { Server } from "socket.io";
 import http from "http";
 import { registerAuctionSockets } from "./sockets/auction.socket.ts";
-
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -28,6 +29,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
+app.use("/api/listings", auctionRouter);
 
 // Sample API endpoint
 app.get("/api/data", (req, res) => {

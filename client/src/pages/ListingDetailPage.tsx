@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Card } from "../components/common/Card";
 import { VehicleHighlights } from "../components/vehicle/VehicleHighlight";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
+import { BidCard } from "../components/auction/BidCard";
 import { socket } from "../lib/socket";
 
 type VechileInfo = {
@@ -23,7 +24,6 @@ export const ListingDetailPage: React.FC = () => {
   const [vehicle, setVehicle] = useState<VechileInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bidAmount, setBidAmount] = useState<number>(0);
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -31,7 +31,6 @@ export const ListingDetailPage: React.FC = () => {
         const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
         const data = await res.json();
         setVehicle(data.vehicle);
-        console.log(data.vehicle);
       } catch (err) {
         setError("Failed to load vehicle details");
         console.error(err);
@@ -50,18 +49,6 @@ export const ListingDetailPage: React.FC = () => {
       socket.emit("leave_auction", id);
     };
   }, [id]);
-
-  useEffect(() => {
-    const handleBidUpdate = (data: { amount: number }) => {
-      setBidAmount(data.amount);
-    };
-
-    socket.on("bid_update", handleBidUpdate);
-
-    return () => {
-      socket.off("bid_update", handleBidUpdate);
-    };
-  }, []);
 
   if (loading) {
     return (
@@ -118,14 +105,6 @@ export const ListingDetailPage: React.FC = () => {
     },
   ];
 
-  const handlePlaceBid = () => {
-    if (!bidAmount) return;
-
-    socket.emit("place_bid", {
-      auctionId: id,
-      amount: bidAmount,
-    });
-  };
   return (
     <section className="min-h-screen pt-20 pb-12 px-4 bg-neutral-50">
       <div className="max-w-7xl mx-auto">
@@ -192,31 +171,7 @@ export const ListingDetailPage: React.FC = () => {
 
           {/* Bidding Section - Right Side */}
           <div className="w-80">
-            <Card className="bg-white sticky top-24 p-6">
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-neutral-800">
-                  Place Your Bid
-                </h2>
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-600 mb-2">
-                    Bid amount
-                  </label>
-                  <input
-                    type="number"
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(Number(e.target.value))}
-                    placeholder={`Minimum $${Number(vehicle.price) || 0}`}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <button
-                  onClick={handlePlaceBid}
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Place a bid
-                </button>
-              </div>
-            </Card>
+            <BidCard auctionId={id} minimumPrice={Number(vehicle.price) || 0} />
           </div>
         </div>
       </div>
