@@ -46,6 +46,7 @@ export const BidCard: React.FC<BidCardProps> = ({
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [viewsCount, setViewsCount] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -85,6 +86,34 @@ export const BidCard: React.FC<BidCardProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!endTime) return;
+
+    const calculateTimeRemaining = () => {
+      const now = new Date();
+      const end = new Date(endTime);
+      const diff = end.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeRemaining("00:00:00");
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeRemaining(
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+      );
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [endTime]);
+
   const handlePlaceBid = () => {
     if (!bidAmount) return;
 
@@ -99,6 +128,13 @@ export const BidCard: React.FC<BidCardProps> = ({
     <Card className="bg-white sticky top-24 p-6">
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-neutral-800">Place Your Bid</h2>
+        
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-xs text-red-600 mb-1">Time Remaining</p>
+          <p className="text-2xl font-mono font-bold text-red-700">
+            {timeRemaining}
+          </p>
+        </div>
         
         <div className="space-y-2 pb-4 border-b border-neutral-200">
           <div className="flex justify-between">

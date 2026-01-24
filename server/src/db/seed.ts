@@ -207,7 +207,7 @@ async function seed() {
           buy_now_price: "6999.00",
           current_price: "6999.00",
           start_time: now,
-          end_time: secondsFromNow(300), // 5m
+          end_time: secondsFromNow(120), // 2m
           status: "active" as const,
           views_count: 9,
           location: "Red Deer, AB",
@@ -221,7 +221,7 @@ async function seed() {
           buy_now_price: "22500.00",
           current_price: "18999.00",
           start_time: now,
-          end_time: secondsFromNow(600), // 10m
+          end_time: secondsFromNow(300), // 5m
           status: "active" as const,
           views_count: 33,
           location: "Vancouver, BC",
@@ -235,7 +235,7 @@ async function seed() {
           buy_now_price: "10200.00",
           current_price: "8499.00",
           start_time: now,
-          end_time: secondsFromNow(90), // 1.5m
+          end_time: secondsFromNow(600), // 10m
           status: "active" as const,
           views_count: 41,
           location: "Toronto, ON",
@@ -249,7 +249,7 @@ async function seed() {
           buy_now_price: "21999.00",
           current_price: "21999.00",
           start_time: now,
-          end_time: secondsFromNow(120), // 2m
+          end_time: secondsFromNow(900), // 15m
           status: "active" as const,
           views_count: 18,
           location: "Kelowna, BC",
@@ -263,7 +263,7 @@ async function seed() {
           buy_now_price: "15500.00",
           current_price: "12999.00",
           start_time: now,
-          end_time: secondsFromNow(45), // 45s
+          end_time: secondsFromNow(1200), // 20m
           status: "active" as const,
           views_count: 27,
           location: "Banff, AB",

@@ -11,7 +11,6 @@ export const auctionRouter = Router();
 auctionRouter.get("/:id", async(req, res)=>{
     try{
         const id = Number(req.params.id);
-        console.log(id)
         const [listing] = await db
         .select()
         .from(listings)
