@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
+const LOCALURL = import.meta.env.FETCHURL;
 interface User {
   email: string;
   role: string;
