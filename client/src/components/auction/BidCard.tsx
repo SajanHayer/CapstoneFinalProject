@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "../common/Card";
 import { socket } from "../../lib/socket";
-
+import { useAuth } from "../../context/AuthContext";
 
 type BiddingInfo = {
   id: number;
@@ -46,7 +46,7 @@ export const BidCard: React.FC<BidCardProps> = ({
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [viewsCount, setViewsCount] = useState<number>(0);
-
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchListingDetails = async () => {
@@ -65,7 +65,6 @@ export const BidCard: React.FC<BidCardProps> = ({
         setStartTime(data.listing.start_time);
         setEndTime(data.listing.end_time);
         setViewsCount(data.listing.views_count);
-        console.log(data.listing);
       } catch (err) {
         console.error(err);
       }
@@ -76,6 +75,7 @@ export const BidCard: React.FC<BidCardProps> = ({
   useEffect(() => {
     const handleBidUpdate = (data: { amount: number }) => {
       setCurrentHighestBid(data.amount);
+      setCurrentPriceValue(data.amount);
     };
 
     socket.on("bid_update", handleBidUpdate);
@@ -91,6 +91,7 @@ export const BidCard: React.FC<BidCardProps> = ({
     socket.emit("place_bid", {
       auctionId: auctionId,
       amount: bidAmount,
+      userId: user?.id,
     });
   };
 
