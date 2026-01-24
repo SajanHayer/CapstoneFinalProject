@@ -44,7 +44,7 @@ export const RegisterPage: React.FC = () => {
       });
 
       const data = await response.json();
-      console.log("Registration response:", data);
+      // console.log("Registration response:", data);
       if (!response.ok) {
         setError(data.message || "Registration failed");
         return;
