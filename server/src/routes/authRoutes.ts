@@ -22,8 +22,8 @@ authRouter.post("/register", async (req, res) => {
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, email));
-
-    if (existing) {
+    
+    if (existing.length > 0) {
       return res.status(409).json({ message: "User already Exists" });
     }
     const password_hash = await hashPassword(password);
