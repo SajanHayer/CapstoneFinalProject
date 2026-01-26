@@ -17,33 +17,71 @@ export interface Listing {
   bids: number;
 }
 
+const DEMO: Listing[] = [
+  {
+    id: "demo-1",
+    title: "2021 Toyota Tacoma TRD Sport",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1619767886558-efdc259cde1c?auto=format&fit=crop&w=1400&q=80",
+    currentPrice: 28500,
+    location: "Calgary, AB",
+    mileage: 68000,
+    year: 2021,
+    status: "ACTIVE",
+    endsAt: new Date().toISOString(),
+    bids: 12,
+  },
+  {
+    id: "demo-2",
+    title: "2019 BMW 330i xDrive",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=1400&q=80",
+    currentPrice: 21900,
+    location: "Edmonton, AB",
+    mileage: 91000,
+    year: 2019,
+    status: "UPCOMING",
+    endsAt: new Date().toISOString(),
+    bids: 0,
+  },
+  {
+    id: "demo-3",
+    title: "2017 Honda Civic Touring",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=1400&q=80",
+    currentPrice: 14900,
+    location: "Vancouver, BC",
+    mileage: 122000,
+    year: 2017,
+    status: "EXPIRED",
+    endsAt: new Date().toISOString(),
+    bids: 31,
+  },
+];
+
 export const ListingsPage: React.FC = () => {
   const [status, setStatus] = useState<ListingStatus>("ACTIVE");
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
-  // Fetch listings from backend
   useEffect(() => {
     const fetchListings = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setDemoMode(false);
 
         const res = await fetch("http://localhost:8080/api/vehicles", {
           credentials: "include",
         });
 
-        if (!res.ok) throw new Error("Failed to fetch listings");
+        if (!res.ok) throw new Error("Failed");
 
         const data = await res.json();
-        // Map backend data to Listing type
-        const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
+        const mapped: Listing[] = data.vehicles.map((v: any) => ({
           id: v.id.toString(),
           title: `${v.year} ${v.make} ${v.model}`,
-          thumbnailUrl: Array.isArray(v.image_url)
-            ? v.image_url[0]
-            : v.image_url,
+          thumbnailUrl: Array.isArray(v.image_url) ? v.image_url[0] : v.image_url,
           currentPrice: Number(v.price),
           location: v.location || "Unknown",
           mileage: Number(v.mileage_hours ?? 0),
@@ -52,15 +90,17 @@ export const ListingsPage: React.FC = () => {
             v.status === "available"
               ? "ACTIVE"
               : v.status === "pending"
-                ? "UPCOMING"
-                : "EXPIRED",
+              ? "UPCOMING"
+              : "EXPIRED",
           endsAt: v.end_time ?? new Date().toISOString(),
           bids: v.bids_count ?? 0,
         }));
 
-        setListings(mappedListings);
-      } catch (err: any) {
-        setError(err.message);
+        setListings(mapped);
+      } catch {
+        // UI-only fallback so frontend work doesn't look “broken”
+        setDemoMode(true);
+        setListings(DEMO);
       } finally {
         setLoading(false);
       }
@@ -69,13 +109,20 @@ export const ListingsPage: React.FC = () => {
     fetchListings();
   }, []);
 
-  // Filter listings based on selected tab
-  const visibleListings = listings.filter((l) => l.status === status);
+  const visible = listings.filter((l) => l.status === status);
 
   return (
     <section className="listings-page">
       <header className="listings-header">
-        <h1>Marketplace</h1>
+        <div>
+          <h1>Marketplace</h1>
+          {demoMode && (
+            <p className="text-sm text-white/60 mt-1">
+              Demo mode: backend unavailable — showing sample listings.
+            </p>
+          )}
+        </div>
+
         <div className="pill-toggle">
           {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map((s) => (
             <button
@@ -92,14 +139,30 @@ export const ListingsPage: React.FC = () => {
       <ListingFilters />
 
       <div className="listings-grid">
-        {loading && <p>Loading listings...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && visibleListings.length === 0 && (
-          <p>No listings in this category yet.</p>
+        {loading && (
+          <>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="listing-card animate-pulse"
+                style={{ minHeight: 290 }}
+              />
+            ))}
+          </>
         )}
-        {!loading &&
-          !error &&
-          visibleListings.map((l) => <ListingCard key={l.id} listing={l} />)}
+
+        {!loading && visible.length === 0 && (
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-left">
+            <p className="text-lg font-extrabold text-white/90">
+              No listings in this category yet.
+            </p>
+            <p className="mt-2 text-sm text-white/65">
+              Try a different tab or come back later.
+            </p>
+          </div>
+        )}
+
+        {!loading && visible.map((l) => <ListingCard key={l.id} listing={l} />)}
       </div>
     </section>
   );
