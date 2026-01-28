@@ -128,3 +128,28 @@ vehicleRouter.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+/* ----------------------------------------------
+   GET /api/vehicles/user:id  → Get all vehicles by user ID
+------------------------------------------------ */
+vehicleRouter.get("/user/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const userVehicles = await db
+      .select()
+      .from(vehicles)
+      .where(eq(vehicles.user_id, id));
+
+    if (userVehicles.length === 0) {
+      return res.status(404).json({ message: "User has no vehicles" });
+    }
+    res.json({ userVehicles });
+  } catch (err) {
+    console.error("Get vehicle error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});

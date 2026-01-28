@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 
-interface ListedVehicle {
+interface GarageVehicle {
   id: number;
   make: string;
   model: string;
@@ -13,50 +13,81 @@ interface ListedVehicle {
   status: string;
 }
 
+interface ListedVehicle {
+  id: number;
+  vehicle_id: number;
+  start_price: number;
+  reserve_price: number;
+  buy_now_price?: number;
+  current_price: number;
+  start_time: string;
+  end_time: string;
+  status: string;
+  location: string;
+}
+
 type TabType = "garage" | "listings";
 
-// Call Vehicle listing to get info and display it here 
+// Call Vehicle listing to get info and display it here
 
 export const AccountPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("garage");
-
+  const [error, setError] = useState<string | null>(null);
   // Placeholder data for user's garage (owned vehicles)
-  const [garageVehicles] = useState<ListedVehicle[]>([
-    {
-      id: 1,
-      make: "Honda",
-      model: "Motorcycle",
-      year: 2020,
-      price: 5000,
-      condition: "used",
-      status: "available",
-    },
-    {
-      id: 2,
-      make: "Harley-Davidson",
-      model: "Street Glide",
-      year: 2019,
-      price: 12000,
-      condition: "used",
-      status: "available",
-    },
-  ]);
+  const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
 
   // Placeholder data for user's listed vehicles for auction
-  const [listedVehicles] = useState<ListedVehicle[]>([
-    {
-      id: 3,
-      make: "Honda",
-      model: "Motorcycle",
-      year: 2020,
-      price: 5000,
-      condition: "used",
-      status: "available",
-    },
-  ]);
+  const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
 
+  // Parameterized fetch function for reusability
+  const fetchData = async (endpoint: string, type: "garage" | "listing") => {
+    try {
+      const res = await fetch(endpoint);
+      const data = await res.json();
+
+      if (type === "garage") {
+        const vehicles: GarageVehicle[] = data.userVehicles.map((v: any) => ({
+          id: v.id,
+          make: v.make,
+          model: v.model,
+          year: v.year,
+          price: Number(v.price),
+          condition: v.condition,
+          status: v.status,
+        }));
+        setGarageVehicles(vehicles);
+      } else if (type === "listing") {
+        const listings: ListedVehicle[] = data.userListings.map((l: any) => ({
+          id: l.id,
+          vehicle: Number(l.vehicle_id),
+          start_price: Number(l.start_price),
+          reserve_price: Number(l.reserve_price),
+          buy_now_price: l.buy_now_price ? Number(l.buy_now_price) : undefined,
+          current_price: Number(l.current_price),
+          start_time: l.start_time,
+          end_time: l.end_time,
+          status: l.status,
+          location: l.location,
+        }));
+        setListedVehicles(listings);
+      }
+    } catch (err) {
+      setError(
+        `Failed to load ${type === "garage" ? "vehicle" : "listing"} details`,
+      );
+      console.error(err);
+    }
+  };
+
+  // Fetch garage vehicles and listings on mount
+  useEffect(() => {
+    if (!user?.id) return;
+
+    fetchData(`http://localhost:8080/api/vehicles/user/${user.id}`, "garage");
+    fetchData(`http://localhost:8080/api/listings/user/${user.id}`, "listing");
+  }, [user?.id]);
   return (
     <section className="account-page">
       <div className="account-container">
@@ -76,7 +107,9 @@ export const AccountPage: React.FC = () => {
             <h3>Contact Information</h3>
             <div className="detail-item">
               <span className="detail-label">Email:</span>
-              <span className="detail-value">{user?.email || "user@example.com"}</span>
+              <span className="detail-value">
+                {user?.email || "user@example.com"}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Member Since:</span>
@@ -132,24 +165,77 @@ export const AccountPage: React.FC = () => {
             {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
             0 ? (
               (activeTab === "garage" ? garageVehicles : listedVehicles).map(
-                (vehicle) => (
-                  <div key={vehicle.id} className="vehicle-item">
+                (item) => (
+                  <div
+                    key={item.id}
+                    className="vehicle-item"
+                    onClick={() => {
+                      if (activeTab === "listings") {
+                        navigate(`/listings/${item.id}`);
+                      }
+                    }}
+                    style={{
+                      cursor: activeTab === "listings" ? "pointer" : "default",
+                    }}
+                  >
                     <div className="vehicle-info">
-                      <h3>
-                        {vehicle.year} {vehicle.make} {vehicle.model}
-                      </h3>
-                      <div className="vehicle-details">
-                        <span className="price">
-                          ${vehicle.price.toLocaleString()}
-                        </span>
-                        <span className="condition">{vehicle.condition}</span>
-                        <span className={`status ${vehicle.status}`}>
-                          {vehicle.status}
-                        </span>
-                      </div>
+                      {activeTab === "garage" ? (
+                        <>
+                          <h3>
+                            {(item as GarageVehicle).year}{" "}
+                            {(item as GarageVehicle).make}{" "}
+                            {(item as GarageVehicle).model}
+                          </h3>
+                          <div className="vehicle-details">
+                            <span className="price">
+                              ${(item as GarageVehicle).price.toLocaleString()}
+                            </span>
+                            <span className="condition">
+                              {(item as GarageVehicle).condition}
+                            </span>
+                            <span
+                              className={`status ${(item as GarageVehicle).status}`}
+                            >
+                              {(item as GarageVehicle).status}
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h3>
+                            Auction #{(item as ListedVehicle).id} -{" "}
+                            {(item as ListedVehicle).location}
+                          </h3>
+                          <div className="vehicle-details">
+                            <span className="price">
+                              $
+                              {(
+                                item as ListedVehicle
+                              ).current_price.toLocaleString()}
+                            </span>
+                            <span className="detail-text">
+                              Start: $
+                              {(
+                                item as ListedVehicle
+                              ).start_price.toLocaleString()}
+                            </span>
+                            <span className="detail-text">
+                              Reserve: $
+                              {(
+                                item as ListedVehicle
+                              ).reserve_price.toLocaleString()}
+                            </span>
+                            <span
+                              className={`status ${(item as ListedVehicle).status}`}
+                            >
+                              {(item as ListedVehicle).status}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                )
+                ),
               )
             ) : (
               <div className="no-vehicles">
