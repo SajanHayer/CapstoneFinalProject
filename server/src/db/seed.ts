@@ -30,7 +30,7 @@ async function seed() {
           name: "Charlie",
           email: "charlie@example.com",
           password_hash: await hashPassword("charlie123"),
-          role: "admin",
+          role: "seller",
         },
       ])
       .returning({ id: users.id });

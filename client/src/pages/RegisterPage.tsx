@@ -39,7 +39,7 @@ export const RegisterPage: React.FC = () => {
           email: form.email,
           password: form.password,
           name: `${form.firstName} ${form.lastName}`,
-          role: "buyer", // default role
+          role: "seller", // default role
         }),
       });
 

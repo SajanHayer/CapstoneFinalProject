@@ -29,14 +29,11 @@ export const Navbar: React.FC = () => {
             <NavLink to="/listings" className="nav-link">
               Browse
             </NavLink>
-            <NavLink to="/favourites" className="nav-link">
+            {/* <NavLink to="/favourites" className="nav-link">
               Favourites
-            </NavLink>
+            </NavLink> */}
             <NavLink to="/account" className="nav-link">
               Account
-            </NavLink>
-            <NavLink to="/add-vehicle" className="nav-link">
-              Add Vehicle
             </NavLink>
           </>
         ) : (
