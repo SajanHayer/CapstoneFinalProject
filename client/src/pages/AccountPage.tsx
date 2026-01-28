@@ -15,14 +15,16 @@ interface GarageVehicle {
 
 interface ListedVehicle {
   id: number;
-  vehicle_id: number;
+  make: string;
+  model: string;
+  year: number;
   start_price: number;
   reserve_price: number;
   buy_now_price?: number;
   current_price: number;
   start_time: string;
   end_time: string;
-  status: string;
+  statusListing: string;
   location: string;
 }
 
@@ -35,59 +37,69 @@ export const AccountPage: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("garage");
   const [error, setError] = useState<string | null>(null);
-  // Placeholder data for user's garage (owned vehicles)
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
-
-  // Placeholder data for user's listed vehicles for auction
   const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
-
-  // Parameterized fetch function for reusability
-  const fetchData = async (endpoint: string, type: "garage" | "listing") => {
-    try {
-      const res = await fetch(endpoint);
-      const data = await res.json();
-
-      if (type === "garage") {
-        const vehicles: GarageVehicle[] = data.userVehicles.map((v: any) => ({
-          id: v.id,
-          make: v.make,
-          model: v.model,
-          year: v.year,
-          price: Number(v.price),
-          condition: v.condition,
-          status: v.status,
-        }));
-        setGarageVehicles(vehicles);
-      } else if (type === "listing") {
-        const listings: ListedVehicle[] = data.userListings.map((l: any) => ({
-          id: l.id,
-          vehicle: Number(l.vehicle_id),
-          start_price: Number(l.start_price),
-          reserve_price: Number(l.reserve_price),
-          buy_now_price: l.buy_now_price ? Number(l.buy_now_price) : undefined,
-          current_price: Number(l.current_price),
-          start_time: l.start_time,
-          end_time: l.end_time,
-          status: l.status,
-          location: l.location,
-        }));
-        setListedVehicles(listings);
-      }
-    } catch (err) {
-      setError(
-        `Failed to load ${type === "garage" ? "vehicle" : "listing"} details`,
-      );
-      console.error(err);
-    }
-  };
 
   // Fetch garage vehicles and listings on mount
   useEffect(() => {
     if (!user?.id) return;
 
-    fetchData(`http://localhost:8080/api/vehicles/user/${user.id}`, "garage");
-    fetchData(`http://localhost:8080/api/listings/user/${user.id}`, "listing");
-  }, [user?.id]);
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/vehicles/user/${user.id}`,
+        );
+        const data = await res.json();
+
+        // Show all vehicles in garage, and separated listed vehicles for listings tab
+        const garage: GarageVehicle[] = [];
+        const listed: ListedVehicle[] = [];
+
+        data.result.forEach((item: any) => {
+          const vehicle = {
+            id: item.vehicles.id,
+            make: item.vehicles.make,
+            model: item.vehicles.model,
+            year: item.vehicles.year,
+            price: Number(item.vehicles.price),
+            condition: item.vehicles.condition,
+            status: item.vehicles.status,
+          };
+
+          // All vehicles go to garage
+          garage.push(vehicle);
+
+          // If vehicle has a listing, also add to listings tab
+          if (item.listings) {
+            listed.push({
+              id: item.listings.id,
+              make: item.vehicles.make,
+              model: item.vehicles.model,
+              year: item.vehicles.year,
+              start_price: Number(item.listings.start_price),
+              reserve_price: Number(item.listings.reserve_price),
+              buy_now_price: item.listings.buy_now_price
+                ? Number(item.listings.buy_now_price)
+                : undefined,
+              current_price: Number(item.listings.current_price),
+              start_time: item.listings.start_time,
+              end_time: item.listings.end_time,
+              statusListing: item.listings.status,
+              location: item.listings.location,
+            });
+          }
+        });
+
+        setGarageVehicles(garage);
+        setListedVehicles(listed);
+      } catch (err) {
+        setError("Failed to load vehicle details");
+        console.error(err);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <section className="account-page">
       <div className="account-container">
@@ -203,8 +215,9 @@ export const AccountPage: React.FC = () => {
                       ) : (
                         <>
                           <h3>
-                            Auction #{(item as ListedVehicle).id} -{" "}
-                            {(item as ListedVehicle).location}
+                            {(item as ListedVehicle).year}{" "}
+                            {(item as ListedVehicle).make}{" "}
+                            {(item as ListedVehicle).model}
                           </h3>
                           <div className="vehicle-details">
                             <span className="price">
@@ -226,9 +239,9 @@ export const AccountPage: React.FC = () => {
                               ).reserve_price.toLocaleString()}
                             </span>
                             <span
-                              className={`status ${(item as ListedVehicle).status}`}
+                              className={`status ${(item as ListedVehicle).statusListing}`}
                             >
-                              {(item as ListedVehicle).status}
+                              {(item as ListedVehicle).statusListing}
                             </span>
                           </div>
                         </>
