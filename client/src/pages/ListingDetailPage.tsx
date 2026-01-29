@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card } from "../components/common/Card";
-import { VehicleHighlights } from "../components/vehicle/VehicleHighlight";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
 import { socket } from "../lib/socket";
 import { useAuth } from "../context/AuthContext";
+import "../styles/listingdetail.css";
 
 type VechileInfo = {
   user_id: number;
@@ -55,7 +54,6 @@ export const ListingDetailPage: React.FC = () => {
           `http://localhost:8080/api/listings/vehicle/${id}`,
         );
         const data = await res.json();
-        console.log(data.result);
         setVehicle(data.result.vehicle);
         setListing(data.result);
         setCurrentHighestBid(Number(data.result.current_price));
@@ -123,9 +121,9 @@ export const ListingDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="min-h-screen pt-20 pb-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-neutral-600">Loading vehicle details...</p>
+      <section className="listing-detail-page">
+        <div className="listing-detail-container">
+          <p className="loading-text">Loading vehicle details...</p>
         </div>
       </section>
     );
@@ -133,15 +131,12 @@ export const ListingDetailPage: React.FC = () => {
 
   if (error || !vehicle) {
     return (
-      <section className="min-h-screen pt-20 pb-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            to="/listings"
-            className="text-primary-600 hover:text-primary-700 font-semibold mb-4 inline-block"
-          >
+      <section className="listing-detail-page">
+        <div className="listing-detail-container">
+          <Link to="/listings" className="back-link">
             ← Back to listings
           </Link>
-          <p className="text-red-600">{error || "Vehicle not found"}</p>
+          <p className="error-text">{error || "Vehicle not found"}</p>
         </div>
       </section>
     );
@@ -185,129 +180,150 @@ export const ListingDetailPage: React.FC = () => {
   ];
 
   return (
-    <section className="min-h-screen pt-20 pb-12 px-4 bg-neutral-50">
-      <div className="max-w-7xl mx-auto">
+    <section className="listing-detail-page">
+      <div className="listing-detail-container">
         {/* Back Link */}
-        <Link
-          to="/listings"
-          className="text-primary-600 hover:text-primary-700 font-semibold inline-block mb-6"
-        >
+        <Link to="/listings" className="back-link">
           ← Back to listings
         </Link>
 
-        <div className="flex gap-6">
-          {/* Main Content - Left Side */}
-          <div className="flex-1 space-y-6">
-            <Card className="bg-gradient-to-r from-neutral-800 to-neutral-900 text-white p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-black text-white mb-2">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <span className="text-neutral-300 text-sm">
-                      {vehicle.condition.charAt(0).toUpperCase() +
-                        vehicle.condition.slice(1)}
-                    </span>
-                    <span className="bg-white/20 px-3 py-1 rounded text-sm font-mono text-neutral-100">
-                      VIN: TBD
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
+        {/* Header Section */}
+        <div className="listing-header-card">
+          <div>
+            <h1 className="listing-title">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </h1>
+            <div className="listing-tags">
+              <span className="tag tag-condition">
+                {vehicle.condition.charAt(0).toUpperCase() +
+                  vehicle.condition.slice(1)}
+              </span>
+              <span
+                className={`tag tag-status tag-status-${listing?.status || "active"}`}
+              >
+                {listing?.status.charAt(0).toUpperCase() +
+                  listing?.status.slice(1)}
+              </span>
+              <span className="tag tag-location">📍 {listing?.location}</span>
+            </div>
+          </div>
+        </div>
 
+        <div className="listing-content-grid">
+          {/* Main Content - Left Side */}
+          <div className="listing-main">
             {/* Image Gallery */}
             {vehicle.image_url &&
               Array.isArray(vehicle.image_url) &&
               vehicle.image_url.length > 0 && (
-                <ImageGallery
-                  images={vehicle.image_url.map((img) =>
-                    typeof img === "string" ? img : URL.createObjectURL(img),
-                  )}
-                  title="Gallery"
-                />
+                <div className="gallery-section">
+                  <ImageGallery
+                    images={vehicle.image_url.map((img) =>
+                      typeof img === "string" ? img : URL.createObjectURL(img),
+                    )}
+                    title="Gallery"
+                  />
+                </div>
               )}
 
-            {/* Vehicle Basics Card */}
-            <VehicleHighlights items={vehicleBasics} />
+            {/* Vehicle Details */}
+            <div className="details-grid">
+              <div className="details-card">
+                <h3>Basic Information</h3>
+                <div className="detail-rows">
+                  {vehicleBasics.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* Vehicle Specs Card */}
-            <VehicleHighlights items={vehicleSpecs} />
+              <div className="details-card">
+                <h3>Vehicle Specifications</h3>
+                <div className="detail-rows">
+                  {vehicleSpecs.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Description Card */}
             {vehicle.description && (
-              <Card className="bg-white">
-                <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-3">
-                  Description
-                </p>
-                <p className="text-neutral-800 leading-relaxed">
-                  {vehicle.description}
-                </p>
-              </Card>
+              <div className="description-card">
+                <h3>Description</h3>
+                <p>{vehicle.description}</p>
+              </div>
             )}
           </div>
 
           {/* Bidding Section - Right Side */}
-          <div className="w-80">
-            <Card className="bg-white sticky top-24 p-6">
-              <div className="space-y-4">
-                <h2 className="text-lg font-bold text-neutral-800">
-                  Place Your Bid
-                </h2>
+          <aside className="listing-sidebar">
+            <div className="bid-card">
+              <h2>Auction Information</h2>
 
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-xs text-red-600 mb-1">Time Remaining</p>
-                  <p className="text-2xl font-mono font-bold text-red-700">
-                    {timeRemaining}
-                  </p>
-                </div>
-
-                {listing && (
-                  <div className="space-y-2 pb-4 border-b border-neutral-200">
-                    <div className="flex justify-between">
-                      <p className="text-xs text-neutral-600">Current Price</p>
-                      <p className="text-sm font-semibold text-neutral-800">
-                        ${Number(listing.current_price || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-xs text-neutral-600">Reserve Price</p>
-                      <p className="text-sm font-semibold text-neutral-800">
-                        ${Number(listing.reserve_price || 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="text-xs text-neutral-600">Buy Now Price</p>
-                      <p className="text-sm font-semibold text-neutral-800">
-                        ${Number(listing.buy_now_price || 0).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-semibold text-neutral-600 mb-2">
-                    Bid amount
-                  </label>
-                  <input
-                    type="number"
-                    value={bidAmount || ""}
-                    onChange={(e) => setBidAmount(Number(e.target.value))}
-                    placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <button
-                  onClick={handlePlaceBid}
-                  disabled={bidAmount <= currentHighestBid}
-                  className="w-full bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-400 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Place a bid
-                </button>
+              {/* Time Remaining */}
+              <div className="time-remaining">
+                <p className="time-label">Time Remaining</p>
+                <p className="time-value">{timeRemaining}</p>
               </div>
-            </Card>
-          </div>
+
+              {/* Price Information */}
+              {listing && (
+                <div className="pricing-section">
+                  <div className="price-row">
+                    <span className="price-label">Current Price</span>
+                    <span className="price-value current">
+                      ${Number(listing.current_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="price-row">
+                    <span className="price-label">Reserve Price</span>
+                    <span className="price-value">
+                      ${Number(listing.reserve_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="price-row">
+                    <span className="price-label">Buy Now Price</span>
+                    <span className="price-value">
+                      ${Number(listing.buy_now_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="price-row">
+                    <span className="price-label">Views</span>
+                    <span className="price-value">{listing.views_count}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Bid Input */}
+              <div className="bid-input-section">
+                <label htmlFor="bid-amount">Place Your Bid</label>
+                <input
+                  id="bid-amount"
+                  type="number"
+                  value={bidAmount || ""}
+                  onChange={(e) => setBidAmount(Number(e.target.value))}
+                  placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
+                  className="bid-input"
+                />
+              </div>
+
+              {/* Place Bid Button */}
+              <button
+                onClick={handlePlaceBid}
+                disabled={bidAmount <= currentHighestBid}
+                className="bid-button"
+              >
+                Place a Bid
+              </button>
+            </div>
+          </aside>
         </div>
       </div>
     </section>
