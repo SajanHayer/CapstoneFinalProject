@@ -1,0 +1,133 @@
+/* ADD LISTING PAGE */
+
+.add-listing-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.add-listing-header {
+  margin-bottom: 2.5rem;
+}
+
+.add-listing-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.add-listing-header p {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.add-listing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Listing Type Selector - Square Tags */
+.listing-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.type-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border: 2px solid #e4e4e4;
+  border-radius: 0.5rem;
+  background: white;
+  cursor: pointer;
+  transition:
+    all 0.2s ease,
+    transform 0.15s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #666;
+  text-align: center;
+}
+
+.type-tag:hover {
+  border-color: #d4d4d8;
+  background: #fafafa;
+  transform: translateY(-2px);
+}
+
+.type-tag.active {
+  background: #111827;
+  color: white;
+  border-color: #111827;
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.15);
+}
+
+.type-label {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.type-description {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.type-tag.active .type-description {
+  opacity: 0.85;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .add-listing-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .add-listing-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .listing-type-selector {
+    grid-template-columns: 1fr;
+  }
+}

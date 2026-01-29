@@ -5,7 +5,9 @@ import { Select } from "../components/common/Select";
 import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth} from "../context/AuthContext";
 
+ 
 type AddVehicleProps = {
   user_id: number;
   make: string;
@@ -20,6 +22,7 @@ type AddVehicleProps = {
 };
 
 export const AddVehiclePage: React.FC = () => {
+  const { user } = useAuth();
   const [imageUrls, setImageUrls] = React.useState<string[]>([]);
   const [imageFiles, setImages] = React.useState<File[]>([]);
   const { register, handleSubmit } = useForm<AddVehicleProps>();
@@ -40,7 +43,7 @@ export const AddVehiclePage: React.FC = () => {
   };
   const onSubmit = async (data: AddVehicleProps) => {
     const formData = new FormData();
-    formData.append("user_id", "1");
+    formData.append("user_id", String(user?.id)); //CHANGE THIS TO USER ID FROM CONTEXT
     formData.append("make", data.make);
     formData.append("model", data.model);
     formData.append("year", data.year.toString());
