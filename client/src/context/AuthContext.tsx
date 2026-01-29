@@ -6,7 +6,7 @@ const LOCALURL = import.meta.env.FETCHURL;
 interface User {
   email: string;
   role: string;
-  id : number;
+  id: number;
 }
 
 interface AuthContextType {

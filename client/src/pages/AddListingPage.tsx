@@ -47,9 +47,12 @@ export const AddListingPage: React.FC = () => {
       }
 
       try {
-        const res = await fetch(`http://localhost:8080/api/vehicles/user/${user.id}`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://localhost:8080/api/vehicles/user/${user.id}`,
+          {
+            credentials: "include",
+          },
+        );
         if (res.ok) {
           const data = await res.json();
           // Extract vehicles without listings from the result
@@ -57,7 +60,10 @@ export const AddListingPage: React.FC = () => {
             const vehiclesWithoutListings = data.result
               .filter((item: any) => !item.listings) // Only vehicles without listings
               .map((item: any) => item.vehicles)
-              .filter((v: Vehicle | null, idx: number, arr: any[]) => v && arr.findIndex(vehicle => vehicle?.id === v.id) === idx);
+              .filter(
+                (v: Vehicle | null, idx: number, arr: any[]) =>
+                  v && arr.findIndex((vehicle) => vehicle?.id === v.id) === idx,
+              );
             setVehicles(vehiclesWithoutListings);
           }
         }
@@ -74,23 +80,32 @@ export const AddListingPage: React.FC = () => {
   const onSubmit = async (data: AddListingProps) => {
     // console.log("Form data:", data);
     data.seller_id = user?.id || 0;
-    try{
-        const res = await fetch('http://localhost:8080/api/listings/create',{
-          method: 'POST',
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        })
-        const result = await res.json();
-        if (!res.ok || result.error) {
-          alert(result.message || "Error uploading vehicle");
-        } else {
-            alert("Listing added successfully!");
-            navigate("/account");
-        }
-    }catch(err){
-        console.error("Error creating listing:", err);
+
+    // Convert datetime-local strings to ISO format
+    const startTime = new Date(data.start_time).toISOString();
+    const endTime = new Date(data.end_time).toISOString();
+
+    try {
+      const res = await fetch("http://localhost:8080/api/listings/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+          start_time: startTime,
+          end_time: endTime,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        alert(result.message || "Error uploading vehicle");
+      } else {
+        alert("Listing added successfully!");
+        navigate("/account");
+      }
+    } catch (err) {
+      console.error("Error creating listing:", err);
     }
   };
 
@@ -106,14 +121,19 @@ export const AddListingPage: React.FC = () => {
         <div className="form-section">
           <h3>Vehicle</h3>
           {loading ? (
-            <p style={{ color: "#666", fontSize: "0.9rem" }}>Loading your vehicles...</p>
+            <p style={{ color: "#666", fontSize: "0.9rem" }}>
+              Loading your vehicles...
+            </p>
           ) : vehicles.length === 0 ? (
             <p style={{ color: "#b91c1c", fontSize: "0.9rem" }}>
               No vehicles found. Please add a vehicle first.
             </p>
           ) : (
             <Select
-              {...register("vehicle_id", { required: true, valueAsNumber: true })}
+              {...register("vehicle_id", {
+                required: true,
+                valueAsNumber: true,
+              })}
             >
               <option value="">Select a vehicle from your garage</option>
               {vehicles.map((vehicle) => (
@@ -132,7 +152,9 @@ export const AddListingPage: React.FC = () => {
             <button
               type="button"
               className={`type-tag ${listingType === "auction" ? "active" : ""}`}
-              onClick={() => register("type").onChange({ target: { value: "auction" } })}
+              onClick={() =>
+                register("type").onChange({ target: { value: "auction" } })
+              }
             >
               <span className="type-label">Auction</span>
               <span className="type-description">Let buyers bid</span>
@@ -140,7 +162,9 @@ export const AddListingPage: React.FC = () => {
             <button
               type="button"
               className={`type-tag ${listingType === "fixed" ? "active" : ""}`}
-              onClick={() => register("type").onChange({ target: { value: "fixed" } })}
+              onClick={() =>
+                register("type").onChange({ target: { value: "fixed" } })
+              }
             >
               <span className="type-label">Fixed Price</span>
               <span className="type-description">Set a price</span>
@@ -158,14 +182,20 @@ export const AddListingPage: React.FC = () => {
               type="number"
               step="0.01"
               placeholder="0.00"
-              {...register("start_price", { required: true, valueAsNumber: true })}
+              {...register("start_price", {
+                required: true,
+                valueAsNumber: true,
+              })}
             />
             <Input
               label="Reserve Price"
               type="number"
               step="0.01"
               placeholder="0.00"
-              {...register("reserve_price", { required: true, valueAsNumber: true })}
+              {...register("reserve_price", {
+                required: true,
+                valueAsNumber: true,
+              })}
             />
             <Input
               label="Buy Now Price (Optional)"

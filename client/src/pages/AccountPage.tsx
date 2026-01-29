@@ -181,11 +181,12 @@ export const AccountPage: React.FC = () => {
                   <div
                     key={item.id}
                     className="vehicle-item"
-                    onClick={() => {
-                      if (activeTab === "listings") {
-                        navigate(`/listings/${item.id}`);
-                      }
-                    }}
+                    //Remove click to go to marketplace listing (this should go to seperate pageand be able to edit info there with seller dashboard)
+                    // onClick={() => {
+                    //   if (activeTab === "listings") {
+                    //     navigate(`/listings/${item.id}`);
+                    //   }
+                    // }}
                     style={{
                       cursor: activeTab === "listings" ? "pointer" : "default",
                     }}

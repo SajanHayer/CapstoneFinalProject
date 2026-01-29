@@ -137,16 +137,15 @@ vehicleRouter.get("/user/:id", async (req, res) => {
     const id = Number(req.params.id);
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid user ID" });
-    }    
+    }
 
     const result = await db
-        .select()
-        .from(vehicles)
-        .leftJoin(listings, eq(listings.vehicle_id, vehicles.id))
-        .where(eq(vehicles.user_id, id));
+      .select()
+      .from(vehicles)
+      .leftJoin(listings, eq(listings.vehicle_id, vehicles.id))
+      .where(eq(vehicles.user_id, id));
 
-    
-    res.json({result});
+    res.json({ result });
     //its okay to have nothing
   } catch (err) {
     console.error("Get vehicle error:", err);

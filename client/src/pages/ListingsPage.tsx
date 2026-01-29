@@ -30,33 +30,44 @@ export const ListingsPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:8080/api/vehicles", {
+        // const res = await fetch("http://localhost:8080/api/vehicles", {
+        //   credentials: "include",
+        // });
+
+        const res = await fetch("http://localhost:8080/api/listings", {
           credentials: "include",
         });
 
         if (!res.ok) throw new Error("Failed to fetch listings");
 
         const data = await res.json();
+        console.log(data);
         // Map backend data to Listing type
-        const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
-          id: v.id.toString(),
-          title: `${v.year} ${v.make} ${v.model}`,
-          thumbnailUrl: Array.isArray(v.image_url)
-            ? v.image_url[0]
-            : v.image_url,
-          currentPrice: Number(v.price),
-          location: v.location || "Unknown",
-          mileage: Number(v.mileage_hours ?? 0),
-          year: Number(v.year),
-          status:
-            v.status === "available"
-              ? "ACTIVE"
-              : v.status === "pending"
-                ? "UPCOMING"
-                : "EXPIRED",
-          endsAt: v.end_time ?? new Date().toISOString(),
-          bids: v.bids_count ?? 0,
-        }));
+        const mappedListings: Listing[] = data.listings.map((listing: any) => {
+          const v = listing.vehicle;
+
+          return {
+            id: listing.vehicle.id.toString(),
+            title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
+            thumbnailUrl: v?.image_url
+              ? Array.isArray(v.image_url)
+                ? v.image_url[0]
+                : v.image_url
+              : undefined,
+            currentPrice: Number(listing.current_price),
+            location: listing.location || "Unknown",
+            mileage: Number(v?.mileage_hours ?? 0),
+            year: Number(v?.year ?? 0),
+            status:
+              listing.status === "active"
+                ? "ACTIVE"
+                : listing.status === "pending"
+                  ? "UPCOMING"
+                  : "EXPIRED",
+            endsAt: listing.end_time ?? new Date().toISOString(),
+            bids: listing.bids_count ?? 0,
+          };
+        });
 
         setListings(mappedListings);
       } catch (err: any) {

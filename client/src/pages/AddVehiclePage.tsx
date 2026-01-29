@@ -5,9 +5,8 @@ import { Select } from "../components/common/Select";
 import { useForm } from "react-hook-form";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth} from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
- 
 type AddVehicleProps = {
   user_id: number;
   make: string;
@@ -68,7 +67,7 @@ export const AddVehiclePage: React.FC = () => {
       alert(result.message || "Error uploading vehicle");
     } else {
       alert("Vehicle added successfully!");
-      navigate("/listings");
+      navigate("/account");
     }
   };
 
