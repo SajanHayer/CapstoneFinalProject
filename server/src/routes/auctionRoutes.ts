@@ -6,7 +6,7 @@ import { listings, vehicles } from "../db/schema";
 export const auctionRouter = Router();
 
 /* ----------------------------------------------
-   GET /api/listings/:id  → Get listing based on id
+   GET /api/listings/:id  --> Get listing based on id
 ------------------------------------------------ */
 auctionRouter.get("/:id", async (req, res) => {
   try {
@@ -26,7 +26,7 @@ auctionRouter.get("/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/listings/vehicle/:id  → Get listing based on vehicle id
+   GET /api/listings/vehicle/:id --> Get listing based on vehicle id
 ------------------------------------------------ */
 auctionRouter.get("/vehicle/:id", async (req, res) => {
   try {
@@ -57,7 +57,7 @@ auctionRouter.get("/vehicle/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/listings/user/:id  → Get listing based on user id
+   GET /api/listings/user/:id --> Get listing based on user id
 ------------------------------------------------ */
 auctionRouter.get("/user/:id", async (req, res) => {
   try {
@@ -78,7 +78,7 @@ auctionRouter.get("/user/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-  POST /api/listings/create/:id  → Get listing based on user id
+  POST /api/listings/create/:id --> Get listing based on user id
 ------------------------------------------------ */
 
 auctionRouter.post("/create", async (req, res) => {
@@ -133,7 +133,7 @@ auctionRouter.post("/create", async (req, res) => {
 });
 
 /* ----------------------------------------------
-  GET /api/listings → Get all listings
+  GET /api/listings --> Get all listings
 ------------------------------------------------ */
 
 auctionRouter.get("/", async (req, res) => {

@@ -12,7 +12,7 @@ const SUPABASE_BUCKET = "powerbidz-images";
 
 //function to send image to supabase storage and get url
 /* ----------------------------------------------
-   POST /api/vehicles/create  → Create a vehicle
+   POST /api/vehicles/create --> Create a vehicle
 ------------------------------------------------ */
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -94,7 +94,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/vehicles  → Get all vehicles
+   GET /api/vehicles --> Get all vehicles
 ------------------------------------------------ */
 vehicleRouter.get("/", requireAuth, async (_req, res) => {
   try {
@@ -107,7 +107,7 @@ vehicleRouter.get("/", requireAuth, async (_req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/vehicles/:id  → Get vehicle by ID
+   GET /api/vehicles/:id --> Get vehicle by ID
 ------------------------------------------------ */
 vehicleRouter.get("/:id", async (req, res) => {
   try {
@@ -130,7 +130,7 @@ vehicleRouter.get("/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/vehicles/user/:id  → Get all vehicles by user ID
+   GET /api/vehicles/user/:id --> Get all vehicles by user ID
 ------------------------------------------------ */
 vehicleRouter.get("/user/:id", async (req, res) => {
   try {

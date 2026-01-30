@@ -294,10 +294,10 @@ export const ListingDetailPage: React.FC = () => {
                       ${Number(listing.buy_now_price || 0).toFixed(2)}
                     </span>
                   </div>
-                  <div className="price-row">
+                  {/* <div className="price-row">
                     <span className="price-label">Views</span>
                     <span className="price-value">{listing.views_count}</span>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
