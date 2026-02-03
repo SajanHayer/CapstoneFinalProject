@@ -1,5 +1,24 @@
 {
-  "dependencies": {
-    "react-chat-window": "^1.2.1"
+  "name": "powerbidz-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Power BIDZ capstone (client + server + db)",
+  "scripts": {
+    "client:install": "npm install --prefix client",
+    "server:install": "npm install --prefix server",
+
+    "client:dev": "npm run dev --prefix client",
+    "server:dev": "npm run dev --prefix server",
+
+    "dev": "concurrently -n CLIENT,SERVER -c auto \"npm run client:dev\" \"npm run server:dev\"",
+
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+
+    "db:migrate": "npm run migrate --prefix server",
+    "db:seed": "npm run seed --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   }
 }
