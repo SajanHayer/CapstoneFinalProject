@@ -23,12 +23,12 @@ export const registerAuctionSockets = () => {
 
     // Place bid (DB logic later)
     socket.on("place_bid", async ({ auctionId, amount, userId }) => {
-      console.log("📨 Bid received:", auctionId, amount);
+      console.log("Bid received:", auctionId, amount);
       try {
         const updatedListing = await placeBid({
           listingId: auctionId,
           bidAmount: amount,
-          bidderId: userId, // or however you auth
+          bidderId: userId,
         });
 
         io.to(`auction:${auctionId}`).emit("bid_update", {
