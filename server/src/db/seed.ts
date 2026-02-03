@@ -1,7 +1,8 @@
 // server/src/db/seed.ts
 import { db } from "./db";
-import { users, vehicles, listings } from "./schema";
+import { users, vehicles, listings, bids } from "./schema";
 import { hashPassword } from "../utils/auth";
+import { eq, inArray } from "drizzle-orm";
 
 async function seed() {
   const secondsFromNow = (seconds: number) =>
@@ -10,32 +11,47 @@ async function seed() {
   try {
     console.log("Seeding database...");
 
-    // ---------------- Users ----------------
-    const insertedUsers = await db
-      .insert(users)
-      .values([
-        {
-          name: "Alice",
-          email: "alice@example.com",
-          password_hash: await hashPassword("alice123"),
-          role: "buyer",
-        },
-        {
-          name: "Bob",
-          email: "bob@example.com",
-          password_hash: await hashPassword("bob123"),
-          role: "seller",
-        },
-        {
-          name: "Charlie",
-          email: "charlie@example.com",
-          password_hash: await hashPassword("charlie123"),
-          role: "admin",
-        },
-      ])
-      .returning({ id: users.id });
+    // Clean previous seed data (keeps existing real users but clears demo data)
+    // Order matters due to foreign keys.
+    await db.delete(bids);
+    await db.delete(listings);
+    await db.delete(vehicles);
 
-    const [user1, user2, user3] = insertedUsers;
+
+    // ---------------- Users ----------------
+// Idempotent: will not fail if these demo users already exist.
+const demoUsers = [
+  {
+    name: "Alice",
+    email: "alice@example.com",
+    password_hash: await hashPassword("alice123"),
+    role: "buyer",
+  },
+  {
+    name: "Bob",
+    email: "bob@example.com",
+    password_hash: await hashPassword("bob123"),
+    role: "seller",
+  },
+  {
+    name: "Charlie",
+    email: "charlie@example.com",
+    password_hash: await hashPassword("charlie123"),
+    role: "admin",
+  },
+] as const;
+
+await db.insert(users).values(demoUsers as any).onConflictDoNothing({ target: users.email });
+
+const found = await db
+  .select({ id: users.id, email: users.email, role: users.role, name: users.name })
+  .from(users)
+  .where(inArray(users.email, demoUsers.map((u) => u.email) as any));
+
+const byEmail = new Map(found.map((u) => [u.email, u]));
+const user1 = byEmail.get("alice@example.com")!;
+const user2 = byEmail.get("bob@example.com")!;
+const user3 = byEmail.get("charlie@example.com")!;
 
     // ---------------- Vehicles (Powersports + Motorcycles) ----------------
     const insertedVehicles = await db
@@ -272,6 +288,57 @@ async function seed() {
       .returning({ id: listings.id });
 
     console.log("Inserted listings:", insertedListings);
+
+    // ---------------- Bids (for analytics dashboard demo) ----------------
+    // Create a few bids across auction listings.
+    const [l1, l2, l3, l4, l5, l6, l7] = insertedListings;
+
+    await db.insert(bids).values([
+      {
+        listing_id: l1.id,
+        bidder_id: user1.id,
+        bid_amount: "8100.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l1.id,
+        bidder_id: user3.id,
+        bid_amount: "8300.00",
+        location: "Edmonton, AB",
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user1.id,
+        bid_amount: "9700.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user3.id,
+        bid_amount: "10000.00",
+        location: "Vancouver, BC",
+      },
+      {
+        listing_id: l4.id,
+        bidder_id: user1.id,
+        bid_amount: "19500.00",
+        location: "Red Deer, AB",
+      },
+      {
+        listing_id: l5.id,
+        bidder_id: user1.id,
+        bid_amount: "8800.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l7.id,
+        bidder_id: user1.id,
+        bid_amount: "13400.00",
+        location: "Banff, AB",
+      },
+    ]);
+
+    console.log("Inserted bids (demo)");
     console.log("Database seeded successfully!");
   } catch (err) {
     console.error("Error seeding database:", err);
