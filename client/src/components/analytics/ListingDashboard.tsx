@@ -211,11 +211,10 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
     try {
       setActionLoading(true);
       const response = await fetch(
-        `http://localhost:8080/api/listings/${listingId}/action`,
+        `http://localhost:8080/api/listings/remove/${listingId}`,
         {
-          method: "PUT",
+          method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
           credentials: "include",
         },
       );
