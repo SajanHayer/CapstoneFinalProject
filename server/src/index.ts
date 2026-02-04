@@ -8,6 +8,7 @@ import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
 import { auctionRouter } from "./routes/auctionRoutes.ts";
 import { startAuctionCron } from "./cron/auctionEnd.cron";
+import { analyticsRouter } from "./routes/analyticsRoutes";
 
 import { Server } from "socket.io";
 import http from "http";
@@ -33,6 +34,25 @@ app.use("/api/assistant", assistantRouter);
 app.use("/api/listings", auctionRouter);
 
 startAuctionCron();
+app.use("/api/analytics", analyticsRouter);
+
+// Lightweight docs index (handy for sponsors / quick testing)
+app.get("/api/docs", (_req, res) => {
+  res.json({
+    name: "PowerBIDZ API",
+    endpoints: [
+      { method: "GET", path: "/api/health", description: "Health check" },
+      { method: "POST", path: "/api/auth/register", description: "Register" },
+      { method: "POST", path: "/api/auth/login", description: "Login" },
+      { method: "POST", path: "/api/auth/logout", description: "Logout" },
+      { method: "GET", path: "/api/auth/check", description: "Check current user" },
+      { method: "GET", path: "/api/vehicles", description: "List vehicles (public)" },
+      { method: "GET", path: "/api/vehicles/:id", description: "Get vehicle by id" },
+      { method: "POST", path: "/api/vehicles/create", description: "Create vehicle (auth)" },
+      { method: "GET", path: "/api/analytics/bids/summary", description: "Bids analytics (seller-scoped if logged in)" },
+    ],
+  });
+});
 
 // Sample API endpoint
 app.get("/api/data", (req, res) => {

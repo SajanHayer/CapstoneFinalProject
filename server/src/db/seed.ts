@@ -1,7 +1,8 @@
 // server/src/db/seed.ts
 import { db } from "./db";
-import { users, vehicles, listings } from "./schema";
+import { users, vehicles, listings, bids } from "./schema";
 import { hashPassword } from "../utils/auth";
+import { eq, inArray } from "drizzle-orm";
 
 async function seed() {
   const secondsFromNow = (seconds: number) =>
@@ -9,6 +10,13 @@ async function seed() {
 
   try {
     console.log("Seeding database...");
+
+    // Clean previous seed data (keeps existing real users but clears demo data)
+    // Order matters due to foreign keys.
+    await db.delete(bids);
+    await db.delete(listings);
+    await db.delete(vehicles);
+
 
     // ---------------- Users ----------------
     const insertedUsers = await db
@@ -272,6 +280,57 @@ async function seed() {
       .returning({ id: listings.id });
 
     console.log("Inserted listings:", insertedListings);
+
+    // ---------------- Bids (for analytics dashboard demo) ----------------
+    // Create a few bids across auction listings.
+    const [l1, l2, l3, l4, l5, l6, l7] = insertedListings;
+
+    await db.insert(bids).values([
+      {
+        listing_id: l1.id,
+        bidder_id: user1.id,
+        bid_amount: "8100.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l1.id,
+        bidder_id: user3.id,
+        bid_amount: "8300.00",
+        location: "Edmonton, AB",
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user1.id,
+        bid_amount: "9700.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user3.id,
+        bid_amount: "10000.00",
+        location: "Vancouver, BC",
+      },
+      {
+        listing_id: l4.id,
+        bidder_id: user1.id,
+        bid_amount: "19500.00",
+        location: "Red Deer, AB",
+      },
+      {
+        listing_id: l5.id,
+        bidder_id: user1.id,
+        bid_amount: "8800.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: l7.id,
+        bidder_id: user1.id,
+        bid_amount: "13400.00",
+        location: "Banff, AB",
+      },
+    ]);
+
+    console.log("Inserted bids (demo)");
     console.log("Database seeded successfully!");
   } catch (err) {
     console.error("Error seeding database:", err);

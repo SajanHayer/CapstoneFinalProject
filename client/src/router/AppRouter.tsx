@@ -10,6 +10,7 @@ import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
+import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -18,11 +19,15 @@ export const AppRouter: React.FC = () => {
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      {/* Public browsing (Guest-friendly) */}
+      <Route path="/listings" element={<ListingsPage />} />
+      <Route path="/listings/:id" element={<ListingDetailPage />} />
+      <Route path="/favourites" element={<FavouritesPage />} />
+      <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+
+      {/* Auth-only */}
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
-        <Route path="/listings" element={<ListingsPage />} />
-        <Route path="/listings/:id" element={<ListingDetailPage />} />
-        <Route path="/favourites" element={<FavouritesPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
       </Route>
