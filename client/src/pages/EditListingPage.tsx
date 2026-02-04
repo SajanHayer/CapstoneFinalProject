@@ -18,6 +18,7 @@ export const EditListingPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
 
   const [form, setForm] = useState<ListingEditForm>({
     description: "",
@@ -72,6 +73,11 @@ export const EditListingPage: React.FC = () => {
 
         // Locked title fields
         setTitle(`${l.year} ${l.make} ${l.model}`);
+
+        // Check if listing has already started
+        const startTime = new Date(l.start_time);
+        const now = new Date();
+        setHasStarted(startTime <= now);
 
         // datetime-local expects "YYYY-MM-DDTHH:mm"
         const endLocal = l.end_time
@@ -143,6 +149,34 @@ export const EditListingPage: React.FC = () => {
   };
 
   if (loading) return <div style={{ padding: 24 }}>Loading edit page…</div>;
+
+  if (hasStarted) {
+    return (
+      <div style={{ padding: 24, maxWidth: 900 }}>
+        <h1>Edit Auction</h1>
+        <div
+          style={{
+            padding: 16,
+            marginTop: 12,
+            backgroundColor: "#fff3cd",
+            border: "1px solid #ffc107",
+            borderRadius: 8,
+            color: "#856404",
+          }}
+        >
+          <strong>Cannot Edit Listing</strong>
+          <p style={{ marginTop: 8, marginBottom: 0 }}>
+            This listing has already begun. You can no longer edit auction details once the listing starts.
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+          <Button variant="outline" onClick={() => navigate("/account")}>
+            Back to Account
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 24, maxWidth: 900 }}>

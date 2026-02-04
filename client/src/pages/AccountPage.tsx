@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
+import { AlertCircle } from "lucide-react";
 
 interface GarageVehicle {
   id: number;
@@ -249,11 +250,18 @@ export const AccountPage: React.FC = () => {
                                 item as ListedVehicle
                               ).reserve_price.toLocaleString()}
                             </span>
-                            <span
-                              className={`listing-status-tag status-${(item as ListedVehicle).statusListing.toLowerCase()}`}
-                            >
-                              {(item as ListedVehicle).statusListing}
-                            </span>
+                            {(() => {
+                              const listing = item as ListedVehicle;
+                              const startTime = new Date(listing.start_time);
+                              const now = new Date();
+                              const displayStatus = startTime > now ? "Upcoming" : listing.statusListing;
+                              const statusClass = startTime > now ? "upcoming" : listing.statusListing.toLowerCase();
+                              return (
+                                <span className={`listing-status-tag status-${statusClass}`}>
+                                  {displayStatus}
+                                </span>
+                              );
+                            })()}
                           </div>
 
                           {/* Analytics and Edit button (only in Listings tab) */}
@@ -268,15 +276,45 @@ export const AccountPage: React.FC = () => {
                               View Analytics
                             </Button>
 
-                            <Button
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/edit-listing/${(item as ListedVehicle).id}`);
-                              }}
-                            >
-                              Edit Auction
-                            </Button>
+                            {(() => {
+                              const listing = item as ListedVehicle;
+                              const hasStarted = new Date(listing.start_time) <= new Date();
+                              const isEnded = listing.statusListing === "ended" || listing.statusListing === "sold";
+                              const cannotEdit = hasStarted || isEnded;
+                              
+                              return (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <Button
+                                    variant="outline"
+                                    disabled={cannotEdit}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!cannotEdit) {
+                                        navigate(`/edit-listing/${listing.id}`);
+                                      }
+                                    }}
+                                    title={cannotEdit ? "Cannot edit listing once it starts or ends" : "Edit auction details"}
+                                  >
+                                    Edit Auction
+                                  </Button>
+                                  {cannotEdit && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        cursor: "pointer",
+                                      }}
+                                      title="Cannot edit listing once it starts or ends"
+                                    >
+                                      <AlertCircle
+                                        size={18}
+                                        style={{ color: "#dc2626" }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </>
                       )}
