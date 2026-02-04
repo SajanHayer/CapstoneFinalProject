@@ -13,13 +13,13 @@
 .add-listing-header h1 {
   font-size: 2rem;
   font-weight: 700;
-  color: #111827;
+  color: var(--text);
   margin-bottom: 0.5rem;
 }
 
 .add-listing-header p {
   font-size: 0.95rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .add-listing-form {
@@ -37,7 +37,7 @@
 .form-section h3 {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text);
   margin: 0;
 }
 
@@ -67,30 +67,30 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 1.5rem;
-  border: 2px solid #e4e4e4;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
-  background: white;
+  background: var(--card);
   cursor: pointer;
   transition:
     all 0.2s ease,
     transform 0.15s ease;
   font-size: 0.95rem;
   font-weight: 500;
-  color: #666;
+  color: var(--muted);
   text-align: center;
 }
 
 .type-tag:hover {
-  border-color: #d4d4d8;
-  background: #fafafa;
+  border-color: var(--accent);
+  background: var(--card2);
   transform: translateY(-2px);
 }
 
 .type-tag.active {
-  background: #111827;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
   color: white;
-  border-color: #111827;
-  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.15);
+  border-color: transparent;
+  box-shadow: 0 10px 22px var(--ring);
 }
 
 .type-label {
@@ -105,6 +105,16 @@
 
 .type-tag.active .type-description {
   opacity: 0.85;
+}
+
+.form-loading-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-error-text {
+  color: #dc2626;
+  font-size: 0.9rem;
 }
 
 /* Form Actions */

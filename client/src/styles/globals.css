@@ -22,6 +22,7 @@
   --primaryHover: #111827;
   --accent: #2563eb; /* blue */
   --accent2: #7c3aed; /* violet */
+  --error: #dc2626; /* red error color */
 
   /* Effects */
   --ring: rgba(37, 99, 235, 0.22);
@@ -45,6 +46,7 @@ html.dark {
   --primaryHover: #ffffff;
   --accent: #60a5fa; /* lighter blue for dark mode */
   --accent2: #a78bfa; /* lighter violet */
+  --error: #ef4444; /* lighter red for dark mode */
 
   --ring: rgba(96, 165, 250, 0.22);
   --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);

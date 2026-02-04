@@ -152,6 +152,22 @@ export const ListingDetailPage: React.FC = () => {
     });
   };
 
+  // Determine listing status
+  const getListingStatus = () => {
+    if (!listing) return null;
+    const now = new Date();
+    const startTime = new Date(listing.start_time);
+    const endTime = new Date(listing.end_time);
+
+    if (now < startTime) return "UPCOMING";
+    if (now >= startTime && now < endTime && listing.status === "active") return "ACTIVE";
+    return "EXPIRED";
+  };
+
+  const listingStatus = getListingStatus();
+  const isAuctionActive = listingStatus === "ACTIVE";
+  const isAuctionUpcoming = listingStatus === "UPCOMING";
+
   // Grouped vehicle information
   const vehicleBasics = [
     { title: "Year", value: String(vehicle.year) },
@@ -267,11 +283,13 @@ export const ListingDetailPage: React.FC = () => {
             <div className="bid-card">
               <h2>Auction Information</h2>
 
-              {/* Time Remaining */}
-              <div className="time-remaining">
-                <p className="time-label">Time Remaining</p>
-                <p className="time-value">{timeRemaining}</p>
-              </div>
+              {/* Time Remaining - Only show for ACTIVE auctions */}
+              {isAuctionActive && (
+                <div className="time-remaining">
+                  <p className="time-label">Time Remaining</p>
+                  <p className="time-value">{timeRemaining}</p>
+                </div>
+              )}
 
               {/* Price Information */}
               {listing && (
@@ -302,6 +320,16 @@ export const ListingDetailPage: React.FC = () => {
               )}
 
               {/* Bid Input */}
+              {isAuctionUpcoming && (
+                <div className="bid-info-message">
+                  This auction hasn't started yet. Check back when it goes live to place bids!
+                </div>
+              )}
+              {!isAuctionActive && !isAuctionUpcoming && (
+                <div className="bid-info-message">
+                  This auction has ended.
+                </div>
+              )}
               <div className="bid-input-section">
                 <label htmlFor="bid-amount">Place Your Bid</label>
                 <input
@@ -311,16 +339,17 @@ export const ListingDetailPage: React.FC = () => {
                   onChange={(e) => setBidAmount(Number(e.target.value))}
                   placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
                   className="bid-input"
+                  disabled={!isAuctionActive}
                 />
               </div>
 
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid}
+                disabled={bidAmount <= currentHighestBid || !isAuctionActive}
                 className="bid-button"
               >
-                Place a Bid
+                {isAuctionUpcoming ? "Auction Not Started" : isAuctionActive ? "Place a Bid" : "Auction Ended"}
               </button>
             </div>
           </aside>

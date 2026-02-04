@@ -105,7 +105,7 @@
 
 .btn-primary {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
-  color: white;
+  color: var(--card);
   box-shadow: 0 10px 22px var(--ring);
 }
 
@@ -164,7 +164,7 @@
 
 .input-error,
 .form-error {
-  color: #b91c1c;
+  color: var(--error);
   font-size: 0.8rem;
 }
 
@@ -383,7 +383,7 @@
 .view-btn.active {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   border-color: transparent;
-  color: white;
+  color: var(--card);
 }
 
 .sidebar-hint {
@@ -406,6 +406,31 @@
 .results-count {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.refresh-button {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background-color: var(--card2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .listings-list {
@@ -454,6 +479,16 @@
   background: rgba(2, 6, 23, 0.7);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.listing-row-badge-upcoming {
+  background: rgba(92, 51, 233, 0.8);
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+.listing-row-badge-ended {
+  background: rgba(220, 38, 38, 0.8);
+  border-color: rgba(252, 202, 202, 0.3);
 }
 
 .listing-row-title {
@@ -662,6 +697,23 @@
   color: var(--muted);
 }
 
+.listing-footer {
+  margin-top: 0.35rem;
+}
+
+.listing-timer {
+  font-size: 0.9rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: var(--card);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin: 0;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
 /* ACCOUNT & FAVOURITES */
 
 .account-page,
@@ -777,7 +829,7 @@
 
 .select-primary {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
-  color: white;
+  color: var(--card);
   border-color: transparent;
 }
 
@@ -819,8 +871,8 @@
 }
 
 .account-profile {
-  background: white;
-  border: 1px solid #e4e4e4;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 2rem;
   height: fit-content;
@@ -831,7 +883,7 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e4e4e4;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;
 }
 
@@ -839,7 +891,7 @@
   width: 80px;
   height: 80px;
   border-radius: 8px;
-  background: #f0f0f0;
+  background: var(--card2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -853,7 +905,7 @@
 
 .profile-role {
   margin: 0.25rem 0 0 0;
-  color: #666;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
@@ -864,7 +916,7 @@
 .profile-details h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  color: #111827;
+  color: var(--text);
 }
 
 .detail-item {
@@ -877,15 +929,15 @@
 
 .detail-label {
   font-weight: 500;
-  color: #666;
+  color: var(--muted);
 }
 
 .detail-value {
-  color: #111827;
+  color: var(--text);
 }
 
 .detail-value.active {
-  color: #16a34a;
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -895,8 +947,8 @@
 }
 
 .account-content {
-  background: white;
-  border: 1px solid #e4e4e4;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 2rem;
 }
@@ -906,7 +958,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e4e4e4;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;
 }
 
@@ -920,7 +972,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-  border-bottom: 1px solid #e4e4e4;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;
 }
 
@@ -935,7 +987,7 @@
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  color: #666;
+  color: var(--muted);
   cursor: pointer;
   position: relative;
   transition: color 0.2s ease;
@@ -945,12 +997,12 @@
 }
 
 .tab:hover {
-  color: #111827;
+  color: var(--text);
 }
 
 .tab.active {
-  color: #111827;
-  border-bottom-color: #111827;
+  color: var(--text);
+  border-bottom-color: var(--text);
 }
 
 .add-vehicle-btn {
@@ -964,21 +1016,21 @@
 
 .vehicle-item {
   padding: 1rem;
-  border: 1px solid #e4e4e4;
+  border: 1px solid var(--border);
   border-radius: 6px;
   margin-bottom: 1rem;
-  background: #f9f9f9;
+  background: var(--card2);
   transition: background 0.2s ease;
 }
 
 .vehicle-item:hover {
-  background: #f5f5f5;
+  background: var(--card);
 }
 
 .vehicle-info h3 {
   margin: 0 0 0.75rem 0;
   font-size: 1.1rem;
-  color: #111827;
+  color: var(--text);
 }
 
 .vehicle-details {
@@ -990,21 +1042,21 @@
 
 .vehicle-details .price {
   font-weight: 600;
-  color: #16a34a;
+  color: var(--accent);
   font-size: 1rem;
 }
 
 .vehicle-details .detail-text {
-  background: #f0f0f0;
-  color: #666;
+  background: var(--card2);
+  color: var(--muted);
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   font-size: 0.85rem;
 }
 
 .vehicle-details .condition {
-  background: #e4e4e4;
-  color: #111827;
+  background: var(--border);
+  color: var(--text);
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   font-size: 0.85rem;
@@ -1037,7 +1089,7 @@
 .no-vehicles {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--muted);
 }
 
 .no-vehicles p {
@@ -1047,13 +1099,13 @@
 .account-menu {
   margin-top: 3rem;
   padding-top: 2rem;
-  border-top: 1px solid #e4e4e4;
+  border-top: 1px solid var(--border);
 }
 
 .account-menu h3 {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  color: #111827;
+  color: var(--text);
 }
 
 .account-menu ul {
@@ -1070,7 +1122,7 @@
 }
 
 .account-menu a {
-  color: #111827;
+  color: var(--text);
   text-decoration: none;
   opacity: 0.7;
   transition: opacity 0.2s ease;

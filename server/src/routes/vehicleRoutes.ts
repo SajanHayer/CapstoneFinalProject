@@ -35,7 +35,10 @@ vehicleRouter.post(
       status,
       description,
     } = req.body;
+    console.log(status);
 
+
+    const status2 = "active"; // Override any client-provided status
     // Prefer authenticated user id over any client-provided value.
     const user_id = (req as any).user?.id;
 
@@ -87,7 +90,7 @@ vehicleRouter.post(
         price,
         mileage_hours: Number(mileage_hours),
         condition,
-        status,
+        status: 'available',
         description,
         image_url: uploadedUrls,
       })
