@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
+import { ListingDashboard } from "../components/analytics/ListingDashboard";
 
 interface GarageVehicle {
   id: number;
@@ -39,6 +40,7 @@ export const AccountPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
   const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
+  const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
 
   // Fetch garage vehicles and listings
   useEffect(() => {
@@ -248,7 +250,7 @@ export const AccountPage: React.FC = () => {
                               ).reserve_price.toLocaleString()}
                             </span>
                             <span
-                              className={`status ${(item as ListedVehicle).statusListing}`}
+                              className={`listing-status-tag status-${(item as ListedVehicle).statusListing.toLowerCase()}`}
                             >
                               {(item as ListedVehicle).statusListing}
                             </span>
@@ -257,12 +259,10 @@ export const AccountPage: React.FC = () => {
                           {/* Analytics and Edit button (only in Listings tab) */}
                           <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
                             <Button
-                              variant="outline"
+                              variant="primary"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!user?.id) return;
-
-                                navigate(`/seller/${user.id}/analytics?listingId=${(item as ListedVehicle).id}`);
+                                setDashboardListingId((item as ListedVehicle).id);
                               }}
                             >
                               View Analytics
@@ -323,6 +323,49 @@ export const AccountPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Dashboard Modal */}
+      {dashboardListingId !== null && (
+        <div className="dashboard-modal-overlay">
+          <div className="dashboard-modal-wrapper">
+            <ListingDashboard
+              listingId={dashboardListingId}
+              onClose={() => {
+                setDashboardListingId(null);
+                // Refresh listings after action
+                if (user?.id) {
+                  window.location.reload();
+                }
+              }}
+              listing={
+                listedVehicles.find((v) => v.id === dashboardListingId)
+                  ? {
+                      id: listedVehicles.find((v) => v.id === dashboardListingId)!.id,
+                      title: `${listedVehicles.find((v) => v.id === dashboardListingId)!.year} ${listedVehicles.find((v) => v.id === dashboardListingId)!.make} ${listedVehicles.find((v) => v.id === dashboardListingId)!.model}`,
+                      year: listedVehicles.find((v) => v.id === dashboardListingId)!.year,
+                      make: listedVehicles.find((v) => v.id === dashboardListingId)!.make,
+                      model: listedVehicles.find((v) => v.id === dashboardListingId)!.model,
+                      location: listedVehicles.find((v) => v.id === dashboardListingId)!.location,
+                      status: listedVehicles.find((v) => v.id === dashboardListingId)!.statusListing,
+                      start_time: listedVehicles.find((v) => v.id === dashboardListingId)!.start_time,
+                      end_time: listedVehicles.find((v) => v.id === dashboardListingId)!.end_time,
+                      start_price: listedVehicles.find((v) => v.id === dashboardListingId)!.start_price,
+                      current_price: listedVehicles.find((v) => v.id === dashboardListingId)!.current_price,
+                      reserve_price: listedVehicles.find((v) => v.id === dashboardListingId)!.reserve_price,
+                      buy_now_price: listedVehicles.find((v) => v.id === dashboardListingId)!.buy_now_price || 0,
+                    }
+                  : undefined
+              }
+              onStatusChange={() => {
+                // Refresh listings after status change
+                if (user?.id) {
+                  window.location.reload();
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

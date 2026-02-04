@@ -1,0 +1,260 @@
+/* Listing Dashboard Styles */
+
+.listing-dashboard {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--card2);
+  position: sticky;
+  top: 0;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dashboard-subtitle {
+  margin: 0.3rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.dashboard-close {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.dashboard-close:hover {
+  background: var(--border);
+  color: var(--accent);
+}
+
+/* Content */
+.dashboard-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Stats Grid */
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.dashboard-stat-card {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.stat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Listing Info */
+.dashboard-listing-info {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.info-section {
+  margin-bottom: 1.5rem;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.info-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Chart Section */
+.dashboard-chart-section {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dashboard-chart-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.chart-container {
+  overflow-x: auto;
+}
+
+/* Bids Table Section */
+.dashboard-bids-section {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dashboard-bids-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.bids-table-container {
+  overflow-x: auto;
+}
+
+.bids-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.bids-table thead {
+  background: var(--border);
+}
+
+.bids-table th {
+  padding: 0.75rem;
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.bids-table td {
+  padding: 0.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+}
+
+.bids-table tbody tr:hover {
+  background: var(--card);
+}
+
+/* Ended Actions */
+.dashboard-ended-actions {
+  background: linear-gradient(135deg, var(--card2), var(--card2));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.dashboard-ended-actions h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ended-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ended-actions-grid button {
+  padding: 0.75rem;
+}
+
+/* Scrollbar styling */
+.listing-dashboard::-webkit-scrollbar {
+  width: 6px;
+}
+
+.listing-dashboard::-webkit-scrollbar-track {
+  background: var(--card2);
+}
+
+.listing-dashboard::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.listing-dashboard::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
