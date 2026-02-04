@@ -1,303 +1,292 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { User, Shield, Settings, Accessibility, Lock, Info, Car, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
+import { Button } from "../components/common/Button";
 
-type TabKey = "profile" | "settings" | "accessibility" | "security" | "information" | "listings";
+interface GarageVehicle {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  condition: string;
+  status: string;
+}
+
+interface ListedVehicle {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  start_price: number;
+  reserve_price: number;
+  buy_now_price?: number;
+  current_price: number;
+  start_time: string;
+  end_time: string;
+  statusListing: string;
+  location: string;
+}
+
+type TabType = "garage" | "listings";
+
+// Call Vehicle listing to get info and display it here
 
 export const AccountPage: React.FC = () => {
-  const { user, isGuest, isLoggedIn } = useAuth();
-  const { theme, setTheme } = useTheme();
-  const [tab, setTab] = useState<TabKey>("profile");
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>("garage");
+  const [error, setError] = useState<string | null>(null);
+  const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
+  const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
 
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [vehLoading, setVehLoading] = useState(false);
-  const [vehError, setVehError] = useState<string | null>(null);
-
+  // Fetch garage vehicles and listings on mount
   useEffect(() => {
-    // Lightweight fetch for the account dashboard cards.
-    // The endpoint is public in guest mode, and also works for authenticated users.
-    const run = async () => {
+    if (!user?.id) return;
+
+    const fetchData = async () => {
       try {
-        setVehLoading(true);
-        setVehError(null);
-        const res = await fetch("http://localhost:8080/api/vehicles", { credentials: "include" });
-        if (!res.ok) throw new Error("Failed to fetch vehicles");
+        const res = await fetch(
+          `http://localhost:8080/api/vehicles/user/${user.id}`,
+        );
         const data = await res.json();
-        setVehicles(Array.isArray(data?.vehicles) ? data.vehicles : []);
-      } catch (e: any) {
-        setVehError(e?.message ?? "Failed to fetch vehicles");
-      } finally {
-        setVehLoading(false);
+
+        // Show all vehicles in garage, and separated listed vehicles for listings tab
+        const garage: GarageVehicle[] = [];
+        const listed: ListedVehicle[] = [];
+
+        data.result.forEach((item: any) => {
+          const vehicle = {
+            id: item.vehicles.id,
+            make: item.vehicles.make,
+            model: item.vehicles.model,
+            year: item.vehicles.year,
+            price: Number(item.vehicles.price),
+            condition: item.vehicles.condition,
+            status: item.vehicles.status,
+          };
+
+          // All vehicles go to garage
+          garage.push(vehicle);
+
+          // If vehicle has a listing, also add to listings tab
+          if (item.listings) {
+            listed.push({
+              id: item.listings.id,
+              make: item.vehicles.make,
+              model: item.vehicles.model,
+              year: item.vehicles.year,
+              start_price: Number(item.listings.start_price),
+              reserve_price: Number(item.listings.reserve_price),
+              buy_now_price: item.listings.buy_now_price
+                ? Number(item.listings.buy_now_price)
+                : undefined,
+              current_price: Number(item.listings.current_price),
+              start_time: item.listings.start_time,
+              end_time: item.listings.end_time,
+              statusListing: item.listings.status,
+              location: item.listings.location,
+            });
+          }
+        });
+
+        setGarageVehicles(garage);
+        setListedVehicles(listed);
+      } catch (err) {
+        setError("Failed to load vehicle details");
+        console.error(err);
       }
     };
-    run();
+
+    fetchData();
   }, []);
-
-  const email = isGuest ? "guest@powerbidz" : user?.email ?? "";
-  const displayName = useMemo(() => {
-    if (!email) return "—";
-    const left = email.split("@")[0] || "";
-    const parts = left.split(/[._-]+/).filter(Boolean);
-    const titled = parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1));
-    return titled.join(" ") || left;
-  }, [email]);
-
-  const role = isGuest ? "Guest" : (user?.role ?? "Buyer");
-  const memberSince = useMemo(() => {
-    // No created_at on the auth payload right now; keep it deterministic for demo.
-    return isGuest ? "—" : "2026";
-  }, [isGuest]);
-
-  const PanelCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div style={{ padding: "1rem", borderRadius: "1rem", background: "var(--card2)", border: "1px solid var(--border)" }}>
-      <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>{title}</div>
-      <div style={{ marginTop: "0.5rem" }}>{children}</div>
-    </div>
-  );
-
-  const items = useMemo(
-    () => [
-      { key: "profile" as const, label: "Profile", icon: User, hint: "name & email" },
-      { key: "settings" as const, label: "Settings", icon: Settings, hint: "preferences" },
-      { key: "accessibility" as const, label: "Accessibility", icon: Accessibility, hint: "comfort" },
-      { key: "security" as const, label: "Login & Security", icon: Lock, hint: "password" },
-      { key: "information" as const, label: "Information", icon: Info, hint: "about" },
-      { key: "listings" as const, label: "My Listings", icon: Car, hint: "seller" },
-    ],
-    []
-  );
-
   return (
     <section className="account-page">
-      <div className="account-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
-          <div>
-            <h2 style={{ margin: 0, fontSize: "1.4rem" }}>Account</h2>
-            <p style={{ margin: "0.35rem 0 0", color: "var(--muted)", fontSize: "0.9rem" }}>
-              {isGuest
-                ? "Guest mode: browse freely. Sign in to manage your profile and create listings."
-                : isLoggedIn
-                ? `Signed in as ${user?.email ?? ""}`
-                : "Sign in to manage your profile and your seller settings."}
-            </p>
+      <div className="account-container">
+        {/* Left Side - Profile */}
+        <div className="account-profile">
+          <div className="profile-header">
+            <div className="profile-avatar">
+              <span>👤</span>
+            </div>
+            <div className="profile-info">
+              <h1>Collector Name</h1>
+              <p className="profile-role">Member</p>
+            </div>
           </div>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.35rem 0.7rem",
-              borderRadius: "999px",
-              border: "1px solid var(--border)",
-              background: "var(--card2)",
-              backdropFilter: "var(--backdrop)",
-            }}
+
+          <div className="profile-details">
+            <h3>Contact Information</h3>
+            <div className="detail-item">
+              <span className="detail-label">Email:</span>
+              <span className="detail-value">
+                {user?.email || "user@example.com"}
+              </span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Member Since:</span>
+              <span className="detail-value">January 2024</span>
+            </div>
+            <div className="detail-item">
+              <span className="detail-label">Account Status:</span>
+              <span className="detail-value active">Active</span>
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={() => navigate("/edit-profile")}
+            className="edit-profile-btn"
           >
-            <Shield size={16} />
-            <span style={{ fontSize: "0.85rem" }}>{isGuest ? "Guest" : "Authenticated"}</span>
-          </div>
+            Edit Profile
+          </Button>
         </div>
 
-        <div className="account-grid">
-          <aside className="account-sidebar">
-            <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
-              Navigation
+        {/* Right Side - Content */}
+        <div className="account-content">
+          {/* Tabs */}
+          <div className="tabs-header">
+            <div className="tabs">
+              <button
+                className={`tab ${activeTab === "garage" ? "active" : ""}`}
+                onClick={() => setActiveTab("garage")}
+              >
+                Garage
+              </button>
+              <button
+                className={`tab ${activeTab === "listings" ? "active" : ""}`}
+                onClick={() => setActiveTab("listings")}
+              >
+                Listings
+              </button>
             </div>
-            <ul className="account-menu">
-              {items.map((it) => {
-                const Icon = it.icon;
-                const active = tab === it.key;
-                return (
-                  <li key={it.key} style={{ borderBottom: "1px solid var(--border)" }}>
-                    <button
-                      onClick={() => setTab(it.key)}
-                      className={active ? "btn btn-primary" : "btn btn-ghost"}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0.55rem 0.85rem",
-                        borderRadius: "0.9rem",
-                      }}
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                        <Icon size={18} />
-                        {it.label}
-                      </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
-                        <span style={{ fontSize: "0.75rem", opacity: 0.75 }}>{it.hint}</span>
-                        <ChevronRight size={16} />
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </aside>
+            <Button
+              variant="primary"
+              onClick={() =>
+                activeTab === "garage"
+                  ? navigate("/add-vehicle")
+                  : navigate("/add-listing")
+              }
+              className="add-vehicle-btn"
+            >
+              + {activeTab === "garage" ? "Add Vehicle" : "Add Listing"}
+            </Button>
+          </div>
 
-          <div className="account-panel">
-            {tab === "profile" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Profile</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  {isGuest
-                    ? "You’re browsing in Guest mode. You can explore the marketplace and analytics, but actions like creating listings are disabled."
-                    : "Manage your profile, preferences, and seller settings from one place."}
-                </p>
-                <div
-                  style={{
-                    marginTop: "1rem",
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <PanelCard title="Name">
-                    <div style={{ fontWeight: 700, fontSize: "1.05rem" }}>{displayName}</div>
-                  </PanelCard>
-                  <PanelCard title="Email">
-                    <div style={{ fontWeight: 600 }}>{email || "—"}</div>
-                  </PanelCard>
-                  <PanelCard title="Role">
-                    <div style={{ fontWeight: 600 }}>{role}</div>
-                  </PanelCard>
-                  <PanelCard title="Member since">
-                    <div style={{ fontWeight: 600 }}>{memberSince}</div>
-                  </PanelCard>
-                  <PanelCard title="Status">
-                    <div style={{ fontWeight: 600 }}>{isGuest ? "Read-only" : "Full access"}</div>
-                  </PanelCard>
-                  <PanelCard title="Garage">
-                    <div style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-                      {vehLoading ? "Loading vehicles…" : vehError ? vehError : `${vehicles.length} vehicles available`}
-                    </div>
-                  </PanelCard>
-                </div>
-              </div>
-            )}
-
-            {tab === "settings" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Settings</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  Customize your experience. These settings are stored locally for demo reliability.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem", marginTop: "1rem" }}>
-                  <PanelCard title="Theme">
-                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <button className={theme === "light" ? "btn btn-primary" : "btn btn-outline"} onClick={() => setTheme("light")}>
-                        Light
-                      </button>
-                      <button className={theme === "dark" ? "btn btn-primary" : "btn btn-outline"} onClick={() => setTheme("dark")}>
-                        Dark
-                      </button>
-                    </div>
-                    <div style={{ marginTop: "0.5rem", color: "var(--muted)", fontSize: "0.9rem" }}>
-                      Current: <b>{theme}</b>
-                    </div>
-                  </PanelCard>
-                  <PanelCard title="Notifications">
-                    <div style={{ color: "var(--muted)", fontSize: "0.92rem" }}>
-                      Email + in-app notifications can be wired to the backend later.
-                    </div>
-                    <div style={{ marginTop: "0.6rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <span className="pill">Outbid alerts</span>
-                      <span className="pill">Auction ending</span>
-                      <span className="pill">New listings</span>
-                    </div>
-                  </PanelCard>
-                </div>
-              </div>
-            )}
-
-            {tab === "accessibility" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Accessibility</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  Built to be readable and usable in both themes.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem", marginTop: "1rem" }}>
-                  <PanelCard title="Contrast">
-                    <div style={{ color: "var(--muted)", fontSize: "0.92rem" }}>Theme tokens keep contrast consistent across the app.</div>
-                  </PanelCard>
-                  <PanelCard title="Motion">
-                    <div style={{ color: "var(--muted)", fontSize: "0.92rem" }}>Subtle hover motion only (no heavy animation spam).</div>
-                  </PanelCard>
-                </div>
-              </div>
-            )}
-
-            {tab === "security" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Login &amp; Security</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  {isGuest ? "Guest mode does not store credentials." : "Account security options for demo."}
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem", marginTop: "1rem" }}>
-                  <PanelCard title="Session">
-                    <div style={{ fontWeight: 700 }}>{isGuest ? "Guest session" : "Authenticated"}</div>
-                    <div style={{ marginTop: "0.35rem", color: "var(--muted)", fontSize: "0.92rem" }}>
-                      Cookie-based session (credentials included in requests).
-                    </div>
-                  </PanelCard>
-                  <PanelCard title="Password">
-                    <div style={{ color: "var(--muted)", fontSize: "0.92rem" }}>Password reset flow can be added later (email + token).</div>
-                  </PanelCard>
-                </div>
-              </div>
-            )}
-
-            {tab === "information" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>Information</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  Power BIDZ is an AI-enhanced vehicle auction marketplace. This panel is designed for sponsor-facing demos.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "0.75rem", marginTop: "1rem" }}>
-                  <PanelCard title="Support">
-                    <div style={{ color: "var(--muted)", fontSize: "0.92rem" }}>For issues, contact the team via the capstone sponsor channel.</div>
-                  </PanelCard>
-                  <PanelCard title="Version">
-                    <div style={{ fontWeight: 700 }}>Demo build</div>
-                    <div style={{ marginTop: "0.35rem", color: "var(--muted)", fontSize: "0.92rem" }}>UI: Openlane-inspired marketplace + analytics.</div>
-                  </PanelCard>
-                </div>
-              </div>
-            )}
-
-            {tab === "listings" && (
-              <div>
-                <h3 style={{ marginTop: 0 }}>My Listings</h3>
-                <p style={{ color: "var(--muted)" }}>
-                  {isGuest
-                    ? "Sign in to create and manage listings."
-                    : "For the demo, this shows the latest vehicles available in the marketplace."}
-                </p>
-
-                <div style={{ marginTop: "1rem", display: "grid", gap: "0.6rem" }}>
-                  {vehLoading && <div className="card">Loading…</div>}
-                  {vehError && <div className="card">{vehError}</div>}
-                  {!vehLoading && !vehError && vehicles.length === 0 && (
-                    <div className="card">No listings found.</div>
-                  )}
-                  {!vehLoading && !vehError && vehicles.slice(0, 8).map((v) => (
-                    <div key={v.id} className="card" style={{ padding: "0.9rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", flexWrap: "wrap" }}>
-                        <div>
-                          <div style={{ fontWeight: 800 }}>{v.year} {v.make} {v.model}</div>
-                          <div style={{ marginTop: "0.2rem", color: "var(--muted)", fontSize: "0.92rem" }}>
-                            {v.location ?? "Unknown"} · {v.status ?? "—"}
+          <div className="vehicles-list">
+            {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
+            0 ? (
+              (activeTab === "garage" ? garageVehicles : listedVehicles).map(
+                (item) => (
+                  <div
+                    key={item.id}
+                    className="vehicle-item"
+                    //Remove click to go to marketplace listing (this should go to seperate pageand be able to edit info there with seller dashboard)
+                    // onClick={() => {
+                    //   if (activeTab === "listings") {
+                    //     navigate(`/listings/${item.id}`);
+                    //   }
+                    // }}
+                    style={{
+                      cursor: activeTab === "listings" ? "pointer" : "default",
+                    }}
+                  >
+                    <div className="vehicle-info">
+                      {activeTab === "garage" ? (
+                        <>
+                          <h3>
+                            {(item as GarageVehicle).year}{" "}
+                            {(item as GarageVehicle).make}{" "}
+                            {(item as GarageVehicle).model}
+                          </h3>
+                          <div className="vehicle-details">
+                            <span className="price">
+                              ${(item as GarageVehicle).price.toLocaleString()}
+                            </span>
+                            <span className="condition">
+                              {(item as GarageVehicle).condition}
+                            </span>
+                            <span
+                              className={`status ${(item as GarageVehicle).status}`}
+                            >
+                              {(item as GarageVehicle).status}
+                            </span>
                           </div>
-                        </div>
-                        <div style={{ fontWeight: 800 }}>${Number(v.price ?? 0).toLocaleString()}</div>
-                      </div>
+                        </>
+                      ) : (
+                        <>
+                          <h3>
+                            {(item as ListedVehicle).year}{" "}
+                            {(item as ListedVehicle).make}{" "}
+                            {(item as ListedVehicle).model}
+                          </h3>
+                          <div className="vehicle-details">
+                            <span className="price">
+                              $
+                              {(
+                                item as ListedVehicle
+                              ).current_price.toLocaleString()}
+                            </span>
+                            <span className="detail-text">
+                              Start: $
+                              {(
+                                item as ListedVehicle
+                              ).start_price.toLocaleString()}
+                            </span>
+                            <span className="detail-text">
+                              Reserve: $
+                              {(
+                                item as ListedVehicle
+                              ).reserve_price.toLocaleString()}
+                            </span>
+                            <span
+                              className={`status ${(item as ListedVehicle).statusListing}`}
+                            >
+                              {(item as ListedVehicle).statusListing}
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ),
+              )
+            ) : (
+              <div className="no-vehicles">
+                <p>
+                  {activeTab === "garage"
+                    ? "Your garage is empty."
+                    : "You haven't listed any vehicles yet."}
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    activeTab === "garage"
+                      ? navigate("/add-vehicle")
+                      : navigate("/add-listing")
+                  }
+                >
+                  {activeTab === "garage"
+                    ? "Add Your First Vehicle"
+                    : "List Your First Vehicle"}
+                </Button>
               </div>
             )}
+          </div>
+
+          <div className="account-menu">
+            <h3>Account Settings</h3>
+            <ul>
+              <li>
+                <a href="#settings">Settings</a>
+              </li>
+              <li>
+                <a href="#security">Login &amp; Security</a>
+              </li>
+              <li>
+                <a href="#information">Information</a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
