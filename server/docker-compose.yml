@@ -1,0 +1,50 @@
+services:
+  client:
+    container_name: powerbidz-client
+    build:
+      context: ./client
+      dockerfile: DockerFile
+    image: powerbidz-client
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  server:
+    container_name: powerbidz-server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: powerbidz-server
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      - db
+    environment:
+      - PORT=8080
+      - DATABASE_URL=postgres://powerbidz:powerbidzpassword@db:5432/powerbidz_db
+      
+
+  db:
+    image: postgres:16
+    container_name: powerbidz-db
+    restart: always
+    environment:  
+      POSTGRES_USER: powerbidz
+      POSTGRES_PASSWORD: powerbidzpassword
+      POSTGRES_DB: powerbidz_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

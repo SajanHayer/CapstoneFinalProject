@@ -1,0 +1,289 @@
+/* ==== Floating container ================================================= */
+
+.chat-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* ==== Round toggle button (only shown when CLOSED) ======================= */
+
+.chat-widget-toggle {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow2);
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    background 0.15s;
+}
+
+.chat-widget-toggle:hover {
+  filter: brightness(1.05);
+  box-shadow: var(--shadow);
+}
+
+.chat-widget-toggle:active {
+  transform: translateY(1px);
+}
+
+/* ==== Chat panel ========================================================== */
+
+.chat-widget-panel {
+  width: 420px;
+  height: 600px !important;
+  max-height: 600px !important;
+  background: linear-gradient(180deg, var(--cardSolid), var(--card));
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+/* ==== Header with title + close X ======================================= */
+
+.chat-widget-header {
+  padding: 0.75rem 0.9rem;
+  padding-right: 40px; /* room for close button */
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white;
+  position: relative; /* allows absolute-position close button */
+}
+
+.chat-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chat-logo-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: rgba(11, 18, 32, 0.9);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.chat-widget-header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.chat-widget-header p {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* small white X in the top-right of header */
+.chat-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  font-weight: 400;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.chat-close-btn:hover {
+  opacity: 1;
+}
+
+/* ==== Messages area (scrollable) ======================================== */
+
+.chat-widget-messages {
+  padding: 0.75rem 0.9rem;
+  background: transparent;
+  flex: 1; /* takes all remaining height */
+  overflow-y: auto; /* <- SCROLLS INSTEAD OF GROWING */
+}
+
+/* optional: nicer scrollbar (can remove if you don’t like it) */
+.chat-widget-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-widget-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-widget-messages::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+}
+
+/* ==== Message rows ======================================================= */
+
+.chat-message-row {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 0.6rem;
+}
+
+.chat-message-row.from-assistant {
+  justify-content: flex-start;
+}
+
+.chat-message-row.from-user {
+  justify-content: flex-end;
+}
+
+/* Avatars */
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+.assistant-avatar {
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white;
+}
+
+.user-avatar {
+  background: rgba(148, 163, 184, 0.25);
+  color: var(--text);
+}
+
+/* Bubbles */
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 14px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.bubble-assistant {
+  background: var(--card2);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble-user {
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+/* ==== Input bar ========================================================== */
+
+.chat-widget-input {
+  display: flex;
+  padding: 0.6rem 0.6rem;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  gap: 0.4rem;
+}
+
+.chat-widget-input input {
+  flex: 1;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8rem;
+  outline: none;
+  background: var(--cardSolid);
+}
+
+.chat-widget-input input:focus {
+  border-color: transparent;
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.chat-widget-input button {
+  border: none;
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.chat-widget-input button:hover {
+  filter: brightness(1.05);
+}
+
+.chat-widget-input button:active {
+  transform: translateY(1px);
+}
+
+/* Typing indicator */
+.typing-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(148, 163, 184, 0.9);
+  animation: typingBounce 1s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typingBounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
