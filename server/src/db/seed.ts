@@ -19,39 +19,31 @@ async function seed() {
 
 
     // ---------------- Users ----------------
-// Idempotent: will not fail if these demo users already exist.
-const demoUsers = [
-  {
-    name: "Alice",
-    email: "alice@example.com",
-    password_hash: await hashPassword("alice123"),
-    role: "buyer",
-  },
-  {
-    name: "Bob",
-    email: "bob@example.com",
-    password_hash: await hashPassword("bob123"),
-    role: "seller",
-  },
-  {
-    name: "Charlie",
-    email: "charlie@example.com",
-    password_hash: await hashPassword("charlie123"),
-    role: "admin",
-  },
-] as const;
+    const insertedUsers = await db
+      .insert(users)
+      .values([
+        {
+          name: "Alice",
+          email: "alice@example.com",
+          password_hash: await hashPassword("alice123"),
+          role: "buyer",
+        },
+        {
+          name: "Bob",
+          email: "bob@example.com",
+          password_hash: await hashPassword("bob123"),
+          role: "seller",
+        },
+        {
+          name: "Charlie",
+          email: "charlie@example.com",
+          password_hash: await hashPassword("charlie123"),
+          role: "seller",
+        },
+      ])
+      .returning({ id: users.id });
 
-await db.insert(users).values(demoUsers as any).onConflictDoNothing({ target: users.email });
-
-const found = await db
-  .select({ id: users.id, email: users.email, role: users.role, name: users.name })
-  .from(users)
-  .where(inArray(users.email, demoUsers.map((u) => u.email) as any));
-
-const byEmail = new Map(found.map((u) => [u.email, u]));
-const user1 = byEmail.get("alice@example.com")!;
-const user2 = byEmail.get("bob@example.com")!;
-const user3 = byEmail.get("charlie@example.com")!;
+    const [user1, user2, user3] = insertedUsers;
 
     // ---------------- Vehicles (Powersports + Motorcycles) ----------------
     const insertedVehicles = await db

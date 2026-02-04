@@ -42,7 +42,8 @@ export const LoginPage: React.FC = () => {
 
       const userEmail = data.user.email;
       const userRole = data.user.role;
-      login({ email: userEmail, role: userRole });
+      const userId = data.user.id;
+      login({ email: userEmail, role: userRole, id: userId });
       // console.log("Login successful:", data.user);
       navigate("/listings");
     } catch (err) {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/db";
-import { vehicles } from "../db/schema";
+import { listings, vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { supabase } from "../services/supabase";
 import multer from "multer";
@@ -12,7 +12,7 @@ const SUPABASE_BUCKET = "powerbidz-images";
 
 //function to send image to supabase storage and get url
 /* ----------------------------------------------
-   POST /api/vehicles/create  → Create a vehicle
+   POST /api/vehicles/create --> Create a vehicle
 ------------------------------------------------ */
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -35,7 +35,10 @@ vehicleRouter.post(
       status,
       description,
     } = req.body;
+    console.log(status);
 
+
+    const status2 = "active"; // Override any client-provided status
     // Prefer authenticated user id over any client-provided value.
     const user_id = (req as any).user?.id;
 
@@ -87,7 +90,7 @@ vehicleRouter.post(
         price,
         mileage_hours: Number(mileage_hours),
         condition,
-        status,
+        status: 'available',
         description,
         image_url: uploadedUrls,
       })
@@ -102,7 +105,7 @@ vehicleRouter.post(
 );
 
 /* ----------------------------------------------
-   GET /api/vehicles  → Get all vehicles
+   GET /api/vehicles --> Get all vehicles
 ------------------------------------------------ */
 // Browsing inventory should be available to guests.
 vehicleRouter.get("/", async (_req, res) => {
@@ -116,7 +119,7 @@ vehicleRouter.get("/", async (_req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/vehicles/:id  → Get vehicle by ID
+   GET /api/vehicles/:id --> Get vehicle by ID
 ------------------------------------------------ */
 vehicleRouter.get("/:id", async (req, res) => {
   try {
@@ -132,6 +135,30 @@ vehicleRouter.get("/:id", async (req, res) => {
     }
 
     res.json({ vehicle });
+  } catch (err) {
+    console.error("Get vehicle error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ----------------------------------------------
+   GET /api/vehicles/user/:id --> Get all vehicles by user ID
+------------------------------------------------ */
+vehicleRouter.get("/user/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const result = await db
+      .select()
+      .from(vehicles)
+      .leftJoin(listings, eq(listings.vehicle_id, vehicles.id))
+      .where(eq(vehicles.user_id, id));
+
+    res.json({ result });
+    //its okay to have nothing
   } catch (err) {
     console.error("Get vehicle error:", err);
     res.status(500).json({ message: "Server error" });

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card } from "../components/common/Card";
-import { VehicleHighlights } from "../components/vehicle/VehicleHighlight";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
-import { BidCard } from "../components/auction/BidCard";
 import { socket } from "../lib/socket";
+import { useAuth } from "../context/AuthContext";
+import "../styles/listingdetail.css";
 
 type VechileInfo = {
   user_id: number;
@@ -19,18 +18,45 @@ type VechileInfo = {
   image_url: string[] | File[]; // array of image URLs or path to image or img
 };
 
+type BiddingInfo = {
+  id: number;
+  vehicle_id: number;
+  seller_id: number;
+  start_price: number;
+  current_price: number;
+  reserve_price: number;
+  buy_now_price: number;
+  status: string;
+  type: string;
+  location: string;
+  views_count: number;
+  start_time: string;
+  end_time: string;
+  created_at: string;
+};
+
 export const ListingDetailPage: React.FC = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [vehicle, setVehicle] = useState<VechileInfo | null>(null);
+  const [listing, setListing] = useState<BiddingInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bidAmount, setBidAmount] = useState<number>(0);
+  const [currentHighestBid, setCurrentHighestBid] = useState<number>(0);
+  const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
 
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
+        // const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
+        const res = await fetch(
+          `http://localhost:8080/api/listings/vehicle/${id}`,
+        );
         const data = await res.json();
-        setVehicle(data.vehicle);
+        setVehicle(data.result.vehicle);
+        setListing(data.result);
+        setCurrentHighestBid(Number(data.result.current_price));
       } catch (err) {
         setError("Failed to load vehicle details");
         console.error(err);
@@ -50,11 +76,54 @@ export const ListingDetailPage: React.FC = () => {
     };
   }, [id]);
 
+  useEffect(() => {
+    const handleBidUpdate = (data: { amount: number }) => {
+      setCurrentHighestBid(data.amount);
+      setListing((prev) =>
+        prev ? { ...prev, current_price: data.amount } : null,
+      );
+    };
+
+    socket.on("bid_update", handleBidUpdate);
+
+    return () => {
+      socket.off("bid_update", handleBidUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!listing?.end_time) return;
+
+    const calculateTimeRemaining = () => {
+      const now = new Date();
+      const end = new Date(listing.end_time);
+      const diff = end.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        setTimeRemaining("00:00:00");
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeRemaining(
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+      );
+    };
+
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+
+    return () => clearInterval(interval);
+  }, [listing?.end_time]);
+
   if (loading) {
     return (
-      <section className="min-h-screen pt-20 pb-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-neutral-600">Loading vehicle details...</p>
+      <section className="listing-detail-page">
+        <div className="listing-detail-container">
+          <p className="loading-text">Loading vehicle details...</p>
         </div>
       </section>
     );
@@ -62,19 +131,42 @@ export const ListingDetailPage: React.FC = () => {
 
   if (error || !vehicle) {
     return (
-      <section className="min-h-screen pt-20 pb-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <Link
-            to="/listings"
-            className="text-primary-600 hover:text-primary-700 font-semibold mb-4 inline-block"
-          >
+      <section className="listing-detail-page">
+        <div className="listing-detail-container">
+          <Link to="/listings" className="back-link">
             ← Back to listings
           </Link>
-          <p className="text-red-600">{error || "Vehicle not found"}</p>
+          <p className="error-text">{error || "Vehicle not found"}</p>
         </div>
       </section>
     );
   }
+
+  const handlePlaceBid = () => {
+    if (!bidAmount) return;
+
+    socket.emit("place_bid", {
+      auctionId: id,
+      amount: bidAmount,
+      userId: user?.id,
+    });
+  };
+
+  // Determine listing status
+  const getListingStatus = () => {
+    if (!listing) return null;
+    const now = new Date();
+    const startTime = new Date(listing.start_time);
+    const endTime = new Date(listing.end_time);
+
+    if (now < startTime) return "UPCOMING";
+    if (now >= startTime && now < endTime && listing.status === "active") return "ACTIVE";
+    return "EXPIRED";
+  };
+
+  const listingStatus = getListingStatus();
+  const isAuctionActive = listingStatus === "ACTIVE";
+  const isAuctionUpcoming = listingStatus === "UPCOMING";
 
   // Grouped vehicle information
   const vehicleBasics = [
@@ -95,9 +187,7 @@ export const ListingDetailPage: React.FC = () => {
     },
     {
       title: "Price",
-      value: vehicle.price
-        ? `$${Number(vehicle.price).toLocaleString()}`
-        : "N/A",
+      value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
     },
     {
       title: "Status",
@@ -106,73 +196,163 @@ export const ListingDetailPage: React.FC = () => {
   ];
 
   return (
-    <section className="min-h-screen pt-20 pb-12 px-4 bg-neutral-50">
-      <div className="max-w-7xl mx-auto">
+    <section className="listing-detail-page">
+      <div className="listing-detail-container">
         {/* Back Link */}
-        <Link
-          to="/listings"
-          className="text-primary-600 hover:text-primary-700 font-semibold inline-block mb-6"
-        >
+        <Link to="/listings" className="back-link">
           ← Back to listings
         </Link>
 
-        <div className="flex gap-6">
-          {/* Main Content - Left Side */}
-          <div className="flex-1 space-y-6">
-            <Card className="bg-gradient-to-r from-neutral-800 to-neutral-900 text-white p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-black text-white mb-2">
-                    {vehicle.year} {vehicle.make} {vehicle.model}
-                  </h1>
-                  <div className="flex items-center gap-2">
-                    <span className="text-neutral-300 text-sm">
-                      {vehicle.condition.charAt(0).toUpperCase() +
-                        vehicle.condition.slice(1)}
-                    </span>
-                    <span className="bg-white/20 px-3 py-1 rounded text-sm font-mono text-neutral-100">
-                      VIN: TBD
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
+        {/* Header Section */}
+        <div className="listing-header-card">
+          <div>
+            <h1 className="listing-title">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </h1>
+            <div className="listing-tags">
+              <span className="tag tag-condition">
+                {vehicle.condition.charAt(0).toUpperCase() +
+                  vehicle.condition.slice(1)}
+              </span>
+              <span
+                className={`tag tag-status tag-status-${listing?.status || "active"}`}
+              >
+                {listing?.status.charAt(0).toUpperCase() +
+                  listing?.status.slice(1)}
+              </span>
+              <span className="tag tag-location">📍 {listing?.location}</span>
+            </div>
+          </div>
+        </div>
 
+        <div className="listing-content-grid">
+          {/* Main Content - Left Side */}
+          <div className="listing-main">
             {/* Image Gallery */}
             {vehicle.image_url &&
               Array.isArray(vehicle.image_url) &&
               vehicle.image_url.length > 0 && (
-                <ImageGallery
-                  images={vehicle.image_url.map((img) =>
-                    typeof img === "string" ? img : URL.createObjectURL(img),
-                  )}
-                  title="Gallery"
-                />
+                <div className="gallery-section">
+                  <ImageGallery
+                    images={vehicle.image_url.map((img) =>
+                      typeof img === "string" ? img : URL.createObjectURL(img),
+                    )}
+                    title="Gallery"
+                  />
+                </div>
               )}
 
-            {/* Vehicle Basics Card */}
-            <VehicleHighlights items={vehicleBasics} />
+            {/* Vehicle Details */}
+            <div className="details-grid">
+              <div className="details-card">
+                <h3>Basic Information</h3>
+                <div className="detail-rows">
+                  {vehicleBasics.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* Vehicle Specs Card */}
-            <VehicleHighlights items={vehicleSpecs} />
+              <div className="details-card">
+                <h3>Vehicle Specifications</h3>
+                <div className="detail-rows">
+                  {vehicleSpecs.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Description Card */}
             {vehicle.description && (
-              <Card className="bg-white">
-                <p className="text-sm text-neutral-600 font-semibold uppercase tracking-wide mb-3">
-                  Description
-                </p>
-                <p className="text-neutral-800 leading-relaxed">
-                  {vehicle.description}
-                </p>
-              </Card>
+              <div className="description-card">
+                <h3>Description</h3>
+                <p>{vehicle.description}</p>
+              </div>
             )}
           </div>
 
           {/* Bidding Section - Right Side */}
-          <div className="w-80">
-            <BidCard auctionId={id} minimumPrice={Number(vehicle.price) || 0} />
-          </div>
+          <aside className="listing-sidebar">
+            <div className="bid-card">
+              <h2>Auction Information</h2>
+
+              {/* Time Remaining - Only show for ACTIVE auctions */}
+              {isAuctionActive && (
+                <div className="time-remaining">
+                  <p className="time-label">Time Remaining</p>
+                  <p className="time-value">{timeRemaining}</p>
+                </div>
+              )}
+
+              {/* Price Information */}
+              {listing && (
+                <div className="pricing-section">
+                  <div className="price-row">
+                    <span className="price-label">Current Price</span>
+                    <span className="price-value current">
+                      ${Number(listing.current_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="price-row">
+                    <span className="price-label">Reserve Price</span>
+                    <span className="price-value">
+                      ${Number(listing.reserve_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="price-row">
+                    <span className="price-label">Buy Now Price</span>
+                    <span className="price-value">
+                      ${Number(listing.buy_now_price || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  {/* <div className="price-row">
+                    <span className="price-label">Views</span>
+                    <span className="price-value">{listing.views_count}</span>
+                  </div> */}
+                </div>
+              )}
+
+              {/* Bid Input */}
+              {isAuctionUpcoming && (
+                <div className="bid-info-message">
+                  This auction hasn't started yet. Check back when it goes live to place bids!
+                </div>
+              )}
+              {!isAuctionActive && !isAuctionUpcoming && (
+                <div className="bid-info-message">
+                  This auction has ended.
+                </div>
+              )}
+              <div className="bid-input-section">
+                <label htmlFor="bid-amount">Place Your Bid</label>
+                <input
+                  id="bid-amount"
+                  type="number"
+                  value={bidAmount || ""}
+                  onChange={(e) => setBidAmount(Number(e.target.value))}
+                  placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
+                  className="bid-input"
+                  disabled={!isAuctionActive}
+                />
+              </div>
+
+              {/* Place Bid Button */}
+              <button
+                onClick={handlePlaceBid}
+                disabled={bidAmount <= currentHighestBid || !isAuctionActive}
+                className="bid-button"
+              >
+                {isAuctionUpcoming ? "Auction Not Started" : isAuctionActive ? "Place a Bid" : "Auction Ended"}
+              </button>
+            </div>
+          </aside>
         </div>
       </div>
     </section>

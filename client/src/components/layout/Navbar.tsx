@@ -6,7 +6,7 @@ import { useTheme } from "../../context/ThemeContext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isLoggedIn, isGuest, logout, exitGuest } = useAuth();
+  const { isLoggedIn, isGuest, logout, exitGuest } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const handleLogout = async () => {
     await logout();
@@ -32,16 +32,13 @@ export const Navbar: React.FC = () => {
         <NavLink to="/analytics" className="nav-link">
           Analytics
         </NavLink>
-        <NavLink to="/favourites" className="nav-link">
+        {/* <NavLink to="/favourites" className="nav-link">
           Favourites
-        </NavLink>
+        </NavLink> */}
         {isLoggedIn && (
           <>
             <NavLink to="/account" className="nav-link">
               Account
-            </NavLink>
-            <NavLink to="/add-vehicle" className="nav-link">
-              Add Vehicle
             </NavLink>
           </>
         )}

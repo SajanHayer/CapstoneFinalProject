@@ -31,6 +31,13 @@ export const listingStatusEnum = pgEnum("listing_status", [
   "sold",
   "cancelled",
 ]);
+export const listingReasonEnum = pgEnum("listing_end_reason", [
+  "success",
+  "unmet",
+  "nobids",
+  "pending",
+]);
+
 export const paymentStatusEnum = pgEnum("payment_status", [
   "pending",
   "paid",
@@ -88,6 +95,7 @@ export const listings = pgTable("listings", {
   start_time: timestamp("start_time").notNull(),
   end_time: timestamp("end_time").notNull(),
   status: listingStatusEnum("status").notNull(),
+  end_reason: listingReasonEnum("end_reason"),
   views_count: integer("views_count").default(0).notNull(),
   location: varchar("location", { length: 255 }),
   created_at: timestamp("created_at").defaultNow().notNull(),

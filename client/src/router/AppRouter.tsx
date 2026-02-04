@@ -9,6 +9,7 @@ import { ListingDetailPage } from "../pages/ListingDetailPage";
 import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
+import { AddListingPage } from "../pages/AddListingPage";
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 
 export const AppRouter: React.FC = () => {
@@ -28,6 +29,7 @@ export const AppRouter: React.FC = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
+        <Route path="/add-listing" element={<AddListingPage />} />
       </Route>
     </Routes>
   );

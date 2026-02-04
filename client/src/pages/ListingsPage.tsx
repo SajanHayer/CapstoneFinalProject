@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { ListingCard } from "../components/listings/ListingCard";
 import { ListingRowCard } from "../components/listings/ListingRowCard";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
@@ -14,11 +15,13 @@ export interface Listing {
   mileage: number;
   year: number;
   status: ListingStatus;
+  startsAt: string;
   endsAt: string;
   bids: number;
 }
 
 export const ListingsPage: React.FC = () => {
+  const { isLoggedIn } = useAuth();
   const [status, setStatus] = useState<ListingStatus>("ACTIVE");
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,49 +33,69 @@ export const ListingsPage: React.FC = () => {
   const [make, setMake] = useState<string>("all");
 
   // Fetch listings from backend
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await fetch("http://localhost:8080/api/listings", {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch listings");
+
+      const data = await res.json();
+      // Map backend data to Listing type
+      const mappedListings: Listing[] = data.listings.map((listing: any) => {
+        const v = listing.vehicle;
+        const now = new Date();
+        const startTime = new Date(listing.start_time);
+        const endTime = new Date(listing.end_time);
+
+        // Determine status based on start_time and end_time
+        let status: ListingStatus;
+        if (now < startTime) {
+          status = "UPCOMING"; // Scheduled for future
+        } else if (now >= startTime && now < endTime && listing.status === "active") {
+          status = "ACTIVE"; // Currently running
+        } else {
+          status = "EXPIRED"; // Ended or cancelled
+        }
+
+        return {
+          id: listing.vehicle.id.toString(),
+          title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
+          thumbnailUrl: v?.image_url
+            ? Array.isArray(v.image_url)
+              ? v.image_url[0]
+              : v.image_url
+            : undefined,
+          currentPrice: Number(listing.current_price),
+          location: listing.location || "Unknown",
+          mileage: Number(v?.mileage_hours ?? 0),
+          year: Number(v?.year ?? 0),
+          status: status,
+          startsAt: listing.start_time ?? new Date().toISOString(),
+          endsAt: listing.end_time ?? new Date().toISOString(),
+          bids: listing.bids_count ?? 0,
+        };
+      });
+
+      setListings(mappedListings);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchListings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const res = await fetch("http://localhost:8080/api/vehicles", {
-          credentials: "include",
-        });
-
-        if (!res.ok) throw new Error("Failed to fetch listings");
-
-        const data = await res.json();
-        // Map backend data to Listing type
-        const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
-          id: v.id.toString(),
-          title: `${v.year} ${v.make} ${v.model}`,
-          thumbnailUrl: Array.isArray(v.image_url)
-            ? v.image_url[0]
-            : v.image_url,
-          currentPrice: Number(v.price),
-          location: v.location || "Unknown",
-          mileage: Number(v.mileage_hours ?? 0),
-          year: Number(v.year),
-          status:
-            v.status === "available"
-              ? "ACTIVE"
-              : v.status === "pending"
-                ? "UPCOMING"
-                : "EXPIRED",
-          endsAt: v.end_time ?? new Date().toISOString(),
-          bids: v.bids_count ?? 0,
-        }));
-
-        setListings(mappedListings);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchListings();
+
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(fetchListings, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Derived filter/sort
@@ -177,9 +200,11 @@ export const ListingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="sidebar-hint">
-            Tip: Use Guest mode to browse. Sign in to bid, watch, and sell.
-          </div>
+          {!isLoggedIn && (
+            <div className="sidebar-hint">
+              Tip: Use Guest mode to browse. Sign in to bid, watch, and sell.
+            </div>
+          )}
         </aside>
 
         <div className="market-results">
@@ -187,6 +212,14 @@ export const ListingsPage: React.FC = () => {
             <div className="results-count">
               {loading ? "Loading…" : `${visibleListings.length} results`}
             </div>
+            <button 
+              className="refresh-button"
+              onClick={fetchListings}
+              title="Refresh listings"
+              disabled={loading}
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
 
           <div className={view === "grid" ? "listings-grid" : "listings-list"}>
