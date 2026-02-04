@@ -15,6 +15,7 @@ interface GarageVehicle {
 
 interface ListedVehicle {
   id: number;
+  vehicleId: number;
   make: string;
   model: string;
   year: number;
@@ -30,62 +31,71 @@ interface ListedVehicle {
 
 type TabType = "garage" | "listings";
 
-// Call Vehicle listing to get info and display it here
-
 export const AccountPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [activeTab, setActiveTab] = useState<TabType>("garage");
   const [error, setError] = useState<string | null>(null);
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
   const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
 
-  // Fetch garage vehicles and listings on mount
+  // Fetch garage vehicles and listings
   useEffect(() => {
     if (!user?.id) return;
 
     const fetchData = async () => {
       try {
+        setError(null);
+
         const res = await fetch(
           `http://localhost:8080/api/vehicles/user/${user.id}`,
         );
+
+        if (!res.ok) {
+          throw new Error(`Failed request: ${res.status}`);
+        }
+
         const data = await res.json();
 
-        // Show all vehicles in garage, and separated listed vehicles for listings tab
+        // ✅ Safe guard (prevents white screen if result is missing)
+        const rows: any[] = Array.isArray(data?.result) ? data.result : [];
+
         const garage: GarageVehicle[] = [];
         const listed: ListedVehicle[] = [];
 
-        data.result.forEach((item: any) => {
-          const vehicle = {
+        rows.forEach((item: any) => {
+          if (!item?.vehicles) return;
+
+          const vehicle: GarageVehicle = {
             id: item.vehicles.id,
             make: item.vehicles.make,
             model: item.vehicles.model,
             year: item.vehicles.year,
-            price: Number(item.vehicles.price),
-            condition: item.vehicles.condition,
-            status: item.vehicles.status,
+            price: Number(item.vehicles.price ?? 0),
+            condition: item.vehicles.condition ?? "",
+            status: item.vehicles.status ?? "",
           };
 
-          // All vehicles go to garage
           garage.push(vehicle);
 
-          // If vehicle has a listing, also add to listings tab
           if (item.listings) {
             listed.push({
               id: item.listings.id,
+              vehicleId: item.vehicles.id,
               make: item.vehicles.make,
               model: item.vehicles.model,
               year: item.vehicles.year,
-              start_price: Number(item.listings.start_price),
-              reserve_price: Number(item.listings.reserve_price),
+              start_price: Number(item.listings.start_price ?? 0),
+              reserve_price: Number(item.listings.reserve_price ?? 0),
               buy_now_price: item.listings.buy_now_price
                 ? Number(item.listings.buy_now_price)
                 : undefined,
-              current_price: Number(item.listings.current_price),
-              start_time: item.listings.start_time,
-              end_time: item.listings.end_time,
-              statusListing: item.listings.status,
-              location: item.listings.location,
+              current_price: Number(item.listings.current_price ?? 0),
+              start_time: item.listings.start_time ?? "",
+              end_time: item.listings.end_time ?? "",
+              statusListing: item.listings.status ?? "",
+              location: item.listings.location ?? "",
             });
           }
         });
@@ -99,7 +109,8 @@ export const AccountPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user?.id]);
+
   return (
     <section className="account-page">
       <div className="account-container">
@@ -173,20 +184,16 @@ export const AccountPage: React.FC = () => {
             </Button>
           </div>
 
+          {error && <p className="error-text">{error}</p>}
+
           <div className="vehicles-list">
             {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
-            0 ? (
+              0 ? (
               (activeTab === "garage" ? garageVehicles : listedVehicles).map(
                 (item) => (
                   <div
                     key={item.id}
                     className="vehicle-item"
-                    //Remove click to go to marketplace listing (this should go to seperate pageand be able to edit info there with seller dashboard)
-                    // onClick={() => {
-                    //   if (activeTab === "listings") {
-                    //     navigate(`/listings/${item.id}`);
-                    //   }
-                    // }}
                     style={{
                       cursor: activeTab === "listings" ? "pointer" : "default",
                     }}
@@ -220,6 +227,7 @@ export const AccountPage: React.FC = () => {
                             {(item as ListedVehicle).make}{" "}
                             {(item as ListedVehicle).model}
                           </h3>
+
                           <div className="vehicle-details">
                             <span className="price">
                               $
@@ -244,6 +252,31 @@ export const AccountPage: React.FC = () => {
                             >
                               {(item as ListedVehicle).statusListing}
                             </span>
+                          </div>
+
+                          {/* Analytics and Edit button (only in Listings tab) */}
+                          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                            <Button
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!user?.id) return;
+
+                                navigate(`/seller/${user.id}/analytics?listingId=${(item as ListedVehicle).id}`);
+                              }}
+                            >
+                              View Analytics
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/edit-listing/${(item as ListedVehicle).id}`);
+                              }}
+                            >
+                              Edit Auction
+                            </Button>
                           </div>
                         </>
                       )}
