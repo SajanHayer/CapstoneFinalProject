@@ -10,7 +10,7 @@ export const LandingPage: React.FC = () => {
     <section className="landing">
       <div className="landing-hero">
         <h1>
-          Welcome to <span className="accent">Power BIDZ</span>
+          Welcome to <span className="accent">Lets Ride Canada</span>
         </h1>
         <p className="subtitle">
           Ignite your bid. Transparent, time-boxed vehicle auctions across

@@ -69,8 +69,6 @@ export const AnalyticsDashboardPage: React.FC = () => {
     run();
   }, []);
 
-  const topListings = useMemo(() => (data?.byListing ?? []).slice(0, 8), [data]);
-
   // Build a tiny activity series from recent bids (last 7 buckets)
   const activity = useMemo(() => {
     const bids = data?.recentBids ?? [];

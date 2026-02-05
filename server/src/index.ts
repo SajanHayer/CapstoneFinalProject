@@ -9,6 +9,8 @@ import { healthRouter } from "./routes/healthRoutes";
 import { auctionRouter } from "./routes/auctionRoutes.ts";
 import { startAuctionCron } from "./cron/auctionEnd.cron";
 import { analyticsRouter } from "./routes/analyticsRoutes";
+import listingAnalyticsRoutes from "./routes/listingAnalytics";
+
 
 import { Server } from "socket.io";
 import http from "http";
@@ -31,7 +33,8 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
-app.use("/api/listings", auctionRouter);
+app.use("/api/listings-analytics", listingAnalyticsRoutes);
+app.use("/api/listings", auctionRouter);         
 
 startAuctionCron();
 app.use("/api/analytics", analyticsRouter);
@@ -39,7 +42,7 @@ app.use("/api/analytics", analyticsRouter);
 // Lightweight docs index (handy for sponsors / quick testing)
 app.get("/api/docs", (_req, res) => {
   res.json({
-    name: "PowerBIDZ API",
+    name: "Lets Ride Canada API",
     endpoints: [
       { method: "GET", path: "/api/health", description: "Health check" },
       { method: "POST", path: "/api/auth/register", description: "Register" },
