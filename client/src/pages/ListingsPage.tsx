@@ -131,7 +131,7 @@ export const ListingsPage: React.FC = () => {
       <header className="market-header">
         <div>
           <h1 className="market-title">Browse vehicles</h1>
-          <p className="market-sub">Find vehicles from across Power BIDZ auctions and sales.</p>
+          <p className="market-sub">Find vehicles from across Lets Ride Canada auctions and sales.</p>
         </div>
 
         <div className="market-header-actions">

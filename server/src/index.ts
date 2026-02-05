@@ -42,7 +42,7 @@ app.use("/api/analytics", analyticsRouter);
 // Lightweight docs index (handy for sponsors / quick testing)
 app.get("/api/docs", (_req, res) => {
   res.json({
-    name: "PowerBIDZ API",
+    name: "Lets Ride Canada API",
     endpoints: [
       { method: "GET", path: "/api/health", description: "Health check" },
       { method: "POST", path: "/api/auth/register", description: "Register" },
