@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import logo from "../../assets/logo-letsrcanada.png";
+import logo from "../../assets/logo.png";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -32,13 +32,16 @@ export const Navbar: React.FC = () => {
         <NavLink to="/analytics" className="nav-link">
           Analytics
         </NavLink>
-        {/* <NavLink to="/favourites" className="nav-link">
+        <NavLink to="/favourites" className="nav-link">
           Favourites
-        </NavLink> */}
+        </NavLink>
         {isLoggedIn && (
           <>
             <NavLink to="/account" className="nav-link">
               Account
+            </NavLink>
+            <NavLink to="/add-vehicle" className="nav-link">
+              Add Vehicle
             </NavLink>
           </>
         )}
