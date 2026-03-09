@@ -79,7 +79,9 @@ router.get("/:listingId/bids", async (req, res) => {
       result: rows.map((r) => ({
         amount: Number(r.bid_amount),
         createdAt:
-          r.bid_time instanceof Date ? r.bid_time.toISOString() : String(r.bid_time),
+          r.bid_time instanceof Date
+            ? r.bid_time.toISOString()
+            : String(r.bid_time),
         bidderId: Number(r.bidder_id),
         bidderName: r.bidder_name,
       })),

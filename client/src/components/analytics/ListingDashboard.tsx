@@ -52,8 +52,7 @@ const LineChart: React.FC<{ bids: BidPoint[] }> = ({ bids }) => {
   }
 
   const sorted = [...bids].sort(
-    (a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
   const values = sorted.map((b) => b.amount);
@@ -68,9 +67,7 @@ const LineChart: React.FC<{ bids: BidPoint[] }> = ({ bids }) => {
   const getY = (v: number) =>
     height - padding - ((v - minY) / range) * (height - padding * 2);
 
-  const points = sorted
-    .map((b, i) => `${getX(i)},${getY(b.amount)}`)
-    .join(" ");
+  const points = sorted.map((b, i) => `${getX(i)},${getY(b.amount)}`).join(" ");
 
   return (
     <svg
@@ -112,9 +109,7 @@ const LineChart: React.FC<{ bids: BidPoint[] }> = ({ bids }) => {
           fill="var(--accent)"
         >
           <title>
-            {b.bidderName} (ID: {b.bidderId})
-            {"\n"}
-            ${b.amount.toLocaleString()}
+            {b.bidderName} (ID: {b.bidderId}){"\n"}${b.amount.toLocaleString()}
             {"\n"}
             {new Date(b.createdAt).toLocaleString()}
           </title>
@@ -170,19 +165,22 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
     );
 
     const totalBids = sortedBids.length;
-    const highestBid = totalBids > 0 ? Math.max(...sortedBids.map((b) => b.amount)) : 0;
-    const avgBid = totalBids > 0 ? sortedBids.reduce((sum, b) => sum + b.amount, 0) / totalBids : 0;
+    const highestBid =
+      totalBids > 0 ? Math.max(...sortedBids.map((b) => b.amount)) : 0;
+    const avgBid =
+      totalBids > 0
+        ? sortedBids.reduce((sum, b) => sum + b.amount, 0) / totalBids
+        : 0;
     const uniqueBidders = new Set(sortedBids.map((b) => b.bidderId)).size;
 
-    const firstBidTime = totalBids > 0 ? new Date(sortedBids[0].createdAt) : null;
+    const firstBidTime =
+      totalBids > 0 ? new Date(sortedBids[0].createdAt) : null;
     const lastBidTime =
       totalBids > 0 ? new Date(sortedBids[totalBids - 1].createdAt) : null;
 
     const timeSpanMinutes =
       firstBidTime && lastBidTime
-        ? Math.round(
-            (lastBidTime.getTime() - firstBidTime.getTime()) / 60000,
-          )
+        ? Math.round((lastBidTime.getTime() - firstBidTime.getTime()) / 60000)
         : 0;
 
     const deltas = sortedBids
@@ -195,7 +193,9 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
         : 0;
 
     const bidsPerHour =
-      timeSpanMinutes > 0 ? (totalBids / (timeSpanMinutes / 60)).toFixed(2) : "—";
+      timeSpanMinutes > 0
+        ? (totalBids / (timeSpanMinutes / 60)).toFixed(2)
+        : "—";
 
     return {
       totalBids,
@@ -291,7 +291,10 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
                 <div>
                   <div className="stat-label">Average Bid</div>
                   <div className="stat-value">
-                    ${stats.avgBid.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    $
+                    {stats.avgBid.toLocaleString(undefined, {
+                      maximumFractionDigits: 0,
+                    })}
                   </div>
                 </div>
                 <DollarSign size={20} />

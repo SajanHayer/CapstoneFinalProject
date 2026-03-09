@@ -33,7 +33,10 @@ export const AddVehiclePage: React.FC = () => {
   });
 
   const [images, setImages] = useState<File[]>([]);
-  const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
+  const previews = useMemo(
+    () => images.map((f) => URL.createObjectURL(f)),
+    [images],
+  );
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +65,9 @@ export const AddVehiclePage: React.FC = () => {
     setOk(null);
 
     if (!canPublish) {
-      setError("Guest mode can't publish vehicles. Please sign in to list a vehicle.");
+      setError(
+        "Guest mode can't publish vehicles. Please sign in to list a vehicle.",
+      );
       return;
     }
 
@@ -123,7 +128,8 @@ export const AddVehiclePage: React.FC = () => {
           <div className="av-header-content">
             <div className="av-header-title">List a vehicle</div>
             <div className="av-header-subtitle">
-              Sponsor-ready listings: clean data, crisp photos, and clear status.
+              Sponsor-ready listings: clean data, crisp photos, and clear
+              status.
             </div>
           </div>
           <div className="av-header-actions">
@@ -140,7 +146,8 @@ export const AddVehiclePage: React.FC = () => {
           <div className="av-alerts">
             {isGuest && (
               <div className="av-alert av-alert-info">
-                You're in Guest mode — you can browse everything, but you can't publish vehicles.
+                You're in Guest mode — you can browse everything, but you can't
+                publish vehicles.
               </div>
             )}
             {error && <div className="av-alert av-alert-error">{error}</div>}
@@ -253,8 +260,8 @@ export const AddVehiclePage: React.FC = () => {
                   <div key={src} className="av-photo-thumb">
                     <img src={src} alt={"preview-" + i} />
                     {i === 0 && <div className="av-photo-badge">Thumbnail</div>}
-                    <button 
-                      onClick={() => removeImage(i)} 
+                    <button
+                      onClick={() => removeImage(i)}
                       className="av-photo-remove-btn"
                       title="Remove"
                     >
@@ -270,7 +277,8 @@ export const AddVehiclePage: React.FC = () => {
             <div className="av-section-title">Listing preview</div>
             <div className="av-preview-vehicle">
               <div className="av-preview-title">
-                {form.year || "Year"} {form.make || "Make"} {form.model || "Model"}
+                {form.year || "Year"} {form.make || "Make"}{" "}
+                {form.model || "Model"}
               </div>
               <div className="av-preview-pills">
                 <Pill text={`Condition: ${form.condition}`} />
@@ -334,7 +342,11 @@ function LabeledSelect({
   return (
     <div className="av-input-group">
       <label className="av-label">{text}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="av-select">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="av-select"
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

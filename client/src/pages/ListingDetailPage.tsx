@@ -160,7 +160,8 @@ export const ListingDetailPage: React.FC = () => {
     const endTime = new Date(listing.end_time);
 
     if (now < startTime) return "UPCOMING";
-    if (now >= startTime && now < endTime && listing.status === "active") return "ACTIVE";
+    if (now >= startTime && now < endTime && listing.status === "active")
+      return "ACTIVE";
     return "EXPIRED";
   };
 
@@ -322,13 +323,12 @@ export const ListingDetailPage: React.FC = () => {
               {/* Bid Input */}
               {isAuctionUpcoming && (
                 <div className="bid-info-message">
-                  This auction hasn't started yet. Check back when it goes live to place bids!
+                  This auction hasn't started yet. Check back when it goes live
+                  to place bids!
                 </div>
               )}
               {!isAuctionActive && !isAuctionUpcoming && (
-                <div className="bid-info-message">
-                  This auction has ended.
-                </div>
+                <div className="bid-info-message">This auction has ended.</div>
               )}
               <div className="bid-input-section">
                 <label htmlFor="bid-amount">Place Your Bid</label>
@@ -349,7 +349,11 @@ export const ListingDetailPage: React.FC = () => {
                 disabled={bidAmount <= currentHighestBid || !isAuctionActive}
                 className="bid-button"
               >
-                {isAuctionUpcoming ? "Auction Not Started" : isAuctionActive ? "Place a Bid" : "Auction Ended"}
+                {isAuctionUpcoming
+                  ? "Auction Not Started"
+                  : isAuctionActive
+                    ? "Place a Bid"
+                    : "Auction Ended"}
               </button>
             </div>
           </aside>

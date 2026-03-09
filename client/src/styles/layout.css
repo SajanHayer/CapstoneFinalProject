@@ -301,7 +301,10 @@
   border-radius: 0.9rem;
   padding: 0.85rem 0.95rem;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.18s ease, border 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    border 0.18s ease;
   box-shadow: var(--shadow);
 }
 
@@ -312,7 +315,9 @@
 
 .market-tab-active {
   border-color: rgba(37, 99, 235, 0.55);
-  box-shadow: 0 0 0 4px var(--ring), var(--shadow2);
+  box-shadow:
+    0 0 0 4px var(--ring),
+    var(--shadow2);
 }
 
 .market-tab-label {
@@ -450,7 +455,9 @@
   background: linear-gradient(180deg, var(--cardSolid), var(--card));
   box-shadow: var(--shadow);
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
 }
 
 .listing-row:hover {
@@ -659,7 +666,9 @@
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
 .listing-card:hover {

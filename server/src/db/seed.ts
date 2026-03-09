@@ -17,7 +17,6 @@ async function seed() {
     await db.delete(listings);
     await db.delete(vehicles);
 
-
     // ---------------- Users ----------------
     const insertedUsers = await db
       .insert(users)

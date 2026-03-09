@@ -9,12 +9,7 @@ export async function settleEndedAuctions() {
   const endedListings = await db
     .select()
     .from(listings)
-    .where(
-      and(
-        eq(listings.status, "active"),
-        lte(listings.end_time, now)
-      )
-    );
+    .where(and(eq(listings.status, "active"), lte(listings.end_time, now)));
 
   for (const listing of endedListings) {
     // Get highest bid for this listing
@@ -50,8 +45,8 @@ export async function settleEndedAuctions() {
           })
           .where(eq(listings.id, listing.id));
       });
-    } 
-    // RESERVE NOT MET --> next steps 
+    }
+    // RESERVE NOT MET --> next steps
     else {
       await db
         .update(listings)

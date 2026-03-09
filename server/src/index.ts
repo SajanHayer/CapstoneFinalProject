@@ -11,7 +11,6 @@ import { startAuctionCron } from "./cron/auctionEnd.cron";
 import { analyticsRouter } from "./routes/analyticsRoutes";
 import listingAnalyticsRoutes from "./routes/listingAnalytics";
 
-
 import { Server } from "socket.io";
 import http from "http";
 import { registerAuctionSockets } from "./sockets/auction.socket.ts";
@@ -34,7 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
-app.use("/api/listings", auctionRouter);         
+app.use("/api/listings", auctionRouter);
 
 startAuctionCron();
 app.use("/api/analytics", analyticsRouter);
@@ -48,11 +47,31 @@ app.get("/api/docs", (_req, res) => {
       { method: "POST", path: "/api/auth/register", description: "Register" },
       { method: "POST", path: "/api/auth/login", description: "Login" },
       { method: "POST", path: "/api/auth/logout", description: "Logout" },
-      { method: "GET", path: "/api/auth/check", description: "Check current user" },
-      { method: "GET", path: "/api/vehicles", description: "List vehicles (public)" },
-      { method: "GET", path: "/api/vehicles/:id", description: "Get vehicle by id" },
-      { method: "POST", path: "/api/vehicles/create", description: "Create vehicle (auth)" },
-      { method: "GET", path: "/api/analytics/bids/summary", description: "Bids analytics (seller-scoped if logged in)" },
+      {
+        method: "GET",
+        path: "/api/auth/check",
+        description: "Check current user",
+      },
+      {
+        method: "GET",
+        path: "/api/vehicles",
+        description: "List vehicles (public)",
+      },
+      {
+        method: "GET",
+        path: "/api/vehicles/:id",
+        description: "Get vehicle by id",
+      },
+      {
+        method: "POST",
+        path: "/api/vehicles/create",
+        description: "Create vehicle (auth)",
+      },
+      {
+        method: "GET",
+        path: "/api/analytics/bids/summary",
+        description: "Bids analytics (seller-scoped if logged in)",
+      },
     ],
   });
 });

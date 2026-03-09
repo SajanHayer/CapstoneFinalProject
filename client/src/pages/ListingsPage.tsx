@@ -56,7 +56,11 @@ export const ListingsPage: React.FC = () => {
         let status: ListingStatus;
         if (now < startTime) {
           status = "UPCOMING"; // Scheduled for future
-        } else if (now >= startTime && now < endTime && listing.status === "active") {
+        } else if (
+          now >= startTime &&
+          now < endTime &&
+          listing.status === "active"
+        ) {
           status = "ACTIVE"; // Currently running
         } else {
           status = "EXPIRED"; // Ended or cancelled
@@ -118,7 +122,9 @@ export const ListingsPage: React.FC = () => {
         l.location.toLowerCase().includes(q)
       );
     })
-    .filter((l) => (make === "all" ? true : l.title.toLowerCase().includes(make)))
+    .filter((l) =>
+      make === "all" ? true : l.title.toLowerCase().includes(make),
+    )
     .sort((a, b) => {
       if (sort === "price") return b.currentPrice - a.currentPrice;
       if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
@@ -131,7 +137,9 @@ export const ListingsPage: React.FC = () => {
       <header className="market-header">
         <div>
           <h1 className="market-title">Browse vehicles</h1>
-          <p className="market-sub">Find vehicles from across Lets Ride Canada auctions and sales.</p>
+          <p className="market-sub">
+            Find vehicles from across Lets Ride Canada auctions and sales.
+          </p>
         </div>
 
         <div className="market-header-actions">
@@ -150,10 +158,14 @@ export const ListingsPage: React.FC = () => {
         {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map((s) => (
           <button
             key={s}
-            className={s === status ? "market-tab market-tab-active" : "market-tab"}
+            className={
+              s === status ? "market-tab market-tab-active" : "market-tab"
+            }
             onClick={() => setStatus(s)}
           >
-            <div className="market-tab-label">{s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}</div>
+            <div className="market-tab-label">
+              {s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}
+            </div>
             <div className="market-tab-sub">
               {s === "UPCOMING"
                 ? "Preview & proxy before Active"
@@ -173,7 +185,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Make</div>
-            <select className="select select-outline" value={make} onChange={(e) => setMake(e.target.value)}>
+            <select
+              className="select select-outline"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+            >
               <option value="all">All</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
@@ -185,7 +201,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Sort</div>
-            <select className="select select-outline" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+            <select
+              className="select select-outline"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+            >
               <option value="ending">Ending soonest</option>
               <option value="price">Price: high to low</option>
               <option value="bids">Most bids</option>
@@ -195,8 +215,18 @@ export const ListingsPage: React.FC = () => {
           <div className="sidebar-block">
             <div className="sidebar-label">View</div>
             <div className="view-toggle">
-              <button className={view === "list" ? "view-btn active" : "view-btn"} onClick={() => setView("list")}>List</button>
-              <button className={view === "grid" ? "view-btn active" : "view-btn"} onClick={() => setView("grid")}>Grid</button>
+              <button
+                className={view === "list" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("list")}
+              >
+                List
+              </button>
+              <button
+                className={view === "grid" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("grid")}
+              >
+                Grid
+              </button>
             </div>
           </div>
 
@@ -212,7 +242,7 @@ export const ListingsPage: React.FC = () => {
             <div className="results-count">
               {loading ? "Loading…" : `${visibleListings.length} results`}
             </div>
-            <button 
+            <button
               className="refresh-button"
               onClick={fetchListings}
               title="Refresh listings"
@@ -223,20 +253,20 @@ export const ListingsPage: React.FC = () => {
           </div>
 
           <div className={view === "grid" ? "listings-grid" : "listings-list"}>
-        {loading && <p>Loading listings...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && visibleListings.length === 0 && (
-          <p>No listings in this category yet.</p>
-        )}
-        {!loading &&
-          !error &&
-          visibleListings.map((l) =>
-            view === "grid" ? (
-              <ListingCard key={l.id} listing={l} />
-            ) : (
-              <ListingRowCard key={l.id} listing={l} />
-            ),
-          )}
+            {loading && <p>Loading listings...</p>}
+            {error && <p className="error">{error}</p>}
+            {!loading && !error && visibleListings.length === 0 && (
+              <p>No listings in this category yet.</p>
+            )}
+            {!loading &&
+              !error &&
+              visibleListings.map((l) =>
+                view === "grid" ? (
+                  <ListingCard key={l.id} listing={l} />
+                ) : (
+                  <ListingRowCard key={l.id} listing={l} />
+                ),
+              )}
           </div>
         </div>
       </div>

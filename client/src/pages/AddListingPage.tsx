@@ -31,13 +31,22 @@ export const AddListingPage: React.FC = () => {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const { register, handleSubmit, watch } = useForm<AddListingProps>({
+  const { register, handleSubmit, watch, setValue } = useForm<AddListingProps>({
     defaultValues: {
       type: "auction",
     },
   });
   const listingType = watch("type");
   const startTime = watch("start_time");
+  const reservePrice = watch("reserve_price");
+
+  // Calculate starting price as 75% of reserve price
+  useEffect(() => {
+    if (reservePrice && !isNaN(Number(reservePrice))) {
+      const calculatedStartPrice = Number(reservePrice) * 0.75;
+      setValue("start_price", calculatedStartPrice);
+    }
+  }, [reservePrice, setValue]);
 
   // Get minimum datetime (now) in correct format for datetime-local
   const getMinDateTime = () => {
@@ -134,9 +143,7 @@ export const AddListingPage: React.FC = () => {
         <div className="form-section">
           <h3>Vehicle</h3>
           {loading ? (
-            <p className="form-loading-text">
-              Loading your vehicles...
-            </p>
+            <p className="form-loading-text">Loading your vehicles...</p>
           ) : vehicles.length === 0 ? (
             <p className="form-error-text">
               No vehicles found. Please add a vehicle first.
@@ -181,10 +188,11 @@ export const AddListingPage: React.FC = () => {
           <h3>Pricing</h3>
           <div className="form-grid">
             <Input
-              label="Starting Price"
+              label="Starting Price (75% of Reserve Price)"
               type="number"
               step="0.01"
               placeholder="0.00"
+              disabled
               {...register("start_price", {
                 required: true,
                 valueAsNumber: true,

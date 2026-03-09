@@ -15,7 +15,10 @@ export const InfoItem = ({ title, value, subValue }: InfoItemProps) => {
       </p>
       <div
         className="px-4 py-3 rounded-lg border-2"
-        style={{ backgroundColor: "var(--card2)", borderColor: "var(--border)" }}
+        style={{
+          backgroundColor: "var(--card2)",
+          borderColor: "var(--border)",
+        }}
       >
         <p
           className="font-black text-3xl lg:text-4xl"

@@ -45,7 +45,9 @@ export const Navbar: React.FC = () => {
         <button
           className="btn btn-outline"
           onClick={toggleTheme}
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
         >
           {theme === "dark" ? "☀️" : "🌙"}
         </button>

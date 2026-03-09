@@ -15,13 +15,16 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
 
     const calculateTimeRemaining = () => {
       const now = new Date();
-      const target = listing.status === "UPCOMING" 
-        ? new Date(listing.startsAt)
-        : new Date(listing.endsAt);
+      const target =
+        listing.status === "UPCOMING"
+          ? new Date(listing.startsAt)
+          : new Date(listing.endsAt);
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
+        setTimeRemaining(
+          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
+        );
         return;
       }
 
@@ -30,7 +33,7 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     };
 
@@ -60,7 +63,8 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
           ${listing.currentPrice.toLocaleString()}
         </p>
         <div className="listing-footer">
-          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
+          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") &&
+          timeRemaining ? (
             <p className="listing-timer">{timeRemaining}</p>
           ) : (
             <p className="listing-bids">{listing.bids} bids</p>

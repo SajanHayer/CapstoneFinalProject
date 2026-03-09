@@ -68,7 +68,9 @@ export const EditListingPage: React.FC = () => {
         const l = json?.result;
 
         if (!l) {
-          throw new Error("Missing 'result' from API. Check backend route response.");
+          throw new Error(
+            "Missing 'result' from API. Check backend route response.",
+          );
         }
 
         // Locked title fields
@@ -88,7 +90,8 @@ export const EditListingPage: React.FC = () => {
           description: l.description ?? "",
           end_time: endLocal,
           reserve_price: Number(l.reserve_price ?? 0),
-          buy_now_price: l.buy_now_price != null ? Number(l.buy_now_price) : undefined,
+          buy_now_price:
+            l.buy_now_price != null ? Number(l.buy_now_price) : undefined,
           location: l.location ?? "",
         });
       } catch (e: any) {
@@ -166,7 +169,8 @@ export const EditListingPage: React.FC = () => {
         >
           <strong>Cannot Edit Listing</strong>
           <p style={{ marginTop: 8, marginBottom: 0 }}>
-            This listing has already begun. You can no longer edit auction details once the listing starts.
+            This listing has already begun. You can no longer edit auction
+            details once the listing starts.
           </p>
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
@@ -193,7 +197,9 @@ export const EditListingPage: React.FC = () => {
           <div style={{ fontWeight: 700, marginBottom: 6 }}>Description</div>
           <textarea
             value={form.description}
-            onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, description: e.target.value }))
+            }
             rows={6}
             style={{
               width: "100%",
@@ -205,11 +211,15 @@ export const EditListingPage: React.FC = () => {
         </label>
 
         <label>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>Auction End Time</div>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>
+            Auction End Time
+          </div>
           <input
             type="datetime-local"
             value={form.end_time}
-            onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, end_time: e.target.value }))
+            }
             style={{
               width: "100%",
               padding: 10,
@@ -246,7 +256,8 @@ export const EditListingPage: React.FC = () => {
             onChange={(e) =>
               setForm((p) => ({
                 ...p,
-                buy_now_price: e.target.value === "" ? undefined : Number(e.target.value),
+                buy_now_price:
+                  e.target.value === "" ? undefined : Number(e.target.value),
               }))
             }
             style={{
@@ -263,7 +274,9 @@ export const EditListingPage: React.FC = () => {
           <input
             type="text"
             value={form.location}
-            onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, location: e.target.value }))
+            }
             style={{
               width: "100%",
               padding: 10,

@@ -152,8 +152,6 @@ auctionRouter.delete("/remove/:id", async (req, res) => {
   }
 });
 
-
-
 /* ----------------------------------------------
   GET /api/listings --> Get all listings
 ------------------------------------------------ */

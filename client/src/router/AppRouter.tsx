@@ -32,7 +32,10 @@ export const AppRouter: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
-        <Route path="/seller/:sellerId/analytics" element={<SellerAnalyticsPage />} />
+        <Route
+          path="/seller/:sellerId/analytics"
+          element={<SellerAnalyticsPage />}
+        />
         <Route path="/edit-listing/:listingId" element={<EditListingPage />} />
       </Route>
     </Routes>

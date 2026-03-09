@@ -41,7 +41,9 @@ export const AccountPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
   const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
-  const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
+  const [dashboardListingId, setDashboardListingId] = useState<number | null>(
+    null,
+  );
 
   // Fetch garage vehicles and listings
   useEffect(() => {
@@ -191,7 +193,7 @@ export const AccountPage: React.FC = () => {
 
           <div className="vehicles-list">
             {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
-              0 ? (
+            0 ? (
               (activeTab === "garage" ? garageVehicles : listedVehicles).map(
                 (item) => (
                   <div
@@ -254,10 +256,18 @@ export const AccountPage: React.FC = () => {
                               const listing = item as ListedVehicle;
                               const startTime = new Date(listing.start_time);
                               const now = new Date();
-                              const displayStatus = startTime > now ? "Upcoming" : listing.statusListing;
-                              const statusClass = startTime > now ? "upcoming" : listing.statusListing.toLowerCase();
+                              const displayStatus =
+                                startTime > now
+                                  ? "Upcoming"
+                                  : listing.statusListing;
+                              const statusClass =
+                                startTime > now
+                                  ? "upcoming"
+                                  : listing.statusListing.toLowerCase();
                               return (
-                                <span className={`listing-status-tag status-${statusClass}`}>
+                                <span
+                                  className={`listing-status-tag status-${statusClass}`}
+                                >
                                   {displayStatus}
                                 </span>
                               );
@@ -265,12 +275,16 @@ export const AccountPage: React.FC = () => {
                           </div>
 
                           {/* Analytics and Edit button (only in Listings tab) */}
-                          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                          <div
+                            style={{ marginTop: 10, display: "flex", gap: 10 }}
+                          >
                             <Button
                               variant="primary"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setDashboardListingId((item as ListedVehicle).id);
+                                setDashboardListingId(
+                                  (item as ListedVehicle).id,
+                                );
                               }}
                             >
                               View Analytics
@@ -278,12 +292,21 @@ export const AccountPage: React.FC = () => {
 
                             {(() => {
                               const listing = item as ListedVehicle;
-                              const hasStarted = new Date(listing.start_time) <= new Date();
-                              const isEnded = listing.statusListing === "ended" || listing.statusListing === "sold";
+                              const hasStarted =
+                                new Date(listing.start_time) <= new Date();
+                              const isEnded =
+                                listing.statusListing === "ended" ||
+                                listing.statusListing === "sold";
                               const cannotEdit = hasStarted || isEnded;
-                              
+
                               return (
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                  }}
+                                >
                                   <Button
                                     variant="outline"
                                     disabled={cannotEdit}
@@ -293,7 +316,11 @@ export const AccountPage: React.FC = () => {
                                         navigate(`/edit-listing/${listing.id}`);
                                       }
                                     }}
-                                    title={cannotEdit ? "Cannot edit listing once it starts or ends" : "Edit auction details"}
+                                    title={
+                                      cannotEdit
+                                        ? "Cannot edit listing once it starts or ends"
+                                        : "Edit auction details"
+                                    }
                                   >
                                     Edit Auction
                                   </Button>
@@ -378,19 +405,43 @@ export const AccountPage: React.FC = () => {
               listing={
                 listedVehicles.find((v) => v.id === dashboardListingId)
                   ? {
-                      id: listedVehicles.find((v) => v.id === dashboardListingId)!.id,
+                      id: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.id,
                       title: `${listedVehicles.find((v) => v.id === dashboardListingId)!.year} ${listedVehicles.find((v) => v.id === dashboardListingId)!.make} ${listedVehicles.find((v) => v.id === dashboardListingId)!.model}`,
-                      year: listedVehicles.find((v) => v.id === dashboardListingId)!.year,
-                      make: listedVehicles.find((v) => v.id === dashboardListingId)!.make,
-                      model: listedVehicles.find((v) => v.id === dashboardListingId)!.model,
-                      location: listedVehicles.find((v) => v.id === dashboardListingId)!.location,
-                      status: listedVehicles.find((v) => v.id === dashboardListingId)!.statusListing,
-                      start_time: listedVehicles.find((v) => v.id === dashboardListingId)!.start_time,
-                      end_time: listedVehicles.find((v) => v.id === dashboardListingId)!.end_time,
-                      start_price: listedVehicles.find((v) => v.id === dashboardListingId)!.start_price,
-                      current_price: listedVehicles.find((v) => v.id === dashboardListingId)!.current_price,
-                      reserve_price: listedVehicles.find((v) => v.id === dashboardListingId)!.reserve_price,
-                      buy_now_price: listedVehicles.find((v) => v.id === dashboardListingId)!.buy_now_price || 0,
+                      year: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.year,
+                      make: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.make,
+                      model: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.model,
+                      location: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.location,
+                      status: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.statusListing,
+                      start_time: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.start_time,
+                      end_time: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.end_time,
+                      start_price: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.start_price,
+                      current_price: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.current_price,
+                      reserve_price: listedVehicles.find(
+                        (v) => v.id === dashboardListingId,
+                      )!.reserve_price,
+                      buy_now_price:
+                        listedVehicles.find((v) => v.id === dashboardListingId)!
+                          .buy_now_price || 0,
                     }
                   : undefined
               }
