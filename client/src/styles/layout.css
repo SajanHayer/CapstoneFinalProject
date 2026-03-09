@@ -392,6 +392,36 @@
   color: var(--muted);
 }
 
+.alert-box {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 16px;
+}
+
+.alert-preview {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.create-alert-btn {
+  width: 100%;
+  padding: 10px;
+  background: #4f7cff;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.create-alert-btn:hover {
+  background: #3a63d9;
+}
+
 .market-results {
   min-width: 0;
 }

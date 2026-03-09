@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ListingCard } from "../components/listings/ListingCard";
 import { ListingRowCard } from "../components/listings/ListingRowCard";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { Range } from "react-range";
 
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
@@ -29,7 +30,13 @@ export const ListingsPage: React.FC = () => {
   const [sort, setSort] = useState<"ending" | "price" | "bids">("ending");
   const [make, setMake] = useState<string>("all");
 
-  // Fetch listings from backend
+  const [yearRange, setYearRange] = useState<number>(2010);
+
+  const [priceRange, setPriceRange] = useState<number[]>([0, 100000]);
+  const [mileageRange, setMileageRange] = useState<number[]>([0, 200000]);
+
+  const [endingSoon, setEndingSoon] = useState(false);
+
   useEffect(() => {
     const fetchListings = async () => {
       try {
@@ -43,7 +50,7 @@ export const ListingsPage: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch listings");
 
         const data = await res.json();
-        // Map backend data to Listing type
+
         const mappedListings: Listing[] = data.vehicles.map((v: any) => ({
           id: v.id.toString(),
           title: `${v.year} ${v.make} ${v.model}`,
@@ -58,8 +65,8 @@ export const ListingsPage: React.FC = () => {
             v.status === "available"
               ? "ACTIVE"
               : v.status === "pending"
-                ? "UPCOMING"
-                : "EXPIRED",
+              ? "UPCOMING"
+              : "EXPIRED",
           endsAt: v.end_time ?? new Date().toISOString(),
           bids: v.bids_count ?? 0,
         }));
@@ -75,14 +82,13 @@ export const ListingsPage: React.FC = () => {
     fetchListings();
   }, []);
 
-  // Derived filter/sort
   const makes = Array.from(
     new Set(
       listings
         .map((l) => l.title.split(" ")[1])
         .filter(Boolean)
-        .map((m) => m.toLowerCase()),
-    ),
+        .map((m) => m.toLowerCase())
+    )
   ).sort();
 
   const visibleListings = listings
@@ -96,10 +102,18 @@ export const ListingsPage: React.FC = () => {
       );
     })
     .filter((l) => (make === "all" ? true : l.title.toLowerCase().includes(make)))
+    .filter((l) => l.year >= yearRange)
+    .filter((l) => l.mileage >= mileageRange[0] && l.mileage <= mileageRange[1])
+    .filter((l) => l.currentPrice >= priceRange[0] && l.currentPrice <= priceRange[1])
+    .filter((l) => {
+      if (!endingSoon) return true;
+      const hoursLeft =
+        (new Date(l.endsAt).getTime() - Date.now()) / (1000 * 60 * 60);
+      return hoursLeft <= 24;
+    })
     .sort((a, b) => {
       if (sort === "price") return b.currentPrice - a.currentPrice;
       if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
-      // ending
       return new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime();
     });
 
@@ -108,7 +122,9 @@ export const ListingsPage: React.FC = () => {
       <header className="market-header">
         <div>
           <h1 className="market-title">Browse vehicles</h1>
-          <p className="market-sub">Find vehicles from across Lets Ride Canada auctions and sales.</p>
+          <p className="market-sub">
+            Find vehicles from across Lets Ride Canada auctions and sales.
+          </p>
         </div>
 
         <div className="market-header-actions">
@@ -130,13 +146,15 @@ export const ListingsPage: React.FC = () => {
             className={s === status ? "market-tab market-tab-active" : "market-tab"}
             onClick={() => setStatus(s)}
           >
-            <div className="market-tab-label">{s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}</div>
+            <div className="market-tab-label">
+              {s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}
+            </div>
             <div className="market-tab-sub">
               {s === "UPCOMING"
                 ? "Preview & proxy before Active"
                 : s === "ACTIVE"
-                  ? "Always-on time-boxed auctions"
-                  : "Recently closed listings"}
+                ? "Always-on time-boxed auctions"
+                : "Recently closed listings"}
             </div>
           </button>
         ))}
@@ -150,7 +168,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Make</div>
-            <select className="select select-outline" value={make} onChange={(e) => setMake(e.target.value)}>
+            <select
+              className="select select-outline"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+            >
               <option value="all">All</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
@@ -161,8 +183,130 @@ export const ListingsPage: React.FC = () => {
           </div>
 
           <div className="sidebar-block">
+            <div className="sidebar-label">Year: {yearRange}+</div>
+            <input
+              type="range"
+              min="1990"
+              max="2025"
+              value={yearRange}
+              onChange={(e) => setYearRange(Number(e.target.value))}
+              style={{
+                width: "100%",
+                marginTop: "10px",
+                accentColor: "#4f7cff",
+                cursor: "pointer"
+              }}
+            />
+          </div>
+
+          <div className="sidebar-block">
+            <div className="sidebar-label">
+              Mileage: {mileageRange[0].toLocaleString()} – {mileageRange[1].toLocaleString()} km
+            </div>
+
+            <Range
+              step={5000}
+              min={0}
+              max={200000}
+              values={mileageRange}
+              onChange={(values) => setMileageRange(values)}
+              renderTrack={({ props, children }) => (
+                <div
+                  {...props}
+                  style={{
+                    ...props.style,
+                    height: "6px",
+                    width: "100%",
+                    background: "#555",
+                    borderRadius: "4px",
+                    position: "relative",
+                    marginTop: "12px",
+                  }}
+                >
+                  {children}
+                </div>
+              )}
+              renderThumb={({ props }) => (
+                <div
+                  {...props}
+                  style={{
+                    ...props.style,
+                    height: "18px",
+                    width: "18px",
+                    borderRadius: "50%",
+                    backgroundColor: "#4f7cff",
+                    border: "3px solid white",
+                    boxShadow: "0 0 6px rgba(0,0,0,0.5)",
+                    cursor: "pointer",
+                  }}
+                />
+              )}
+            />
+          </div>
+
+          <div className="sidebar-block">
+            <div className="sidebar-label">
+              Price: ${priceRange[0].toLocaleString()} – ${priceRange[1].toLocaleString()}
+            </div>
+
+            <Range
+              step={1000}
+              min={0}
+              max={100000}
+              values={priceRange}
+              onChange={(values) => setPriceRange(values)}
+              renderTrack={({ props, children }) => (
+                <div
+                  {...props}
+                  style={{
+                    ...props.style,
+                    height: "6px",
+                    width: "100%",
+                    background: "#555",
+                    borderRadius: "4px",
+                    position: "relative",
+                    marginTop: "12px",
+                  }}
+                >
+                  {children}
+                </div>
+              )}
+              renderThumb={({ props }) => (
+                <div
+                  {...props}
+                  style={{
+                    ...props.style,
+                    height: "18px",
+                    width: "18px",
+                    borderRadius: "50%",
+                    backgroundColor: "#4f7cff",
+                    border: "3px solid white",
+                    boxShadow: "0 0 6px rgba(0,0,0,0.5)",
+                    cursor: "pointer",
+                  }}
+                />
+              )}
+            />
+          </div>
+
+          <div className="sidebar-block">
+            <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={endingSoon}
+                onChange={(e) => setEndingSoon(e.target.checked)}
+              />
+              Ending within 24 hours
+            </label>
+          </div>
+
+          <div className="sidebar-block">
             <div className="sidebar-label">Sort</div>
-            <select className="select select-outline" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+            <select
+              className="select select-outline"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+            >
               <option value="ending">Ending soonest</option>
               <option value="price">Price: high to low</option>
               <option value="bids">Most bids</option>
@@ -172,9 +316,63 @@ export const ListingsPage: React.FC = () => {
           <div className="sidebar-block">
             <div className="sidebar-label">View</div>
             <div className="view-toggle">
-              <button className={view === "list" ? "view-btn active" : "view-btn"} onClick={() => setView("list")}>List</button>
-              <button className={view === "grid" ? "view-btn active" : "view-btn"} onClick={() => setView("grid")}>Grid</button>
+              <button
+                className={view === "list" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("list")}
+              >
+                List
+              </button>
+              <button
+                className={view === "grid" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("grid")}
+              >
+                Grid
+              </button>
             </div>
+          </div>
+
+          <div className="sidebar-block">
+            <button
+              className="select select-outline"
+              onClick={() => {
+                setMake("all");
+                setYearRange(2010);
+                setMileageRange([0, 200000]);
+                setPriceRange([0, 100000]);
+                setEndingSoon(false);
+                setSort("ending");
+              }}
+            >
+              Clear Filters
+            </button>
+          </div>
+
+          <div className="sidebar-block alert-box">
+            <div className="sidebar-label">Email Alerts</div>
+
+            <div className="alert-preview">
+              <div>Make: {make === "all" ? "Any" : make.toUpperCase()}</div>
+              <div>Year: {yearRange}+</div>
+              <div>
+                Price: ${priceRange[0].toLocaleString()} – $
+                {priceRange[1].toLocaleString()}
+              </div>
+              <div>
+                Mileage: {mileageRange[0].toLocaleString()} –{" "}
+                {mileageRange[1].toLocaleString()} km
+              </div>
+            </div>
+
+            <button
+              className="create-alert-btn"
+              onClick={() =>
+                alert(
+                  "Email alert created! You'll be notified when vehicles match these filters."
+                )
+              }
+            >
+              🔔 Create Email Alert
+            </button>
           </div>
 
           <div className="sidebar-hint">
@@ -189,21 +387,24 @@ export const ListingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className={view === "grid" ? "listings-grid" : "listings-list"}>
-        {loading && <p>Loading listings...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && visibleListings.length === 0 && (
-          <p>No listings in this category yet.</p>
-        )}
-        {!loading &&
-          !error &&
-          visibleListings.map((l) =>
-            view === "grid" ? (
-              <ListingCard key={l.id} listing={l} />
-            ) : (
-              <ListingRowCard key={l.id} listing={l} />
-            ),
-          )}
+          <div
+  className={view === "grid" ? "listings-grid" : "listings-list"}
+  style={{ minHeight: "500px" }}
+>
+            {loading && <p>Loading listings...</p>}
+            {error && <p className="error">{error}</p>}
+            {!loading && !error && visibleListings.length === 0 && (
+              <p>No listings in this category yet.</p>
+            )}
+            {!loading &&
+              !error &&
+              visibleListings.map((l) =>
+                view === "grid" ? (
+                  <ListingCard key={l.id} listing={l} />
+                ) : (
+                  <ListingRowCard key={l.id} listing={l} />
+                )
+              )}
           </div>
         </div>
       </div>
