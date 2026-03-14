@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
+import { BidHistory } from "../components/listings/BidHistory";
 import { socket } from "../lib/socket";
 import { useAuth } from "../context/AuthContext";
 import "../styles/listingdetail.css";
@@ -44,7 +45,11 @@ export const ListingDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [currentHighestBid, setCurrentHighestBid] = useState<number>(0);
+  const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
+  const [userLocation, setUserLocation] = useState<string>("");
+  const [isLocationValid, setIsLocationValid] = useState<boolean>(false);
+  const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -57,6 +62,19 @@ export const ListingDetailPage: React.FC = () => {
         setVehicle(data.result.vehicle);
         setListing(data.result);
         setCurrentHighestBid(Number(data.result.current_price));
+        
+        // Fetch highest bidder info
+        const bidsRes = await fetch(`http://localhost:8080/api/listings/${id}/bids`);
+        const bidsData = await bidsRes.json();
+        if (bidsData.result && bidsData.result.length > 0) {
+          // Find highest bid
+          const highestBid = bidsData.result.reduce((max: any, bid: any) =>
+            Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max
+          );
+          if (highestBid) {
+            setHighestBidderId(highestBid.bidder_id);
+          }
+        }
       } catch (err) {
         setError("Failed to load vehicle details");
         console.error(err);
@@ -77,11 +95,19 @@ export const ListingDetailPage: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    const handleBidUpdate = (data: { amount: number }) => {
+    const handleBidUpdate = (data: { amount: number; bidder_id?: number; end_time?: string }) => {
       setCurrentHighestBid(data.amount);
-      setListing((prev) =>
-        prev ? { ...prev, current_price: data.amount } : null,
-      );
+      if (data.bidder_id) setHighestBidderId(data.bidder_id);
+      if (data.end_time) {
+        // Update end_time if auction was extended
+        setListing((prev) =>
+          prev ? { ...prev, current_price: data.amount, end_time: data.end_time || prev.end_time } : null,
+        );
+      } else {
+        setListing((prev) =>
+          prev ? { ...prev, current_price: data.amount } : null,
+        );
+      }
     };
 
     socket.on("bid_update", handleBidUpdate);
@@ -143,13 +169,31 @@ export const ListingDetailPage: React.FC = () => {
   }
 
   const handlePlaceBid = () => {
-    if (!bidAmount) return;
+    if (!bidAmount || !userLocation) {
+      alert("Please enter both a bid amount and your location");
+      return;
+    }
+
+    // Check if location is validated from Google Places
+    if (!isLocationValid) {
+      alert("Please select a valid location from the suggestions");
+      return;
+    }
+
+    // Check if user is already highest bidder
+    if (highestBidderId === user?.id) {
+      alert("You are already the highest bidder");
+      return;
+    }
 
     socket.emit("place_bid", {
       auctionId: id,
       amount: bidAmount,
       userId: user?.id,
+      location: userLocation,
     });
+
+    setBidAmount(0);
   };
 
   // Determine listing status
@@ -218,8 +262,8 @@ export const ListingDetailPage: React.FC = () => {
               <span
                 className={`tag tag-status tag-status-${listing?.status || "active"}`}
               >
-                {listing?.status.charAt(0).toUpperCase() +
-                  listing?.status.slice(1)}
+                {listing?.status && listing.status.charAt(0).toUpperCase() +
+                  listing.status.slice(1)}
               </span>
               <span className="tag tag-location">📍 {listing?.location}</span>
             </div>
@@ -277,6 +321,13 @@ export const ListingDetailPage: React.FC = () => {
                 <p>{vehicle.description}</p>
               </div>
             )}
+
+            {/* Bid History - Only show for ACTIVE auctions */}
+            {isAuctionActive && (
+              <div className="description-card" style={{ marginTop: "24px" }}>
+                <BidHistory listingId={id} />
+              </div>
+            )}
           </div>
 
           {/* Bidding Section - Right Side */}
@@ -330,6 +381,11 @@ export const ListingDetailPage: React.FC = () => {
               {!isAuctionActive && !isAuctionUpcoming && (
                 <div className="bid-info-message">This auction has ended.</div>
               )}
+              {highestBidderId === user?.id && isAuctionActive && (
+                <div className="bid-info-message" style={{ backgroundColor: "#e3f2fd", color: "#1565c0" }}>
+                  ✓ You are the highest bidder!
+                </div>
+              )}
               <div className="bid-input-section">
                 <label htmlFor="bid-amount">Place Your Bid</label>
                 <input
@@ -339,21 +395,35 @@ export const ListingDetailPage: React.FC = () => {
                   onChange={(e) => setBidAmount(Number(e.target.value))}
                   placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
                   className="bid-input"
-                  disabled={!isAuctionActive}
+                  disabled={!isAuctionActive || highestBidderId === user?.id}
+                />
+              </div>
+              <div className="bid-input-section">
+                <label htmlFor="user-location">Your Location</label>
+                <input
+                  id="user-location"
+                  type="text"
+                  value={userLocation}
+                  onChange={(e) => setUserLocation(e.target.value)}
+                  placeholder="Enter your location (e.g., Calgary, AB)"
+                  className="bid-input"
+                  disabled={!isAuctionActive || highestBidderId === user?.id}
                 />
               </div>
 
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid || !isAuctionActive}
+                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation || !isLocationValid || highestBidderId === user?.id}
                 className="bid-button"
               >
-                {isAuctionUpcoming
-                  ? "Auction Not Started"
-                  : isAuctionActive
-                    ? "Place a Bid"
-                    : "Auction Ended"}
+                {highestBidderId === user?.id && isAuctionActive
+                  ? "You Are Highest Bidder"
+                  : isAuctionUpcoming
+                    ? "Auction Not Started"
+                    : isAuctionActive
+                      ? "Place a Bid"
+                      : "Auction Ended"}
               </button>
             </div>
           </aside>

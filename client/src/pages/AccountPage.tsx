@@ -3,35 +3,40 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
-import { AlertCircle } from "lucide-react";
 
 interface GarageVehicle {
   id: number;
   make: string;
   model: string;
   year: number;
-  price: number;
   condition: string;
   status: string;
 }
 
-interface ListedVehicle {
+interface BidItem {
   id: number;
-  vehicleId: number;
-  make: string;
-  model: string;
-  year: number;
-  start_price: number;
-  reserve_price: number;
-  buy_now_price?: number;
-  current_price: number;
-  start_time: string;
-  end_time: string;
-  statusListing: string;
-  location: string;
+  bid_amount: number;
+  bid_time: string;
+  listing_id: number;
+  vehicle: {
+    id: number;
+    make: string;
+    model: string;
+    year: number;
+    image_url?: string[];
+  };
+  listing: {
+    id: number;
+    start_price: number;
+    current_price: number;
+    start_time: string;
+    end_time: string;
+    status: string;
+    end_reason?: string;
+  };
 }
 
-type TabType = "garage" | "listings";
+type TabType = "garage" | "bids";
 
 export const AccountPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,16 +45,19 @@ export const AccountPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("garage");
   const [error, setError] = useState<string | null>(null);
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
-  const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
+  const [userBids, setUserBids] = useState<BidItem[]>([]);
   const [dashboardListingId, setDashboardListingId] = useState<number | null>(
     null,
   );
+  const [endedListingAlert, setEndedListingAlert] = useState<string | null>(null);
 
-  // Fetch garage vehicles and listings
+  // Fetch garage vehicles (only once on mount)
   useEffect(() => {
     if (!user?.id) return;
 
-    const fetchData = async () => {
+    let isMounted = true;
+
+    const fetchGarage = async () => {
       try {
         setError(null);
 
@@ -62,59 +70,109 @@ export const AccountPage: React.FC = () => {
         }
 
         const data = await res.json();
-
-        // ✅ Safe guard (prevents white screen if result is missing)
         const rows: any[] = Array.isArray(data?.result) ? data.result : [];
 
-        const garage: GarageVehicle[] = [];
-        const listed: ListedVehicle[] = [];
+        const garage: GarageVehicle[] = rows.map((vehicle: any) => ({
+          id: vehicle.id,
+          make: vehicle.make,
+          model: vehicle.model,
+          year: vehicle.year,
+          condition: vehicle.condition ?? "",
+          status: vehicle.status ?? "",
+        }));
 
-        rows.forEach((item: any) => {
-          if (!item?.vehicles) return;
-
-          const vehicle: GarageVehicle = {
-            id: item.vehicles.id,
-            make: item.vehicles.make,
-            model: item.vehicles.model,
-            year: item.vehicles.year,
-            price: Number(item.vehicles.price ?? 0),
-            condition: item.vehicles.condition ?? "",
-            status: item.vehicles.status ?? "",
-          };
-
-          garage.push(vehicle);
-
-          if (item.listings) {
-            listed.push({
-              id: item.listings.id,
-              vehicleId: item.vehicles.id,
-              make: item.vehicles.make,
-              model: item.vehicles.model,
-              year: item.vehicles.year,
-              start_price: Number(item.listings.start_price ?? 0),
-              reserve_price: Number(item.listings.reserve_price ?? 0),
-              buy_now_price: item.listings.buy_now_price
-                ? Number(item.listings.buy_now_price)
-                : undefined,
-              current_price: Number(item.listings.current_price ?? 0),
-              start_time: item.listings.start_time ?? "",
-              end_time: item.listings.end_time ?? "",
-              statusListing: item.listings.status ?? "",
-              location: item.listings.location ?? "",
-            });
-          }
-        });
-
-        setGarageVehicles(garage);
-        setListedVehicles(listed);
+        if (isMounted) {
+          setGarageVehicles(garage);
+        }
       } catch (err) {
-        setError("Failed to load vehicle details");
+        if (isMounted) {
+          setError("Failed to load vehicles");
+        }
         console.error(err);
       }
     };
 
-    fetchData();
+    fetchGarage();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user?.id]);
+
+  // Fetch user bids (only when bids tab is active)
+  useEffect(() => {
+    if (!user?.id || activeTab !== "bids") return;
+
+    let isMounted = true;
+
+    const fetchBids = async () => {
+      try {
+        setError(null);
+
+        const res = await fetch(
+          `http://localhost:8080/api/listings/bids/user/${user.id}`,
+        );
+
+        if (!res.ok) {
+          throw new Error(`Failed request: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const result: any[] = Array.isArray(data?.result) ? data.result : [];
+
+        const bids: BidItem[] = result
+          .filter((item: any) => item.listing && item.vehicle)
+          .map((item: any) => ({
+            id: item.id,
+            bid_amount: Number(item.bid_amount),
+            bid_time: item.bid_time,
+            listing_id: item.listing_id,
+            vehicle: {
+              id: item.vehicle.id,
+              make: item.vehicle.make,
+              model: item.vehicle.model,
+              year: item.vehicle.year,
+              image_url: item.vehicle.image_url,
+            },
+            listing: {
+              id: item.listing.id,
+              start_price: Number(item.listing.start_price),
+              current_price: Number(item.listing.current_price),
+              start_time: item.listing.start_time,
+              end_time: item.listing.end_time,
+              status: item.listing.status,
+              end_reason: item.listing.end_reason,
+            },
+          }));
+
+        if (isMounted) {
+          setUserBids(bids);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("Failed to load bids");
+        }
+        console.error(err);
+      }
+    };
+
+    fetchBids();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id, activeTab]);
+
+  const handleBidItemClick = (bid: BidItem) => {
+    // Only block cancelled listings - allow viewing of ended auctions
+    if (bid.listing.status === "cancelled") {
+      setEndedListingAlert(`This auction was cancelled by the seller.`);
+      setTimeout(() => setEndedListingAlert(null), 3000);
+      return;
+    }
+    
+    navigate(`/listings/${bid.listing_id}`);
+  };
 
   return (
     <section className="account-page">
@@ -170,205 +228,186 @@ export const AccountPage: React.FC = () => {
                 Garage
               </button>
               <button
-                className={`tab ${activeTab === "listings" ? "active" : ""}`}
-                onClick={() => setActiveTab("listings")}
+                className={`tab ${activeTab === "bids" ? "active" : ""}`}
+                onClick={() => setActiveTab("bids")}
               >
-                Listings
+                Bids
               </button>
             </div>
             <Button
               variant="primary"
-              onClick={() =>
-                activeTab === "garage"
-                  ? navigate("/add-vehicle")
-                  : navigate("/add-listing")
-              }
+              onClick={() => navigate("/add-vehicle")}
               className="add-vehicle-btn"
             >
-              + {activeTab === "garage" ? "Add Vehicle" : "Add Listing"}
+              + Add Vehicle
             </Button>
           </div>
 
           {error && <p className="error-text">{error}</p>}
+          {endedListingAlert && (
+            <div style={{
+              padding: "12px 16px",
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "6px",
+              color: "#856404",
+              marginBottom: "16px",
+              fontSize: "14px"
+            }}>
+              ⚠️ {endedListingAlert}
+            </div>
+          )}
 
           <div className="vehicles-list">
-            {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
-            0 ? (
-              (activeTab === "garage" ? garageVehicles : listedVehicles).map(
-                (item) => (
+            {activeTab === "garage" ? (
+              // GARAGE TAB
+              garageVehicles.length > 0 ? (
+                garageVehicles.map((vehicle) => (
                   <div
-                    key={item.id}
+                    key={vehicle.id}
                     className="vehicle-item"
-                    style={{
-                      cursor: activeTab === "listings" ? "pointer" : "default",
-                    }}
+                    onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                    style={{ cursor: "pointer" }}
                   >
                     <div className="vehicle-info">
-                      {activeTab === "garage" ? (
-                        <>
-                          <h3>
-                            {(item as GarageVehicle).year}{" "}
-                            {(item as GarageVehicle).make}{" "}
-                            {(item as GarageVehicle).model}
-                          </h3>
-                          <div className="vehicle-details">
-                            <span className="price">
-                              ${(item as GarageVehicle).price.toLocaleString()}
-                            </span>
-                            <span className="condition">
-                              {(item as GarageVehicle).condition}
-                            </span>
-                            <span
-                              className={`status ${(item as GarageVehicle).status}`}
-                            >
-                              {(item as GarageVehicle).status}
-                            </span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <h3>
-                            {(item as ListedVehicle).year}{" "}
-                            {(item as ListedVehicle).make}{" "}
-                            {(item as ListedVehicle).model}
-                          </h3>
+                      <h3>
+                        {vehicle.year} {vehicle.make} {vehicle.model}
+                      </h3>
+                      <div className="vehicle-details">
+                        <span className="condition">
+                          {vehicle.condition}
+                        </span>
+                        <span className={`status ${vehicle.status}`}>
+                          {vehicle.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-vehicles">
+                  <p>Your garage is empty.</p>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/add-vehicle")}
+                  >
+                    Add Your First Vehicle
+                  </Button>
+                </div>
+              )
+            ) : (
+              // BIDS TAB
+              userBids.length > 0 ? (
+                userBids.map((bid) => {
+                  const now = new Date();
+                  const startTime = new Date(bid.listing.start_time);
+                  const endTime = new Date(bid.listing.end_time);
+                  const isLive = now >= startTime && now < endTime && bid.listing.status === "active";
+                  const isEnded = bid.listing.status === "ended" || bid.listing.status === "sold";
+                  const isCancelled = bid.listing.status === "cancelled";
+                  const thumbnailUrl = bid.vehicle.image_url && Array.isArray(bid.vehicle.image_url) && bid.vehicle.image_url.length > 0
+                    ? bid.vehicle.image_url[0]
+                    : "https://via.placeholder.com/100x80?text=No+Image";
 
-                          <div className="vehicle-details">
-                            <span className="price">
-                              $
-                              {(
-                                item as ListedVehicle
-                              ).current_price.toLocaleString()}
-                            </span>
-                            <span className="detail-text">
-                              Start: $
-                              {(
-                                item as ListedVehicle
-                              ).start_price.toLocaleString()}
-                            </span>
-                            <span className="detail-text">
-                              Reserve: $
-                              {(
-                                item as ListedVehicle
-                              ).reserve_price.toLocaleString()}
-                            </span>
+                  return (
+                    <div
+                      key={bid.id}
+                      className="vehicle-item"
+                      onClick={() => handleBidItemClick(bid)}
+                      style={{ cursor: "pointer", display: "flex", gap: "15px", alignItems: "flex-start" }}
+                    >
+                      {/* Thumbnail Image */}
+                      <div style={{ minWidth: "120px", height: "100px", borderRadius: "6px", overflow: "hidden" }}>
+                        <img 
+                          src={thumbnailUrl}
+                          alt={`${bid.vehicle.year} ${bid.vehicle.make} ${bid.vehicle.model}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </div>
+
+                      <div className="vehicle-info" style={{ flex: 1 }}>
+                        <h3>
+                          {bid.vehicle.year} {bid.vehicle.make}{" "}
+                          {bid.vehicle.model}
+                        </h3>
+
+                        <div className="vehicle-details">
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
+                            <div>
+                              <span className="detail-label">Your Bid:</span>
+                              <span className="price" style={{ display: "block" }}>
+                                ${bid.bid_amount.toLocaleString()}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="detail-label">Current:</span>
+                              <span className="price" style={{ display: "block" }}>
+                                ${bid.listing.current_price.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <span className="detail-text">
+                            Start: ${bid.listing.start_price.toLocaleString()}
+                          </span>
+
+                          <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
                             {(() => {
-                              const listing = item as ListedVehicle;
-                              const startTime = new Date(listing.start_time);
-                              const now = new Date();
-                              const displayStatus =
-                                startTime > now
-                                  ? "Upcoming"
-                                  : listing.statusListing;
-                              const statusClass =
-                                startTime > now
-                                  ? "upcoming"
-                                  : listing.statusListing.toLowerCase();
+                              const isHighestBid = bid.bid_amount === bid.listing.current_price;
+                              const statusText = isHighestBid ? "Highest Bid" : "Outbid";
+                              const statusClass = isHighestBid ? "highest-bid" : "outbid";
                               return (
-                                <span
-                                  className={`listing-status-tag status-${statusClass}`}
-                                >
+                                <span className={`listing-status-tag status-${statusClass}`}>
+                                  {statusText}
+                                </span>
+                              );
+                            })()}
+                            {(() => {
+                              const displayStatus = isCancelled ? "Cancelled" : (isLive ? "Live" : (isEnded ? "Ended" : "Upcoming"));
+                              const statusClass = isCancelled ? "cancelled" : (isLive ? "active" : (isEnded ? "ended" : "upcoming"));
+                              return (
+                                <span className={`listing-status-tag status-${statusClass}`}>
                                   {displayStatus}
                                 </span>
                               );
                             })()}
-                          </div>
-
-                          {/* Analytics and Edit button (only in Listings tab) */}
-                          <div
-                            style={{ marginTop: 10, display: "flex", gap: 10 }}
-                          >
-                            <Button
-                              variant="primary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDashboardListingId(
-                                  (item as ListedVehicle).id,
-                                );
-                              }}
-                            >
-                              View Analytics
-                            </Button>
-
                             {(() => {
-                              const listing = item as ListedVehicle;
-                              const hasStarted =
-                                new Date(listing.start_time) <= new Date();
-                              const isEnded =
-                                listing.statusListing === "ended" ||
-                                listing.statusListing === "sold";
-                              const cannotEdit = hasStarted || isEnded;
-
-                              return (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                  }}
-                                >
-                                  <Button
-                                    variant="outline"
-                                    disabled={cannotEdit}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (!cannotEdit) {
-                                        navigate(`/edit-listing/${listing.id}`);
-                                      }
-                                    }}
-                                    title={
-                                      cannotEdit
-                                        ? "Cannot edit listing once it starts or ends"
-                                        : "Edit auction details"
-                                    }
-                                  >
-                                    Edit Auction
-                                  </Button>
-                                  {cannotEdit && (
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        cursor: "pointer",
-                                      }}
-                                      title="Cannot edit listing once it starts or ends"
-                                    >
-                                      <AlertCircle
-                                        size={18}
-                                        style={{ color: "#dc2626" }}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              );
+                              if (bid.listing.end_reason === "cancelled") {
+                                return (
+                                  <span className="listing-status-tag status-cancelled">
+                                    Seller Cancelled
+                                  </span>
+                                );
+                              } else if (bid.listing.end_reason === "unmet") {
+                                return (
+                                  <span className="listing-status-tag status-unmet">
+                                    Reserve Not Met
+                                  </span>
+                                );
+                              }
+                              return null;
                             })()}
                           </div>
-                        </>
-                      )}
+                          
+                          <span className="detail-text" style={{ fontSize: "0.85em", color: "var(--muted)", marginTop: "6px" }}>
+                            Bid placed on: {new Date(bid.bid_time).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ),
+                  );
+                })
+              ) : (
+                <div className="no-vehicles">
+                  <p>You haven't placed any bids yet.</p>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/listings")}
+                  >
+                    Browse Listings
+                  </Button>
+                </div>
               )
-            ) : (
-              <div className="no-vehicles">
-                <p>
-                  {activeTab === "garage"
-                    ? "Your garage is empty."
-                    : "You haven't listed any vehicles yet."}
-                </p>
-                <Button
-                  variant="primary"
-                  onClick={() =>
-                    activeTab === "garage"
-                      ? navigate("/add-vehicle")
-                      : navigate("/add-listing")
-                  }
-                >
-                  {activeTab === "garage"
-                    ? "Add Your First Vehicle"
-                    : "List Your First Vehicle"}
-                </Button>
-              </div>
             )}
           </div>
 
@@ -397,59 +436,6 @@ export const AccountPage: React.FC = () => {
               listingId={dashboardListingId}
               onClose={() => {
                 setDashboardListingId(null);
-                // Refresh listings after action
-                if (user?.id) {
-                  window.location.reload();
-                }
-              }}
-              listing={
-                listedVehicles.find((v) => v.id === dashboardListingId)
-                  ? {
-                      id: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.id,
-                      title: `${listedVehicles.find((v) => v.id === dashboardListingId)!.year} ${listedVehicles.find((v) => v.id === dashboardListingId)!.make} ${listedVehicles.find((v) => v.id === dashboardListingId)!.model}`,
-                      year: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.year,
-                      make: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.make,
-                      model: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.model,
-                      location: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.location,
-                      status: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.statusListing,
-                      start_time: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.start_time,
-                      end_time: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.end_time,
-                      start_price: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.start_price,
-                      current_price: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.current_price,
-                      reserve_price: listedVehicles.find(
-                        (v) => v.id === dashboardListingId,
-                      )!.reserve_price,
-                      buy_now_price:
-                        listedVehicles.find((v) => v.id === dashboardListingId)!
-                          .buy_now_price || 0,
-                    }
-                  : undefined
-              }
-              onStatusChange={() => {
-                // Refresh listings after status change
-                if (user?.id) {
-                  window.location.reload();
-                }
               }}
             />
           </div>

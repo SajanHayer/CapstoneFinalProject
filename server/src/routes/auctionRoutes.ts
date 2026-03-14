@@ -1,24 +1,25 @@
 import { Router } from "express";
 import { db } from "../db/db";
-import { eq } from "drizzle-orm";
-import { listings, vehicles } from "../db/schema";
+import { eq, ne } from "drizzle-orm";
+import { listings, vehicles, bids } from "../db/schema";
 
 export const auctionRouter = Router();
 
+/* ===== IMPORTANT: More specific routes MUST come FIRST ===== */
+
 /* ----------------------------------------------
-   GET /api/listings/:id  --> Get listing based on id
+   GET /api/listings/:id/bids --> Get all bids for a specific listing
 ------------------------------------------------ */
-auctionRouter.get("/:id", async (req, res) => {
+auctionRouter.get("/:id/bids", async (req, res) => {
   try {
-    const id = Number(req.params.id);
-    const [listing] = await db
+    const listingId = Number(req.params.id);
+    
+    const bidList = await db
       .select()
-      .from(listings)
-      .where(eq(listings.id, id));
-    if (!listing) {
-      return res.status(404).json({ message: "Vehicle not found" });
-    }
-    res.json({ listing });
+      .from(bids)
+      .where(eq(bids.listing_id, listingId));
+
+    res.json({ result: bidList });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -26,7 +27,74 @@ auctionRouter.get("/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/listings/vehicle/:id --> Get listing based on vehicle id
+   GET /api/listings/bids/user/:id --> Get all bids placed by a user
+------------------------------------------------ */
+auctionRouter.get("/bids/user/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    
+    // Fetch all bids for the user with listing and vehicle info
+    const rows = await db
+      .select({
+        bid: bids,
+        listing: listings,
+        vehicle: vehicles,
+      })
+      .from(bids)
+      .leftJoin(listings, eq(listings.id, bids.listing_id))
+      .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+      .where(eq(bids.bidder_id, id));
+
+    if (!rows || rows.length === 0) {
+      return res.json({ result: [] });
+    }
+
+    const result = rows.map(row => ({
+      ...row.bid,
+      listing: row.listing,
+      vehicle: row.vehicle,
+    }));
+
+    res.json({ result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ----------------------------------------------
+   GET /api/listings/vehicle-all/:id --> Get ALL listings for a vehicle
+------------------------------------------------ */
+auctionRouter.get("/vehicle-all/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    // Fetch ALL listings with their vehicles
+    const rows = await db
+      .select({ listing: listings, vehicle: vehicles })
+      .from(listings)
+      .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+      .where(eq(listings.vehicle_id, id));
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: "Listings not found" });
+    }
+
+    // Merge listings + vehicle into array of objects
+    const result = rows.map(row => ({
+      ...row.listing,
+      vehicle: row.vehicle,
+    }));
+    res.json({ result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ===== General routes follow ===== */
+
+/* ----------------------------------------------
+   GET /api/listings/vehicle/:id --> Get first listing for a vehicle
 ------------------------------------------------ */
 auctionRouter.get("/vehicle/:id", async (req, res) => {
   try {
@@ -37,7 +105,7 @@ auctionRouter.get("/vehicle/:id", async (req, res) => {
       .from(listings)
       .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
       .where(eq(listings.vehicle_id, id))
-      .limit(1); // optional, ensures a single result
+      .limit(1);
 
     if (!row || row.length === 0) {
       return res.status(404).json({ message: "Listing not found" });
@@ -48,7 +116,6 @@ auctionRouter.get("/vehicle/:id", async (req, res) => {
       ...row[0].listing,
       vehicle: row[0].vehicle,
     };
-    // console.log(result);
     res.json({ result });
   } catch (err) {
     console.error(err);
@@ -57,7 +124,7 @@ auctionRouter.get("/vehicle/:id", async (req, res) => {
 });
 
 /* ----------------------------------------------
-   GET /api/listings/user/:id --> Get listing based on user id
+   GET /api/listings/user/:id --> Get listings by seller/user id
 ------------------------------------------------ */
 auctionRouter.get("/user/:id", async (req, res) => {
   try {
@@ -156,7 +223,7 @@ auctionRouter.delete("/remove/:id", async (req, res) => {
   GET /api/listings --> Get all listings
 ------------------------------------------------ */
 
-auctionRouter.get("/", async (req, res) => {
+auctionRouter.get("/", async (_req, res) => {
   try {
     const rows = await db
       .select({
@@ -164,13 +231,34 @@ auctionRouter.get("/", async (req, res) => {
         vehicle: vehicles,
       })
       .from(listings)
-      .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id));
+      .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+      .where(ne(listings.status, "cancelled"));
     const result = rows.map(({ listing, vehicle }) => ({
       ...listing,
-      vehicle, // nested, clean, JSON-safe
+      vehicle, 
     }));
     // console.log({listings: result});
     res.json({ listings: result });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* ----------------------------------------------
+   GET /api/listings/:id  --> Get listing based on id (MUST BE LAST)
+------------------------------------------------ */
+auctionRouter.get("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const [listing] = await db
+      .select()
+      .from(listings)
+      .where(eq(listings.id, id));
+    if (!listing) {
+      return res.status(404).json({ message: "Vehicle not found" });
+    }
+    res.json({ listing });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

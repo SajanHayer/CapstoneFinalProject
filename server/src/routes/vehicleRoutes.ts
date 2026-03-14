@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/db";
-import { listings, vehicles } from "../db/schema";
+import { vehicles } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { supabase } from "../services/supabase";
 import multer from "multer";
@@ -153,7 +153,6 @@ vehicleRouter.get("/user/:id", async (req, res) => {
     const result = await db
       .select()
       .from(vehicles)
-      .leftJoin(listings, eq(listings.vehicle_id, vehicles.id))
       .where(eq(vehicles.user_id, id));
 
     res.json({ result });

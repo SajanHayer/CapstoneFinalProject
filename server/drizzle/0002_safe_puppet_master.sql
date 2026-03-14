@@ -1,0 +1,1 @@
+ALTER TYPE "public"."listing_end_reason" ADD VALUE 'cancelled';

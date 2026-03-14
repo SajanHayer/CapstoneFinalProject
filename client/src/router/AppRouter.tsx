@@ -13,6 +13,7 @@ import { AddListingPage } from "../pages/AddListingPage";
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
+import { VehicleDetailPage } from "../pages/VehicleDetailPage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -30,6 +31,7 @@ export const AppRouter: React.FC = () => {
       {/* Auth-only */}
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route

@@ -7,9 +7,7 @@ import {
   text,
   timestamp,
   numeric,
-  boolean,
   pgEnum,
-  foreignKey,
   json,
 } from "drizzle-orm/pg-core";
 
@@ -36,6 +34,7 @@ export const listingReasonEnum = pgEnum("listing_end_reason", [
   "unmet",
   "nobids",
   "pending",
+  "cancelled",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [
