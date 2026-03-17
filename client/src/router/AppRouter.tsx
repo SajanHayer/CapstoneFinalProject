@@ -10,6 +10,8 @@ import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
+import { HeatMapPage } from "../pages/HeatMapPage";
+
 
 export const AppRouter: React.FC = () => {
   return (
@@ -25,6 +27,8 @@ export const AppRouter: React.FC = () => {
         <Route path="/favourites" element={<FavouritesPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
+        <Route path="/heatmap" element={<HeatMapPage />} />
+
       </Route>
     </Routes>
   );

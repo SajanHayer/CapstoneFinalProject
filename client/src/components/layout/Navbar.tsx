@@ -29,6 +29,9 @@ export const Navbar: React.FC = () => {
             <NavLink to="/listings" className="nav-link">
               Browse
             </NavLink>
+            <NavLink to="/heatmap" className="nav-link">
+              Heat Map
+            </NavLink>
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}

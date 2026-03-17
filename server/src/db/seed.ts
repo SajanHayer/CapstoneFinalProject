@@ -179,10 +179,12 @@ async function seed() {
           buy_now_price: "9200.00",
           current_price: "7899.00",
           start_time: now,
-          end_time: secondsFromNow(30), // 30s
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 12,
-          location: "Calgary, AB",
+          location: "79 Lucas Terrace NW, Calgary, AB",
+          latitude: "51.0405",
+          longitude: "-114.1455",
         },
         {
           vehicle_id: v2.id,
@@ -193,10 +195,12 @@ async function seed() {
           buy_now_price: "11200.00",
           current_price: "9499.00",
           start_time: now,
-          end_time: secondsFromNow(60), // 1m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 21,
-          location: "Edmonton, AB",
+          location: "University of Calgary, Calgary, AB",
+          latitude: "51.1604",
+          longitude: "-114.1323",
         },
         {
           vehicle_id: v3.id,
@@ -207,10 +211,12 @@ async function seed() {
           buy_now_price: "6999.00",
           current_price: "6999.00",
           start_time: now,
-          end_time: secondsFromNow(120), // 2m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 9,
-          location: "Red Deer, AB",
+          location: "59 East Lake Crescent NE, Airdrie, AB T4A 2H5",
+          latitude: "51.2967",
+          longitude: "-113.9899",
         },
         {
           vehicle_id: v4.id,
@@ -221,10 +227,12 @@ async function seed() {
           buy_now_price: "22500.00",
           current_price: "18999.00",
           start_time: now,
-          end_time: secondsFromNow(300), // 5m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 33,
-          location: "Vancouver, BC",
+          location: "Aspen Landing, Calgary, AB",
+          latitude: "51.0150",
+          longitude: "-114.1200",
         },
         {
           vehicle_id: v5.id,
@@ -235,10 +243,12 @@ async function seed() {
           buy_now_price: "10200.00",
           current_price: "8499.00",
           start_time: now,
-          end_time: secondsFromNow(600), // 10m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 41,
-          location: "Toronto, ON",
+          location: "Bridgeland, Calgary, AB",
+          latitude: "51.1300",
+          longitude: "-113.9900",
         },
         {
           vehicle_id: v6.id,
@@ -249,10 +259,12 @@ async function seed() {
           buy_now_price: "21999.00",
           current_price: "21999.00",
           start_time: now,
-          end_time: secondsFromNow(900), // 15m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 18,
-          location: "Kelowna, BC",
+          location: "Beltline, Calgary, AB",
+          latitude: "51.0505",
+          longitude: "-114.0850",
         },
         {
           vehicle_id: v7.id,
@@ -263,10 +275,12 @@ async function seed() {
           buy_now_price: "15500.00",
           current_price: "12999.00",
           start_time: now,
-          end_time: secondsFromNow(1200), // 20m
+          end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
           views_count: 27,
-          location: "Banff, AB",
+          location: "Downtown Calgary, Calgary, AB",
+          latitude: "51.0450",
+          longitude: "-114.0708",
         },
       ])
       .returning({ id: listings.id });

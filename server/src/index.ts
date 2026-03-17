@@ -7,6 +7,8 @@ import { vehicleRouter } from "./routes/vehicleRoutes";
 import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
 import { auctionRouter } from "./routes/auctionRoutes.ts";
+import { heatmapRouter } from "./routes/heatmapRoutes";
+
 import { startAuctionCron } from "./cron/auctionEnd.cron";
 
 import { Server } from "socket.io";
@@ -31,6 +33,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/listings", auctionRouter);
+app.use("/api/heatmap", heatmapRouter);
+
 
 startAuctionCron();
 
