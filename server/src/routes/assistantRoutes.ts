@@ -30,7 +30,7 @@ assistantRouter.post("/chat", async (req, res) => {
         parts: [
           {
             text:
-              "You are the PowerBidz Assistant. " +
+              "You are the Lets Ride Canada Assistant. " +
               "Help users with questions about browsing vehicles, auctions, " +
               "their account, and general car-buying questions. " +
               "Be concise, friendly, and avoid making up technical specs.",

@@ -4,7 +4,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../styles/addlisting.css";
 
 type Vehicle = {
@@ -37,6 +37,19 @@ export const AddListingPage: React.FC = () => {
     },
   });
   const listingType = watch("type");
+  const startTime = watch("start_time");
+
+  // Get minimum datetime (now) in correct format for datetime-local
+  const getMinDateTime = () => {
+    const now = new Date();
+    return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+  };
+
+  // Get minimum end time (start time or later)
+  const getMinEndTime = () => {
+    if (!startTime) return getMinDateTime();
+    return startTime;
+  };
 
   // Fetch user's vehicles
   useEffect(() => {
@@ -113,7 +126,7 @@ export const AddListingPage: React.FC = () => {
     <div className="add-listing-container">
       <div className="add-listing-header">
         <h1>Create New Listing</h1>
-        <p>Set up your vehicle for auction or fixed price sale</p>
+        <p>Set up your vehicle for auction</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="add-listing-form">
@@ -121,11 +134,11 @@ export const AddListingPage: React.FC = () => {
         <div className="form-section">
           <h3>Vehicle</h3>
           {loading ? (
-            <p style={{ color: "#666", fontSize: "0.9rem" }}>
+            <p className="form-loading-text">
               Loading your vehicles...
             </p>
           ) : vehicles.length === 0 ? (
-            <p style={{ color: "#b91c1c", fontSize: "0.9rem" }}>
+            <p className="form-error-text">
               No vehicles found. Please add a vehicle first.
             </p>
           ) : (
@@ -158,16 +171,6 @@ export const AddListingPage: React.FC = () => {
             >
               <span className="type-label">Auction</span>
               <span className="type-description">Let buyers bid</span>
-            </button>
-            <button
-              type="button"
-              className={`type-tag ${listingType === "fixed" ? "active" : ""}`}
-              onClick={() =>
-                register("type").onChange({ target: { value: "fixed" } })
-              }
-            >
-              <span className="type-label">Fixed Price</span>
-              <span className="type-description">Set a price</span>
             </button>
           </div>
           <input type="hidden" {...register("type")} />
@@ -214,11 +217,13 @@ export const AddListingPage: React.FC = () => {
             <Input
               label="Start Time"
               type="datetime-local"
+              min={getMinDateTime()}
               {...register("start_time", { required: true })}
             />
             <Input
               label="End Time"
               type="datetime-local"
+              min={getMinEndTime()}
               {...register("end_time", { required: true })}
             />
           </div>

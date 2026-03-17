@@ -9,17 +9,17 @@ export const InfoItem = ({ title, value, subValue }: InfoItemProps) => {
     <div className="flex flex-col">
       <p
         className="text-xs font-bold uppercase tracking-widest mb-3"
-        style={{ color: "#4b5563" }}
+        style={{ color: "var(--muted)" }}
       >
         {title}
       </p>
       <div
         className="px-4 py-3 rounded-lg border-2"
-        style={{ backgroundColor: "#f3f4f6", borderColor: "#d1d5db" }}
+        style={{ backgroundColor: "var(--card2)", borderColor: "var(--border)" }}
       >
         <p
           className="font-black text-3xl lg:text-4xl"
-          style={{ color: "#111827" }}
+          style={{ color: "var(--text)", letterSpacing: "-0.02em" }}
         >
           {value}
         </p>

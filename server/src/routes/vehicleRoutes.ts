@@ -17,11 +17,15 @@ const SUPABASE_BUCKET = "powerbidz-images";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
+// Creating a vehicle is a privileged action; require authentication.
+vehicleRouter.post(
+  "/create",
+  requireAuth,
+  upload.array("images", 15),
+  async (req, res) => {
   // Get Request body parameters
   try {
     const {
-      user_id,
       make,
       model,
       year,
@@ -31,6 +35,12 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
       status,
       description,
     } = req.body;
+    console.log(status);
+
+
+    const status2 = "active"; // Override any client-provided status
+    // Prefer authenticated user id over any client-provided value.
+    const user_id = (req as any).user?.id;
 
     const files = req.files as Express.Multer.File[];
 
@@ -80,7 +90,7 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
         price,
         mileage_hours: Number(mileage_hours),
         condition,
-        status,
+        status: 'available',
         description,
         image_url: uploadedUrls,
       })
@@ -91,12 +101,14 @@ vehicleRouter.post("/create", upload.array("images", 15), async (req, res) => {
     console.error("Create vehicle error:", err);
     res.status(500).json({ message: "Server error" });
   }
-});
+},
+);
 
 /* ----------------------------------------------
    GET /api/vehicles --> Get all vehicles
 ------------------------------------------------ */
-vehicleRouter.get("/", requireAuth, async (_req, res) => {
+// Browsing inventory should be available to guests.
+vehicleRouter.get("/", async (_req, res) => {
   try {
     const result = await db.select().from(vehicles);
     res.json({ vehicles: result });

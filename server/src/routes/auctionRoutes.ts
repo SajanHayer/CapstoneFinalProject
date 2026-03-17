@@ -133,6 +133,28 @@ auctionRouter.post("/create", async (req, res) => {
 });
 
 /* ----------------------------------------------
+  REMOVE /api/listings/remove/:id --> Remove listing based of id and vehilce id
+------------------------------------------------ */
+
+auctionRouter.delete("/remove/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await db
+      .update(listings)
+      .set({ status: "cancelled" }) // or "ended"
+      .where(eq(listings.id, Number(id)));
+
+    res.json({ message: "Auction cancelled" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+/* ----------------------------------------------
   GET /api/listings --> Get all listings
 ------------------------------------------------ */
 

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
+import { ListingDashboard } from "../components/analytics/ListingDashboard";
+import { AlertCircle } from "lucide-react";
 
 interface GarageVehicle {
   id: number;
@@ -15,6 +17,7 @@ interface GarageVehicle {
 
 interface ListedVehicle {
   id: number;
+  vehicleId: number;
   make: string;
   model: string;
   year: number;
@@ -30,62 +33,72 @@ interface ListedVehicle {
 
 type TabType = "garage" | "listings";
 
-// Call Vehicle listing to get info and display it here
-
 export const AccountPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
   const [activeTab, setActiveTab] = useState<TabType>("garage");
   const [error, setError] = useState<string | null>(null);
   const [garageVehicles, setGarageVehicles] = useState<GarageVehicle[]>([]);
   const [listedVehicles, setListedVehicles] = useState<ListedVehicle[]>([]);
+  const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
 
-  // Fetch garage vehicles and listings on mount
+  // Fetch garage vehicles and listings
   useEffect(() => {
     if (!user?.id) return;
 
     const fetchData = async () => {
       try {
+        setError(null);
+
         const res = await fetch(
           `http://localhost:8080/api/vehicles/user/${user.id}`,
         );
+
+        if (!res.ok) {
+          throw new Error(`Failed request: ${res.status}`);
+        }
+
         const data = await res.json();
 
-        // Show all vehicles in garage, and separated listed vehicles for listings tab
+        // ✅ Safe guard (prevents white screen if result is missing)
+        const rows: any[] = Array.isArray(data?.result) ? data.result : [];
+
         const garage: GarageVehicle[] = [];
         const listed: ListedVehicle[] = [];
 
-        data.result.forEach((item: any) => {
-          const vehicle = {
+        rows.forEach((item: any) => {
+          if (!item?.vehicles) return;
+
+          const vehicle: GarageVehicle = {
             id: item.vehicles.id,
             make: item.vehicles.make,
             model: item.vehicles.model,
             year: item.vehicles.year,
-            price: Number(item.vehicles.price),
-            condition: item.vehicles.condition,
-            status: item.vehicles.status,
+            price: Number(item.vehicles.price ?? 0),
+            condition: item.vehicles.condition ?? "",
+            status: item.vehicles.status ?? "",
           };
 
-          // All vehicles go to garage
           garage.push(vehicle);
 
-          // If vehicle has a listing, also add to listings tab
           if (item.listings) {
             listed.push({
               id: item.listings.id,
+              vehicleId: item.vehicles.id,
               make: item.vehicles.make,
               model: item.vehicles.model,
               year: item.vehicles.year,
-              start_price: Number(item.listings.start_price),
-              reserve_price: Number(item.listings.reserve_price),
+              start_price: Number(item.listings.start_price ?? 0),
+              reserve_price: Number(item.listings.reserve_price ?? 0),
               buy_now_price: item.listings.buy_now_price
                 ? Number(item.listings.buy_now_price)
                 : undefined,
-              current_price: Number(item.listings.current_price),
-              start_time: item.listings.start_time,
-              end_time: item.listings.end_time,
-              statusListing: item.listings.status,
-              location: item.listings.location,
+              current_price: Number(item.listings.current_price ?? 0),
+              start_time: item.listings.start_time ?? "",
+              end_time: item.listings.end_time ?? "",
+              statusListing: item.listings.status ?? "",
+              location: item.listings.location ?? "",
             });
           }
         });
@@ -99,7 +112,8 @@ export const AccountPage: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user?.id]);
+
   return (
     <section className="account-page">
       <div className="account-container">
@@ -173,20 +187,16 @@ export const AccountPage: React.FC = () => {
             </Button>
           </div>
 
+          {error && <p className="error-text">{error}</p>}
+
           <div className="vehicles-list">
             {(activeTab === "garage" ? garageVehicles : listedVehicles).length >
-            0 ? (
+              0 ? (
               (activeTab === "garage" ? garageVehicles : listedVehicles).map(
                 (item) => (
                   <div
                     key={item.id}
                     className="vehicle-item"
-                    //Remove click to go to marketplace listing (this should go to seperate pageand be able to edit info there with seller dashboard)
-                    // onClick={() => {
-                    //   if (activeTab === "listings") {
-                    //     navigate(`/listings/${item.id}`);
-                    //   }
-                    // }}
                     style={{
                       cursor: activeTab === "listings" ? "pointer" : "default",
                     }}
@@ -220,6 +230,7 @@ export const AccountPage: React.FC = () => {
                             {(item as ListedVehicle).make}{" "}
                             {(item as ListedVehicle).model}
                           </h3>
+
                           <div className="vehicle-details">
                             <span className="price">
                               $
@@ -239,11 +250,71 @@ export const AccountPage: React.FC = () => {
                                 item as ListedVehicle
                               ).reserve_price.toLocaleString()}
                             </span>
-                            <span
-                              className={`status ${(item as ListedVehicle).statusListing}`}
+                            {(() => {
+                              const listing = item as ListedVehicle;
+                              const startTime = new Date(listing.start_time);
+                              const now = new Date();
+                              const displayStatus = startTime > now ? "Upcoming" : listing.statusListing;
+                              const statusClass = startTime > now ? "upcoming" : listing.statusListing.toLowerCase();
+                              return (
+                                <span className={`listing-status-tag status-${statusClass}`}>
+                                  {displayStatus}
+                                </span>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Analytics and Edit button (only in Listings tab) */}
+                          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
+                            <Button
+                              variant="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDashboardListingId((item as ListedVehicle).id);
+                              }}
                             >
-                              {(item as ListedVehicle).statusListing}
-                            </span>
+                              View Analytics
+                            </Button>
+
+                            {(() => {
+                              const listing = item as ListedVehicle;
+                              const hasStarted = new Date(listing.start_time) <= new Date();
+                              const isEnded = listing.statusListing === "ended" || listing.statusListing === "sold";
+                              const cannotEdit = hasStarted || isEnded;
+                              
+                              return (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                  <Button
+                                    variant="outline"
+                                    disabled={cannotEdit}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!cannotEdit) {
+                                        navigate(`/edit-listing/${listing.id}`);
+                                      }
+                                    }}
+                                    title={cannotEdit ? "Cannot edit listing once it starts or ends" : "Edit auction details"}
+                                  >
+                                    Edit Auction
+                                  </Button>
+                                  {cannotEdit && (
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        cursor: "pointer",
+                                      }}
+                                      title="Cannot edit listing once it starts or ends"
+                                    >
+                                      <AlertCircle
+                                        size={18}
+                                        style={{ color: "#dc2626" }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </>
                       )}
@@ -290,6 +361,49 @@ export const AccountPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Dashboard Modal */}
+      {dashboardListingId !== null && (
+        <div className="dashboard-modal-overlay">
+          <div className="dashboard-modal-wrapper">
+            <ListingDashboard
+              listingId={dashboardListingId}
+              onClose={() => {
+                setDashboardListingId(null);
+                // Refresh listings after action
+                if (user?.id) {
+                  window.location.reload();
+                }
+              }}
+              listing={
+                listedVehicles.find((v) => v.id === dashboardListingId)
+                  ? {
+                      id: listedVehicles.find((v) => v.id === dashboardListingId)!.id,
+                      title: `${listedVehicles.find((v) => v.id === dashboardListingId)!.year} ${listedVehicles.find((v) => v.id === dashboardListingId)!.make} ${listedVehicles.find((v) => v.id === dashboardListingId)!.model}`,
+                      year: listedVehicles.find((v) => v.id === dashboardListingId)!.year,
+                      make: listedVehicles.find((v) => v.id === dashboardListingId)!.make,
+                      model: listedVehicles.find((v) => v.id === dashboardListingId)!.model,
+                      location: listedVehicles.find((v) => v.id === dashboardListingId)!.location,
+                      status: listedVehicles.find((v) => v.id === dashboardListingId)!.statusListing,
+                      start_time: listedVehicles.find((v) => v.id === dashboardListingId)!.start_time,
+                      end_time: listedVehicles.find((v) => v.id === dashboardListingId)!.end_time,
+                      start_price: listedVehicles.find((v) => v.id === dashboardListingId)!.start_price,
+                      current_price: listedVehicles.find((v) => v.id === dashboardListingId)!.current_price,
+                      reserve_price: listedVehicles.find((v) => v.id === dashboardListingId)!.reserve_price,
+                      buy_now_price: listedVehicles.find((v) => v.id === dashboardListingId)!.buy_now_price || 0,
+                    }
+                  : undefined
+              }
+              onStatusChange={() => {
+                // Refresh listings after status change
+                if (user?.id) {
+                  window.location.reload();
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

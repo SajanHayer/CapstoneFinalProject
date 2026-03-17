@@ -1,11 +1,13 @@
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import logo from "../../assets/logo-letsrcanada.png";
+import logo from "../../assets/logo.png";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, isGuest, logout, exitGuest } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const handleLogout = async () => {
     await logout();
     navigate("/"); // send user home
@@ -24,7 +26,10 @@ export const Navbar: React.FC = () => {
         <NavLink to="/" className="nav-link">
           Home
         </NavLink>
-        {isLoggedIn ? (
+        <NavLink to="/listings" className="nav-link">
+          Browse
+        </NavLink>
+        {isLoggedIn && (
           <>
             <NavLink to="/listings" className="nav-link">
               Browse
@@ -38,19 +43,39 @@ export const Navbar: React.FC = () => {
             <NavLink to="/account" className="nav-link">
               Account
             </NavLink>
+            {/* <NavLink to="/analytics" className="nav-link">
+              Analytics
+            </NavLink> */}
           </>
-        ) : (
-          <div>Not Logged In </div>
         )}
       </nav>
 
       <div className="navbar-right">
+        <button
+          className="btn btn-outline"
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? "☀️" : "🌙"}
+        </button>
+
         {isLoggedIn ? (
           <button className="btn btn-primary" onClick={handleLogout}>
             Logout
           </button>
         ) : (
           <>
+            {isGuest && (
+              <button
+                className="btn btn-outline"
+                onClick={() => {
+                  exitGuest();
+                  navigate("/");
+                }}
+              >
+                Exit Guest
+              </button>
+            )}
             <Link to="/login" className="btn btn-outline">
               Sign In
             </Link>

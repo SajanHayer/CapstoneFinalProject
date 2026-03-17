@@ -9,7 +9,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, enterGuest } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +55,7 @@ export const LoginPage: React.FC = () => {
   return (
     <section className="auth-page">
       <div className="auth-card">
-        <h2>Login to Power BIDZ</h2>
+        <h2>Login to Lets Ride Canada</h2>
         <form onSubmit={handleSubmit} className="auth-form">
           <Input
             label="Email"
@@ -76,6 +76,17 @@ export const LoginPage: React.FC = () => {
           <Button type="submit" className="auth-submit">
             Login
           </Button>
+
+          <button
+            type="button"
+            className="btn btn-outline w-full mt-3"
+            onClick={() => {
+              enterGuest();
+              navigate("/listings");
+            }}
+          >
+            Continue as Guest
+          </button>
         </form>
 
         <p className="auth-switch">
