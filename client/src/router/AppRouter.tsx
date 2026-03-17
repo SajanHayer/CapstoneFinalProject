@@ -14,6 +14,7 @@ import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
 import { VehicleDetailPage } from "../pages/VehicleDetailPage";
+import { EditVehiclePage } from "../pages/EditVehiclePage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -33,6 +34,7 @@ export const AppRouter: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
+        <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route
           path="/seller/:sellerId/analytics"

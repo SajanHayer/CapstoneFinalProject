@@ -162,3 +162,111 @@ vehicleRouter.get("/user/:id", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+/* ----------------------------------------------
+   PUT /api/vehicles/:id --> Update a vehicle
+------------------------------------------------ */
+vehicleRouter.put(
+  "/:id",
+  requireAuth,
+  upload.array("images", 15),
+  async (req, res) => {
+    try {
+      const vehicleId = Number(req.params.id);
+      const user_id = (req as any).user?.id;
+
+      if (isNaN(vehicleId)) {
+        return res.status(400).json({ message: "Invalid vehicle ID" });
+      }
+
+      // Get the existing vehicle to check ownership
+      const [existingVehicle] = await db
+        .select()
+        .from(vehicles)
+        .where(eq(vehicles.id, vehicleId));
+
+      if (!existingVehicle) {
+        return res.status(404).json({ message: "Vehicle not found" });
+      }
+
+      // Check if user owns the vehicle
+      if (existingVehicle.user_id !== Number(user_id)) {
+        return res
+          .status(403)
+          .json({ message: "You can only edit your own vehicles" });
+      }
+
+      const {
+        make,
+        model,
+        year,
+        price,
+        mileage_hours,
+        condition,
+        description,
+        existingImages,
+      } = req.body;
+
+      if (!make || !model || !Number(year) || !price) {
+        return res.status(400).json({
+          message: "Make, model, year, and price are required",
+        });
+      }
+
+      // Parse existing images
+      let images: string[] = [];
+      if (existingImages) {
+        try {
+          images = JSON.parse(existingImages);
+        } catch (e) {
+          images = [];
+        }
+      }
+
+      // Upload new images to Supabase Storage
+      const files = req.files as Express.Multer.File[];
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const { data, error } = await supabase.storage
+          .from(SUPABASE_BUCKET)
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+          });
+
+        if (error) throw error;
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from(SUPABASE_BUCKET).getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      // Combine existing images with new ones
+      const allImages = [...images, ...uploadedUrls];
+
+      // Update the vehicle
+      const [updatedVehicle] = await db
+        .update(vehicles)
+        .set({
+          make,
+          model,
+          year: Number(year),
+          price,
+          mileage_hours: Number(mileage_hours || 0),
+          condition,
+          description,
+          image_url: allImages,
+        })
+        .where(eq(vehicles.id, vehicleId))
+        .returning();
+
+      res.json({ vehicle: updatedVehicle, message: "Vehicle updated successfully" });
+    } catch (err) {
+      console.error("Update vehicle error:", err);
+      res.status(500).json({ message: "Server error", error: String(err) });
+    }
+  }
+);

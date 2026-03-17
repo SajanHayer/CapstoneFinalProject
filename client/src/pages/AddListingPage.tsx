@@ -4,7 +4,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import "../styles/addlisting.css";
 
 type Vehicle = {
@@ -12,6 +12,7 @@ type Vehicle = {
   make: string;
   model: string;
   year: number;
+  hasActiveListing?: boolean;
 };
 
 type AddListingProps = {
@@ -29,16 +30,23 @@ type AddListingProps = {
 export const AddListingPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const vehicleIdFromParams = searchParams.get("vehicleId");
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVehicleHasActiveListing, setSelectedVehicleHasActiveListing] =
+    useState(false);
   const { register, handleSubmit, watch, setValue } = useForm<AddListingProps>({
     defaultValues: {
       type: "auction",
+      vehicle_id: vehicleIdFromParams ? Number(vehicleIdFromParams) : undefined,
     },
   });
   const listingType = watch("type");
   const startTime = watch("start_time");
   const reservePrice = watch("reserve_price");
+  const selectedVehicleId = watch("vehicle_id");
 
   // Calculate starting price as 75% of reserve price
   useEffect(() => {
@@ -47,6 +55,14 @@ export const AddListingPage: React.FC = () => {
       setValue("start_price", calculatedStartPrice);
     }
   }, [reservePrice, setValue]);
+
+  // Check if selected vehicle has active listing
+  useEffect(() => {
+    if (selectedVehicleId && vehicles.length > 0) {
+      const selected = vehicles.find((v) => v.id === selectedVehicleId);
+      setSelectedVehicleHasActiveListing(selected?.hasActiveListing || false);
+    }
+  }, [selectedVehicleId, vehicles]);
 
   // Get minimum datetime (now) in correct format for datetime-local
   const getMinDateTime = () => {
@@ -77,16 +93,29 @@ export const AddListingPage: React.FC = () => {
         );
         if (res.ok) {
           const data = await res.json();
-          // Extract vehicles without listings from the result
+          // Extract all vehicles and check for active listings
           if (data.result && Array.isArray(data.result)) {
-            const vehiclesWithoutListings = data.result
-              .filter((item: any) => !item.listings) // Only vehicles without listings
-              .map((item: any) => item.vehicles)
+            const allVehicles = data.result
+              .map((item: any) => ({
+                id: item.vehicles.id,
+                make: item.vehicles.make,
+                model: item.vehicles.model,
+                year: item.vehicles.year,
+                hasActiveListing:
+                  item.listings &&
+                  item.listings.length > 0 &&
+                  item.listings.some(
+                    (listing: any) =>
+                      listing.status === "active" ||
+                      (new Date(listing.start_time) <= new Date() &&
+                        new Date(listing.end_time) >= new Date()),
+                  ),
+              }))
               .filter(
-                (v: Vehicle | null, idx: number, arr: any[]) =>
-                  v && arr.findIndex((vehicle) => vehicle?.id === v.id) === idx,
+                (v: Vehicle, idx: number, arr: Vehicle[]) =>
+                  arr.findIndex((vehicle) => vehicle.id === v.id) === idx,
               );
-            setVehicles(vehiclesWithoutListings);
+            setVehicles(allVehicles);
           }
         }
       } catch (err) {
@@ -149,19 +178,34 @@ export const AddListingPage: React.FC = () => {
               No vehicles found. Please add a vehicle first.
             </p>
           ) : (
-            <Select
-              {...register("vehicle_id", {
-                required: true,
-                valueAsNumber: true,
-              })}
-            >
-              <option value="">Select a vehicle from your garage</option>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.year} {vehicle.make} {vehicle.model}
-                </option>
-              ))}
-            </Select>
+            <>
+              <Select
+                {...register("vehicle_id", {
+                  required: true,
+                  valueAsNumber: true,
+                })}
+              >
+                <option value="">Select a vehicle from your garage</option>
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model}
+                    {vehicle.hasActiveListing ? " (Active Listing)" : ""}
+                  </option>
+                ))}
+              </Select>
+              {selectedVehicleHasActiveListing && (
+                <p
+                  style={{
+                    color: "#dc2626",
+                    fontSize: "14px",
+                    marginTop: "8px",
+                    fontWeight: 500,
+                  }}
+                >
+                  ⚠️ This vehicle has an active listing or a recent listing that has ended. Please complete or remove that listing before adding a new one.
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -250,7 +294,19 @@ export const AddListingPage: React.FC = () => {
 
         {/* Submit Button */}
         <div className="form-actions">
-          <Button type="submit">Create Listing</Button>
+          <Button
+            type="submit"
+            disabled={!selectedVehicleId || selectedVehicleHasActiveListing}
+            title={
+              selectedVehicleHasActiveListing
+                ? "Cannot create listing - this vehicle already has an active listing"
+                : !selectedVehicleId
+                  ? "Please select a vehicle"
+                  : ""
+            }
+          >
+            Create Listing
+          </Button>
         </div>
       </form>
     </div>

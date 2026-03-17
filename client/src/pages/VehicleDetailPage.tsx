@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
-import { AlertCircle } from "lucide-react";
+import { ImageGallery } from "../components/vehicle/ImageGallery";
 
 interface VehicleDetails {
   id: number;
@@ -31,6 +31,7 @@ interface ListingInfo {
   end_time: string;
   statusListing: string;
   location: string;
+  end_reason?: string;
 }
 
 export const VehicleDetailPage: React.FC = () => {
@@ -42,6 +43,7 @@ export const VehicleDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
+  const [cancellingListingId, setCancellingListingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -61,7 +63,7 @@ export const VehicleDetailPage: React.FC = () => {
         const vehicleData = await vehicleRes.json();
         setVehicle(vehicleData.vehicle);
 
-        // Fetch all listings for this vehicle
+        // Fetch all listings for this vehicle 
         const listingsRes = await fetch(
           `http://localhost:8080/api/listings/vehicle-all/${vehicleId}`
         );
@@ -84,6 +86,7 @@ export const VehicleDetailPage: React.FC = () => {
           end_time: item.end_time,
           statusListing: item.status,
           location: item.location || "",
+          end_reason: item.end_reason || "",
         }));
 
         setListings(mappedListings);
@@ -97,6 +100,40 @@ export const VehicleDetailPage: React.FC = () => {
 
     fetchData();
   }, [vehicleId]);
+
+  const handleRemoveListing = async (listingId: number) => {
+    if (!window.confirm("Are you sure you want to remove this listing? This action cannot be undone.")) {
+      return;
+    }
+
+    setCancellingListingId(listingId);
+    try {
+      const res = await fetch(`http://localhost:8080/api/listings/remove/${listingId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to remove listing");
+      }
+
+      // Update the listings state to reflect the change
+      setListings((prevListings) =>
+        prevListings.map((listing) =>
+          listing.id === listingId
+            ? { ...listing, statusListing: "cancelled" }
+            : listing
+        )
+      );
+
+      alert("Listing removed successfully!");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to remove listing");
+      console.error(err);
+    } finally {
+      setCancellingListingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -121,155 +158,269 @@ export const VehicleDetailPage: React.FC = () => {
     );
   }
 
-  const thumbnailUrl = vehicle.image_url && vehicle.image_url.length > 0
-    ? vehicle.image_url[0]
-    : "https://via.placeholder.com/300x200?text=No+Image";
+  // Grouped vehicle information
+  const vehicleBasics = [
+    { title: "Year", value: String(vehicle.year) },
+    { title: "Make", value: vehicle.make },
+    { title: "Model", value: vehicle.model },
+  ];
+
+  const vehicleSpecs = [
+    {
+      title: "Mileage/Hours",
+      value: vehicle.mileage_hours ? String(vehicle.mileage_hours) : "N/A",
+    },
+    {
+      title: "Condition",
+      value: vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
+    },
+    {
+      title: "Price",
+      value: vehicle.price ? `$${Number(vehicle.price).toLocaleString()}` : "N/A",
+    },
+    {
+      title: "Status",
+      value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
+    },
+  ];
 
   return (
-    <section className="account-page">
-      <div className="account-container">
-        {/* Left Side - Vehicle Details */}
-        <div className="account-profile">
-          {/* Vehicle Image */}
-          <div style={{ marginBottom: "20px", borderRadius: "8px", overflow: "hidden" }}>
-            <img 
-              src={thumbnailUrl} 
-              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-              style={{ width: "100%", height: "300px", objectFit: "cover" }}
-            />
-          </div>
+    <section className="listing-detail-page">
+      <div className="listing-detail-container">
+        {/* Back Link */}
+        <div
+          onClick={() => navigate("/account")}
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            marginBottom: "20px",
+            fontSize: "14px",
+            color: "#666",
+          }}
+        >
+          ← Back to Account
+        </div>
 
-          <div className="profile-header">
-            <div className="profile-avatar">
-              <span>🏍️</span>
-            </div>
-            <div className="profile-info">
-              <h1>
-                {vehicle.year} {vehicle.make} {vehicle.model}
-              </h1>
-              <p className="profile-role">{vehicle.condition}</p>
-            </div>
-          </div>
-
-          <div className="profile-details">
-            <h3>Vehicle Information</h3>
-            <div className="detail-item">
-              <span className="detail-label">Price:</span>
-              <span className="detail-value">${vehicle.price.toLocaleString()}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Mileage/Hours:</span>
-              <span className="detail-value">{vehicle.mileage_hours.toLocaleString()}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Status:</span>
-              <span className={`detail-value ${vehicle.status}`}>
-                {vehicle.status}
+        {/* Header Section */}
+        <div className="listing-header-card">
+          <div>
+            <h1 className="listing-title">
+              {vehicle.year} {vehicle.make} {vehicle.model}
+            </h1>
+            <div className="listing-tags">
+              <span className="tag tag-condition">
+                {vehicle.condition.charAt(0).toUpperCase() +
+                  vehicle.condition.slice(1)}
+              </span>
+              <span className={`tag tag-status tag-status-${vehicle.status}`}>
+                {vehicle.status && vehicle.status.charAt(0).toUpperCase() +
+                  vehicle.status.slice(1)}
               </span>
             </div>
-            <div className="detail-item">
-              <span className="detail-label">Description:</span>
-              <span className="detail-value">{vehicle.description}</span>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: "10px", marginTop: "15px" }}>
-            <Button
-              variant="primary"
-              onClick={() => navigate(`/add-listing`)}
-              className="edit-profile-btn"
-            >
-              + List Vehicle
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/account")}
-              className="edit-profile-btn"
-            >
-              ← Back to Garage
-            </Button>
           </div>
         </div>
 
-        {/* Right Side - Listings */}
-        <div className="account-content">
-          {/* Header */}
-          <div className="tabs-header">
-            <h2>All Listings for This Vehicle</h2>
+        <div className="listing-content-grid">
+          {/* Main Content - Left Side */}
+          <div className="listing-main">
+            {/* Image Gallery */}
+            {vehicle.image_url &&
+              Array.isArray(vehicle.image_url) &&
+              vehicle.image_url.length > 0 && (
+                <div className="gallery-section">
+                  <ImageGallery
+                    images={vehicle.image_url.map((img) =>
+                      typeof img === "string" ? img : URL.createObjectURL(img),
+                    )}
+                    title="Gallery"
+                  />
+                </div>
+              )}
+
+            {/* Vehicle Details */}
+            <div className="details-grid">
+              <div className="details-card">
+                <h3>Basic Information</h3>
+                <div className="detail-rows">
+                  {vehicleBasics.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="details-card">
+                <h3>Specifications</h3>
+                <div className="detail-rows">
+                  {vehicleSpecs.map((item, idx) => (
+                    <div key={idx} className="detail-row">
+                      <span className="detail-label">{item.title}</span>
+                      <span className="detail-value">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="details-card">
+              <h3>Description</h3>
+              <p style={{ lineHeight: "1.6", color: "#666" }}>
+                {vehicle.description}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "24px",
+                flexWrap: "wrap",
+              }}
+            >
+              <Button
+                variant="primary"
+                onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
+              >
+                + List Vehicle for Auction
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
+              >
+                ✎ Edit Vehicle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/account")}
+              >
+                ← Back to Account
+              </Button>
+            </div>
           </div>
 
-          {error && <p className="error-text">{error}</p>}
+          {/* Right Side - Listings */}
+          <div className="listing-sidebar">
+            <div className="sidebar-card">
+              <h3>Auction History</h3>
+              {error && <p className="error-text" style={{ fontSize: "14px" }}>{error}</p>}
 
-          <div className="vehicles-list">
-            {listings.length > 0 ? (
-              listings.map((listing) => (
-                <div key={listing.id} className="vehicle-item">
-                  <div className="vehicle-info">
-                    <h3>
-                      {listing.year} {listing.make} {listing.model}
-                    </h3>
-
-                    <div className="vehicle-details">
-                      <span className="price">
-                        ${listing.current_price.toLocaleString()}
-                      </span>
-                      <span className="detail-text">
-                        Start: ${listing.start_price.toLocaleString()}
-                      </span>
-                      <span className="detail-text">
-                        Reserve: ${listing.reserve_price.toLocaleString()}
-                      </span>
-                      {(() => {
-                        const startTime = new Date(listing.start_time);
-                        const now = new Date();
-                        const displayStatus =
-                          startTime > now ? "Upcoming" : listing.statusListing;
-                        const statusClass =
-                          startTime > now
-                            ? "upcoming"
-                            : listing.statusListing.toLowerCase();
-                        return (
-                          <span
-                            className={`listing-status-tag status-${statusClass}`}
-                          >
-                            {displayStatus}
-                          </span>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Analytics and Edit button */}
+              {listings.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {listings.map((listing) => (
                     <div
-                      style={{ marginTop: 10, display: "flex", gap: 10 }}
+                      key={listing.id}
+                      style={{
+                        padding: "12px",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        backgroundColor: "#f9f9f9",
+                      }}
                     >
-                      <Button
-                        variant="primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDashboardListingId(listing.id);
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: "8px",
                         }}
                       >
-                        View Analytics
-                      </Button>
+                        <span
+                          style={{
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            color: "#333",
+                          }}
+                        >
+                          Current: ${listing.current_price.toLocaleString()}
+                        </span>
+                        {(() => {
+                          const startTime = new Date(listing.start_time);
+                          const now = new Date();
+                          const displayStatus =
+                            startTime > now ? "Upcoming" : listing.statusListing;
+                          const statusClass =
+                            startTime > now
+                              ? "upcoming"
+                              : listing.statusListing.toLowerCase();
+                          return (
+                            <span
+                              className={`listing-status-tag status-${statusClass}`}
+                              style={{ fontSize: "12px", padding: "4px 8px" }}
+                            >
+                              {displayStatus}
+                            </span>
+                          );
+                        })()}
+                      </div>
 
-                      {(() => {
-                        const hasStarted =
-                          new Date(listing.start_time) <= new Date();
-                        const isEnded =
-                          listing.statusListing === "ended" ||
-                          listing.statusListing === "sold";
-                        const cannotEdit = hasStarted || isEnded;
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#666",
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "8px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <div>
+                          <span style={{ display: "block", color: "#999" }}>
+                            Start
+                          </span>
+                          <span style={{ fontWeight: 500 }}>
+                            ${listing.start_price.toLocaleString()}
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ display: "block", color: "#999" }}>
+                            Reserve
+                          </span>
+                          <span style={{ fontWeight: 500 }}>
+                            ${listing.reserve_price.toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
 
-                        return (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6,
-                            }}
-                          >
+                      {/* Analytics and Edit button */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Button
+                          variant="primary"
+                          style={{ flex: 1, fontSize: "12px", padding: "6px 10px" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDashboardListingId(listing.id);
+                          }}
+                        >
+                          View Analytics
+                        </Button>
+
+                        {(() => {
+                          const hasStarted =
+                            new Date(listing.start_time) <= new Date();
+                          const isEnded =
+                            listing.statusListing === "ended" ||
+                            listing.statusListing === "sold";
+                          const cannotEdit = hasStarted || isEnded;
+
+                          return (
                             <Button
                               variant="outline"
+                              style={{
+                                flex: 1,
+                                fontSize: "12px",
+                                padding: "6px 10px",
+                              }}
                               disabled={cannotEdit}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -285,54 +436,76 @@ export const VehicleDetailPage: React.FC = () => {
                             >
                               Edit Auction
                             </Button>
-                            {cannotEdit && (
-                              <div
+                          );
+                        })()}
+                      </div>
+
+                      {/* Action Buttons for Ended Auctions */}
+                      {(() => {
+                        const isEnded = listing.statusListing === "ended";
+                        const isCancelled = listing.end_reason === "cancelled";
+
+                        if (isEnded && !isCancelled) {
+                          return (
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "8px",
+                                flexWrap: "wrap",
+                                marginTop: "10px",
+                                paddingTop: "10px",
+                                borderTop: "1px solid #e0e0e0",
+                              }}
+                            >
+                              <Button
+                                variant="primary"
                                 style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  cursor: "pointer",
+                                  flex: 1,
+                                  fontSize: "12px",
+                                  padding: "6px 10px",
+                                  backgroundColor: "#27ae60",
                                 }}
-                                title="Cannot edit listing once it starts or ends"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Placeholder for sell vehicle action
+                                  alert("Sell vehicle functionality - Coming soon");
+                                }}
                               >
-                                <AlertCircle
-                                  size={18}
-                                  style={{ color: "#dc2626" }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
+                                💰 Sell Vehicle
+                              </Button>
+                              <Button
+                                variant="outline"
+                                style={{
+                                  flex: 1,
+                                  fontSize: "12px",
+                                  padding: "6px 10px",
+                                  color: "#dc2626",
+                                  borderColor: "#dc2626",
+                                }}
+                                disabled={cancellingListingId === listing.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveListing(listing.id);
+                                }}
+                              >
+                                {cancellingListingId === listing.id
+                                  ? "Removing..."
+                                  : "🗑️ Remove Listing"}
+                              </Button>
+                            </div>
+                          );
+                        }
+                        return null;
                       })()}
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))
-            ) : (
-              <div className="no-vehicles">
-                <p>No listings found for this vehicle.</p>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate("/account")}
-                >
-                  Back to Garage
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="account-menu">
-            <h3>Account Settings</h3>
-            <ul>
-              <li>
-                <a href="#settings">Settings</a>
-              </li>
-              <li>
-                <a href="#security">Login &amp; Security</a>
-              </li>
-              <li>
-                <a href="#information">Information</a>
-              </li>
-            </ul>
+              ) : (
+                <p style={{ fontSize: "14px", color: "#666" }}>
+                  No auctions yet for this vehicle.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
