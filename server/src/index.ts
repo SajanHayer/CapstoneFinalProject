@@ -7,6 +7,8 @@ import { vehicleRouter } from "./routes/vehicleRoutes";
 import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
 import { auctionRouter } from "./routes/auctionRoutes.ts";
+import { heatmapRouter } from "./routes/heatmapRoutes";
+
 import { startAuctionCron } from "./cron/auctionEnd.cron";
 import { analyticsRouter } from "./routes/analyticsRoutes";
 import listingAnalyticsRoutes from "./routes/listingAnalytics";
@@ -33,8 +35,14 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
+feature/heatmap
+app.use("/api/listings", auctionRouter);
+app.use("/api/heatmap", heatmapRouter);
+
+
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
 app.use("/api/listings", auctionRouter);         
+main
 
 startAuctionCron();
 app.use("/api/analytics", analyticsRouter);
