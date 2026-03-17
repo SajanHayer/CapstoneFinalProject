@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
+import { YouWonModal } from "../components/analytics/YouWonModal";
 
 interface GarageVehicle {
   id: number;
@@ -49,7 +50,9 @@ export const AccountPage: React.FC = () => {
   const [dashboardListingId, setDashboardListingId] = useState<number | null>(
     null,
   );
+  const [wonListingId, setWonListingId] = useState<number | null>(null);
   const [endedListingAlert, setEndedListingAlert] = useState<string | null>(null);
+  const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(new Set());
 
   // Fetch garage vehicles (only once on mount)
   useEffect(() => {
@@ -147,6 +150,8 @@ export const AccountPage: React.FC = () => {
 
         if (isMounted) {
           setUserBids(bids);
+          // Fetch transactions for each bid to determine "You Won" status
+          await fetchTransactionsForBids(bids);
         }
       } catch (err) {
         if (isMounted) {
@@ -163,6 +168,31 @@ export const AccountPage: React.FC = () => {
     };
   }, [user?.id, activeTab]);
 
+  const fetchTransactionsForBids = async (bids: BidItem[]) => {
+    try {
+      const bidIdsWithTransaction = new Set<number>();
+
+      // For each ended listing, check if user has a transaction
+      for (const bid of bids) {
+        if (bid.listing.status === "sold"|| bid.listing.status === "ended") {
+          // Check if user has a transaction for this listing
+          const transRes = await fetch(
+            `http://localhost:8080/api/listings/transactions/check/${bid.listing_id}/${user?.id}`,
+          );
+          if (transRes.ok) {
+            const transData = await transRes.json();
+            if (transData.eligible) {
+              bidIdsWithTransaction.add(bid.id);
+            }
+          }
+        }
+      }
+      setTransactionBidIds(bidIdsWithTransaction);
+    } catch (err) {
+      console.error("Failed to fetch transactions:", err);
+    }
+  };
+
   const handleBidItemClick = (bid: BidItem) => {
     // Only block cancelled listings - allow viewing of ended auctions
     if (bid.listing.status === "cancelled") {
@@ -172,6 +202,10 @@ export const AccountPage: React.FC = () => {
     }
     
     navigate(`/listings/${bid.listing_id}`);
+  };
+
+  const handleShowWinnerInfo = (listingId: number) => {
+    setWonListingId(listingId);
   };
 
   return (
@@ -351,38 +385,96 @@ export const AccountPage: React.FC = () => {
                             Start: ${bid.listing.start_price.toLocaleString()}
                           </span>
 
-                          <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                            {/* Tag 1: Auction Status */}
                             {(() => {
-                              const isHighestBid = bid.bid_amount === bid.listing.current_price;
-                              const statusText = isHighestBid ? "Highest Bid" : "Outbid";
-                              const statusClass = isHighestBid ? "highest-bid" : "outbid";
-                              return (
-                                <span className={`listing-status-tag status-${statusClass}`}>
-                                  {statusText}
-                                </span>
-                              );
-                            })()}
-                            {(() => {
-                              const displayStatus = isCancelled ? "Cancelled" : (isLive ? "Live" : (isEnded ? "Ended" : "Upcoming"));
-                              const statusClass = isCancelled ? "cancelled" : (isLive ? "active" : (isEnded ? "ended" : "upcoming"));
+                              let displayStatus = "Upcoming";
+                              let statusClass = "upcoming";
+                              
+                              if (bid.listing.status === "cancelled") {
+                                displayStatus = "Cancelled";
+                                statusClass = "cancelled";
+                              } else if (isEnded) {
+                                displayStatus = "Ended";
+                                statusClass = "ended";
+                              } else if (isLive) {
+                                displayStatus = "Active";
+                                statusClass = "active";
+                              }
+                              
                               return (
                                 <span className={`listing-status-tag status-${statusClass}`}>
                                   {displayStatus}
                                 </span>
                               );
                             })()}
+
+                            {/* Tag 2: Bid Status - Changes based on seller actions or bid outcome */}
                             {(() => {
-                              if (bid.listing.end_reason === "cancelled") {
+                              const isHighestBid = bid.bid_amount === bid.listing.current_price;
+                              const isSold = bid.listing.status === "sold";
+                              const isCancelledListing = bid.listing.status === "cancelled";
+                              const isCancelledOrUnmet =
+                                bid.listing.end_reason === "cancelled" ||
+                                bid.listing.end_reason === "unmet";
+
+                              // If listing was cancelled by seller
+                              if (isCancelledListing) {
                                 return (
                                   <span className="listing-status-tag status-cancelled">
-                                    Seller Cancelled
+                                    Cancelled
                                   </span>
                                 );
-                              } else if (bid.listing.end_reason === "unmet") {
+                              }
+
+                              // If seller marked as sold and user has transaction
+                              if (isSold && transactionBidIds.has(bid.id)) {
                                 return (
-                                  <span className="listing-status-tag status-unmet">
-                                    Reserve Not Met
+                                  <span className="listing-status-tag" style={{ backgroundColor: "#27ae60", color: "white" }}>
+                                    Sold
                                   </span>
+                                );
+                              }
+
+                              // If outbid
+                              if (!isHighestBid && !isCancelledOrUnmet) {
+                                return (
+                                  <span className="listing-status-tag status-outbid">
+                                    Outbid
+                                  </span>
+                                );
+                              }
+
+                              // If highest bid
+                              if (isHighestBid && !isEnded) {
+                                return (
+                                  <span className="listing-status-tag status-highest-bid">
+                                    Highest Bid
+                                  </span>
+                                );
+                              }
+
+                              return null;
+                            })()}
+
+                            {/* You Won Button - Only show if user has transaction */}
+                            {(() => {
+                              if (transactionBidIds.has(bid.id) && bid.listing.status === "sold") {
+                                return (
+                                  <Button
+                                    variant="primary"
+                                    style={{
+                                      fontSize: "12px",
+                                      padding: "6px 12px",
+                                      backgroundColor: "#27ae60",
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleShowWinnerInfo(bid.listing.id);
+                                    }}
+                                  >
+                                    You Won
+                                  </Button>
                                 );
                               }
                               return null;
@@ -436,6 +528,20 @@ export const AccountPage: React.FC = () => {
               listingId={dashboardListingId}
               onClose={() => {
                 setDashboardListingId(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* You Won Modal */}
+      {wonListingId !== null && (
+        <div className="dashboard-modal-overlay">
+          <div className="dashboard-modal-wrapper">
+            <YouWonModal
+              listingId={wonListingId}
+              onClose={() => {
+                setWonListingId(null);
               }}
             />
           </div>

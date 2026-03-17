@@ -48,8 +48,6 @@ export const ListingDetailPage: React.FC = () => {
   const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
   const [userLocation, setUserLocation] = useState<string>("");
-  const [isLocationValid, setIsLocationValid] = useState<boolean>(false);
-  const autocompleteRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -59,12 +57,12 @@ export const ListingDetailPage: React.FC = () => {
           `http://localhost:8080/api/listings/vehicle/${id}`,
         );
         const data = await res.json();
-        setVehicle(data.result.vehicle);
-        setListing(data.result);
-        setCurrentHighestBid(Number(data.result.current_price));
+        setVehicle(data.result[0].vehicle);
+        setListing(data.result[0]);
+        setCurrentHighestBid(Number(data.result[0].current_price));
         
         // Fetch highest bidder info
-        const bidsRes = await fetch(`http://localhost:8080/api/listings/${id}/bids`);
+        const bidsRes = await fetch(`http://localhost:8080/api/listings/${id}/all/bids`);
         const bidsData = await bidsRes.json();
         if (bidsData.result && bidsData.result.length > 0) {
           // Find highest bid
@@ -77,7 +75,7 @@ export const ListingDetailPage: React.FC = () => {
         }
       } catch (err) {
         setError("Failed to load vehicle details");
-        console.error(err);
+        console.log(err);
       } finally {
         setLoading(false);
       }
@@ -86,13 +84,15 @@ export const ListingDetailPage: React.FC = () => {
   }, [id]); // when id changes, refetch vehicle
 
   useEffect(() => {
-    if (!id) return;
-    // join room
-    socket.emit("join_auction", id);
+    if (!listing) return;
+    // join room using LISTING ID, not vehicle ID
+    socket.connect();
+    socket.emit("join_auction", listing.id);
     return () => {
-      socket.emit("leave_auction", id);
+      socket.emit("leave_auction", listing.id);
+      socket.disconnect();
     };
-  }, [id]);
+  }, [listing]);
 
   useEffect(() => {
     const handleBidUpdate = (data: { amount: number; bidder_id?: number; end_time?: string }) => {
@@ -174,20 +174,19 @@ export const ListingDetailPage: React.FC = () => {
       return;
     }
 
-    // Check if location is validated from Google Places
-    if (!isLocationValid) {
-      alert("Please select a valid location from the suggestions");
-      return;
-    }
-
     // Check if user is already highest bidder
     if (highestBidderId === user?.id) {
       alert("You are already the highest bidder");
       return;
     }
 
+    if (!listing) {
+      alert("Listing not loaded");
+      return;
+    }
+
     socket.emit("place_bid", {
-      auctionId: id,
+      auctionId: listing.id,
       amount: bidAmount,
       userId: user?.id,
       location: userLocation,
@@ -414,7 +413,7 @@ export const ListingDetailPage: React.FC = () => {
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation || !isLocationValid || highestBidderId === user?.id}
+                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation || highestBidderId === user?.id}
                 className="bid-button"
               >
                 {highestBidderId === user?.id && isAuctionActive

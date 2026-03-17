@@ -263,10 +263,13 @@ vehicleRouter.put(
         .where(eq(vehicles.id, vehicleId))
         .returning();
 
-      res.json({ vehicle: updatedVehicle, message: "Vehicle updated successfully" });
+      res.json({
+        vehicle: updatedVehicle,
+        message: "Vehicle updated successfully",
+      });
     } catch (err) {
       console.error("Update vehicle error:", err);
       res.status(500).json({ message: "Server error", error: String(err) });
     }
-  }
+  },
 );

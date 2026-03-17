@@ -49,7 +49,7 @@ export async function placeBid({
 
     const [updatedListing] = await tx
       .update(listings)
-      .set({ 
+      .set({
         current_price: bidAmount,
         end_time: newEndTime,
       })

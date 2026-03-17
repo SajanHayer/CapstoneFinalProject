@@ -32,6 +32,7 @@ interface ListingInfo {
   statusListing: string;
   location: string;
   end_reason?: string;
+  highest_bid?: number;
 }
 
 export const VehicleDetailPage: React.FC = () => {
@@ -44,6 +45,7 @@ export const VehicleDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
   const [cancellingListingId, setCancellingListingId] = useState<number | null>(null);
+  const [sellingListingId, setSellingListingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -65,13 +67,12 @@ export const VehicleDetailPage: React.FC = () => {
 
         // Fetch all listings for this vehicle 
         const listingsRes = await fetch(
-          `http://localhost:8080/api/listings/vehicle-all/${vehicleId}`
+          `http://localhost:8080/api/listings/vehicle/all/${vehicleId}`
         );
         if (!listingsRes.ok) {
           throw new Error("Failed to fetch listings");
         }
         const listingsData = await listingsRes.json();
-
         const mappedListings: ListingInfo[] = (listingsData.result || []).map((item: any) => ({
           id: item.id,
           vehicleId: item.vehicle_id,
@@ -89,7 +90,30 @@ export const VehicleDetailPage: React.FC = () => {
           end_reason: item.end_reason || "",
         }));
 
-        setListings(mappedListings);
+        // Fetch highest bid for each listing
+        const listingsWithBids = await Promise.all(
+          mappedListings.map(async (listing) => {
+            try {
+              const bidsRes = await fetch(
+                `http://localhost:8080/api/listings/${listing.id}/all/bids`
+              );
+              if (bidsRes.ok) {
+                const bidsData = await bidsRes.json();
+                if (bidsData.result && bidsData.result.length > 0) {
+                  const highestBid = bidsData.result.reduce((max: any, bid: any) =>
+                    Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max
+                  );
+                  return { ...listing, highest_bid: Number(highestBid.bid_amount) };
+                }
+              }
+            } catch (err) {
+              console.error(`Failed to fetch bids for listing ${listing.id}:`, err);
+            }
+            return listing;
+          })
+        );
+
+        setListings(listingsWithBids);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load data");
         console.error(err);
@@ -132,6 +156,41 @@ export const VehicleDetailPage: React.FC = () => {
       console.error(err);
     } finally {
       setCancellingListingId(null);
+    }
+  };
+
+  const handleSellVehicle = async (listingId: number) => {
+    if (!window.confirm("Are you sure you want to complete this sale? This will mark the listing as sold.")) {
+      return;
+    }
+
+    setSellingListingId(listingId);
+    try {
+      const res = await fetch(`http://localhost:8080/api/listings/${listingId}/sale`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to complete sale");
+      }
+
+      // Update the listings state to show as sold
+      setListings((prevListings) =>
+        prevListings.map((listing) =>
+          listing.id === listingId
+            ? { ...listing, statusListing: "sold" }
+            : listing
+        )
+      );
+
+      alert("Sale completed successfully! Payment is pending.");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to complete sale");
+      console.error(err);
+    } finally {
+      setSellingListingId(null);
     }
   };
 
@@ -202,7 +261,35 @@ export const VehicleDetailPage: React.FC = () => {
         >
           ← Back to Account
         </div>
-
+          {/* Action Buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                marginTop: "24px",
+                marginBottom: "24px",
+                flexWrap: "wrap",
+              }}
+            >
+              <Button
+                variant="primary"
+                onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
+              >
+                + List Vehicle for Auction
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
+              >
+                ✎ Edit Vehicle
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/account")}
+              >
+                ← Back to Account
+              </Button>
+            </div>
         {/* Header Section */}
         <div className="listing-header-card">
           <div>
@@ -273,35 +360,6 @@ export const VehicleDetailPage: React.FC = () => {
                 {vehicle.description}
               </p>
             </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "24px",
-                flexWrap: "wrap",
-              }}
-            >
-              <Button
-                variant="primary"
-                onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
-              >
-                + List Vehicle for Auction
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
-              >
-                ✎ Edit Vehicle
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/account")}
-              >
-                ← Back to Account
-              </Button>
-            </div>
           </div>
 
           {/* Right Side - Listings */}
@@ -336,7 +394,7 @@ export const VehicleDetailPage: React.FC = () => {
                             color: "#333",
                           }}
                         >
-                          Current: ${listing.current_price.toLocaleString()}
+                          Current Highest Bid: ${listing.current_price.toLocaleString()}
                         </span>
                         {(() => {
                           const startTime = new Date(listing.start_time);
@@ -384,6 +442,14 @@ export const VehicleDetailPage: React.FC = () => {
                             ${listing.reserve_price.toLocaleString()}
                           </span>
                         </div>
+                        {/* <div style={{ gridColumn: "1 / -1" }}>
+                          <span style={{ display: "block", color: "#999" }}>
+                            Highest Bid
+                          </span>
+                          <span style={{ fontWeight: 500 }}>
+                            {listing.current_price ? `$${listing.current_price.toLocaleString()}` : "No bids"}
+                          </span>
+                        </div> */}
                       </div>
 
                       {/* Analytics and Edit button */}
@@ -443,7 +509,26 @@ export const VehicleDetailPage: React.FC = () => {
                       {/* Action Buttons for Ended Auctions */}
                       {(() => {
                         const isEnded = listing.statusListing === "ended";
+                        const isSold = listing.statusListing === "sold";
                         const isCancelled = listing.end_reason === "cancelled";
+
+                        if (isSold) {
+                          return (
+                            <div
+                              style={{
+                                marginTop: "10px",
+                                paddingTop: "10px",
+                                paddingBottom: "10px",
+                                borderTop: "1px solid #e0e0e0",
+                                color: "#27ae60",
+                                fontWeight: 600,
+                                fontSize: "14px",
+                              }}
+                            >
+                              ✓ Sold
+                            </div>
+                          );
+                        }
 
                         if (isEnded && !isCancelled) {
                           return (
@@ -465,13 +550,13 @@ export const VehicleDetailPage: React.FC = () => {
                                   padding: "6px 10px",
                                   backgroundColor: "#27ae60",
                                 }}
+                                disabled={sellingListingId === listing.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Placeholder for sell vehicle action
-                                  alert("Sell vehicle functionality - Coming soon");
+                                  handleSellVehicle(listing.id);
                                 }}
                               >
-                                💰 Sell Vehicle
+                                {sellingListingId === listing.id ? "Processing..." : "💰 Sell Vehicle"}
                               </Button>
                               <Button
                                 variant="outline"

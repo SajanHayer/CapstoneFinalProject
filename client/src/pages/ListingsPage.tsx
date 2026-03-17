@@ -3,6 +3,7 @@ import { ListingCard } from "../components/listings/ListingCard";
 import { ListingRowCard } from "../components/listings/ListingRowCard";
 import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { socket } from "../lib/socket";
 
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
@@ -46,44 +47,46 @@ export const ListingsPage: React.FC = () => {
 
       const data = await res.json();
       // Map backend data to Listing type
-      const mappedListings: Listing[] = data.listings.map((listing: any) => {
-        const v = listing.vehicle;
-        const now = new Date();
-        const startTime = new Date(listing.start_time);
-        const endTime = new Date(listing.end_time);
+      const mappedListings: Listing[] = data.listings
+        .filter((listing: any) => listing.status !== "cancelled") // Exclude cancelled listings
+        .map((listing: any) => {
+          const v = listing.vehicle;
+          const now = new Date();
+          const startTime = new Date(listing.start_time);
+          const endTime = new Date(listing.end_time);
 
-        // Determine status based on start_time and end_time
-        let status: ListingStatus;
-        if (now < startTime) {
-          status = "UPCOMING"; // Scheduled for future
-        } else if (
-          now >= startTime &&
-          now < endTime &&
-          listing.status === "active"
-        ) {
-          status = "ACTIVE"; // Currently running
-        } else {
-          status = "EXPIRED"; // Ended or cancelled
-        }
+          // Determine status based on start_time and end_time
+          let status: ListingStatus;
+          if (now < startTime) {
+            status = "UPCOMING"; // Scheduled for future
+          } else if (
+            now >= startTime &&
+            now < endTime &&
+            listing.status === "active"
+          ) {
+            status = "ACTIVE"; // Currently running
+          } else {
+            status = "EXPIRED"; // Ended or cancelled
+          }
 
-        return {
-          id: listing.vehicle.id.toString(),
-          title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
-          thumbnailUrl: v?.image_url
-            ? Array.isArray(v.image_url)
-              ? v.image_url[0]
-              : v.image_url
-            : undefined,
-          currentPrice: Number(listing.current_price),
-          location: listing.location || "Unknown",
-          mileage: Number(v?.mileage_hours ?? 0),
-          year: Number(v?.year ?? 0),
-          status: status,
-          startsAt: listing.start_time ?? new Date().toISOString(),
-          endsAt: listing.end_time ?? new Date().toISOString(),
-          bids: listing.bids_count ?? 0,
-        };
-      });
+          return {
+            id: listing.vehicle.id.toString(),
+            title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
+            thumbnailUrl: v?.image_url
+              ? Array.isArray(v.image_url)
+                ? v.image_url[0]
+                : v.image_url
+              : undefined,
+            currentPrice: Number(listing.current_price),
+            location: listing.location || "Unknown",
+            mileage: Number(v?.mileage_hours ?? 0),
+            year: Number(v?.year ?? 0),
+            status: status,
+            startsAt: listing.start_time ?? new Date().toISOString(),
+            endsAt: listing.end_time ?? new Date().toISOString(),
+            bids: listing.bids_count ?? 0,
+          };
+        });
 
       setListings(mappedListings);
     } catch (err: any) {
@@ -101,6 +104,45 @@ export const ListingsPage: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Socket connection for real-time bid updates
+  useEffect(() => {
+    if (listings.length === 0) return;
+
+    // Connect to socket once
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // Join auction rooms for all active listings
+    const activeListings = listings.filter((l) => l.status === "ACTIVE" || l.status === "UPCOMING");
+    activeListings.forEach((listing) => {
+      socket.emit("join_auction", Number(listing.id));
+    });
+
+    // Listen for bid updates
+    const handleBidUpdate = (data: { auctionId: number; amount: number }) => {
+      setListings((prevListings) =>
+        prevListings.map((listing) =>
+          Number(listing.id) === data.auctionId
+            ? { ...listing, currentPrice: data.amount }
+            : listing
+        )
+      );
+    };
+
+    socket.on("bid_update", handleBidUpdate);
+
+    return () => {
+      // Leave only the rooms we joined
+      activeListings.forEach((listing) => {
+        socket.emit("leave_auction", Number(listing.id));
+      });
+      socket.off("bid_update", handleBidUpdate);
+    };
+  }, [
+    listings.map((l) => `${l.id}-${l.status}`).join(","),
+  ]);
 
   // Derived filter/sort
   const makes = Array.from(

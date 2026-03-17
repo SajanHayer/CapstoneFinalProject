@@ -23,7 +23,7 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
     const fetchBids = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/listings/${listingId}/bids`
+          `http://localhost:8080/api/listings/${listingId}/all/bids`
         );
         const data = await res.json();
         const bidList: Bid[] = Array.isArray(data?.result) ? data.result : [];

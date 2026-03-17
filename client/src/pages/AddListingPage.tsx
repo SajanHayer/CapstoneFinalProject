@@ -4,7 +4,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import "../styles/addlisting.css";
 
 type Vehicle = {
@@ -91,33 +91,47 @@ export const AddListingPage: React.FC = () => {
             credentials: "include",
           },
         );
-        if (res.ok) {
-          const data = await res.json();
-          // Extract all vehicles and check for active listings
-          if (data.result && Array.isArray(data.result)) {
-            const allVehicles = data.result
-              .map((item: any) => ({
-                id: item.vehicles.id,
-                make: item.vehicles.make,
-                model: item.vehicles.model,
-                year: item.vehicles.year,
-                hasActiveListing:
-                  item.listings &&
-                  item.listings.length > 0 &&
-                  item.listings.some(
-                    (listing: any) =>
-                      listing.status === "active" ||
-                      (new Date(listing.start_time) <= new Date() &&
-                        new Date(listing.end_time) >= new Date()),
-                  ),
-              }))
-              .filter(
-                (v: Vehicle, idx: number, arr: Vehicle[]) =>
-                  arr.findIndex((vehicle) => vehicle.id === v.id) === idx,
-              );
-            setVehicles(allVehicles);
-          }
-        }
+
+        const res2 = await fetch(`http://localhost:8080/api/vehicles/${vehicleIdFromParams}`,{credentials: "include"});
+        const data = await res2.json();
+        // const vehicleDetails = data.vehicle;
+        // console.log("Raw vehicle data fo vehicleIdFromParams:", data.vehicle);
+        const { id, make, model, year } = data.vehicle;
+        const vehicleDetails: Vehicle = { id, make, model, year };
+        console.log("Vehicl:", vehicleDetails);
+        setVehicles([vehicleDetails]);
+ 
+
+        // setVehicles(vehicleDetails);
+        // if (res.ok) {
+        //   const data = await res.json();
+        //   console.log("Raw vehicles data from API:", vehicleIdFromParams);
+        //   console.log("Fetched vehicles data:", data);
+        //   // Extract all vehicles and check for active listings
+        //   if (data.result && Array.isArray(data.result)) {
+        //     const allVehicles = data.result
+        //       .map((item: any) => ({
+        //         id: item.vehicles.id,
+        //         make: item.vehicles.make,
+        //         model: item.vehicles.model,
+        //         year: item.vehicles.year,
+        //         hasActiveListing:
+        //           item.listings &&
+        //           item.listings.length > 0 &&
+        //           item.listings.some(
+        //             (listing: any) =>
+        //               listing.status === "active" ||
+        //               (new Date(listing.start_time) <= new Date() &&
+        //                 new Date(listing.end_time) >= new Date()),
+        //           ),
+        //       }))
+        //       .filter(
+        //         (v: Vehicle, idx: number, arr: Vehicle[]) =>
+        //           arr.findIndex((vehicle) => vehicle.id === v.id) === idx,
+        //       );
+        //     setVehicles(allVehicles);
+        //   }
+        // }
       } catch (err) {
         console.error("Failed to fetch vehicles:", err);
       } finally {

@@ -40,7 +40,7 @@ export async function settleEndedAuctions() {
         await tx
           .update(listings)
           .set({
-            status: "sold",
+            status: "ended",
             end_reason: "success",
           })
           .where(eq(listings.id, listing.id));

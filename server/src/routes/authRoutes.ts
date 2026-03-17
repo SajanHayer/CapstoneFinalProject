@@ -99,6 +99,36 @@ authRouter.post("/logout", async (_req, res) => {
   res.json({ message: "Logged out" });
 });
 
+// GET /api/users/:id -> Get user info by ID
+authRouter.get("/users/:id", async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const [user] = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (err) {
+    console.error("Get user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 authRouter.get("/check", requireAuth, (req, res) => {
   const user = (req as any).user;
   res.json({ user: user });

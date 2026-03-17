@@ -183,7 +183,7 @@ async function seed() {
           start_price: "7899.00",
           reserve_price: "8500.00",
           buy_now_price: "9200.00",
-          current_price: "7899.00",
+          current_price: "8300.00",
           start_time: now,
           end_time: secondsFromNow(30), // 30s
           status: "active" as const,
@@ -197,7 +197,7 @@ async function seed() {
           start_price: "9499.00",
           reserve_price: "10300.00",
           buy_now_price: "11200.00",
-          current_price: "9499.00",
+          current_price: "10000.00",
           start_time: now,
           end_time: secondsFromNow(60), // 1m
           status: "active" as const,
@@ -225,7 +225,7 @@ async function seed() {
           start_price: "18999.00",
           reserve_price: "20500.00",
           buy_now_price: "22500.00",
-          current_price: "18999.00",
+          current_price: "19500.00",
           start_time: now,
           end_time: secondsFromNow(300), // 5m
           status: "active" as const,
@@ -239,7 +239,7 @@ async function seed() {
           start_price: "8499.00",
           reserve_price: "9200.00",
           buy_now_price: "10200.00",
-          current_price: "8499.00",
+          current_price: "8800.00",
           start_time: now,
           end_time: secondsFromNow(600), // 10m
           status: "active" as const,
@@ -267,7 +267,7 @@ async function seed() {
           start_price: "12999.00",
           reserve_price: "14000.00",
           buy_now_price: "15500.00",
-          current_price: "12999.00",
+          current_price: "13400.00",
           start_time: now,
           end_time: secondsFromNow(1200), // 20m
           status: "active" as const,
@@ -289,42 +289,49 @@ async function seed() {
         bidder_id: user1.id,
         bid_amount: "8100.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
       },
       {
         listing_id: l1.id,
         bidder_id: user3.id,
         bid_amount: "8300.00",
         location: "Edmonton, AB",
+        bid_time: new Date(Date.now()), // 5s from now
       },
       {
         listing_id: l2.id,
         bidder_id: user1.id,
         bid_amount: "9700.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 20 * 1000), // 20s from now
       },
       {
         listing_id: l2.id,
         bidder_id: user3.id,
         bid_amount: "10000.00",
         location: "Vancouver, BC",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
       },
       {
         listing_id: l4.id,
         bidder_id: user1.id,
         bid_amount: "19500.00",
         location: "Red Deer, AB",
+        bid_time: new Date(Date.now()), // 30s from now
       },
       {
         listing_id: l5.id,
         bidder_id: user1.id,
         bid_amount: "8800.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now()), // 15s from now
       },
       {
         listing_id: l7.id,
         bidder_id: user1.id,
         bid_amount: "13400.00",
         location: "Banff, AB",
+        bid_time: new Date(Date.now() - 5 * 1000), // 5s from now
       },
     ]);
 
@@ -347,7 +354,7 @@ async function seed() {
           start_price: "7500.00",
           reserve_price: "8500.00",
           buy_now_price: "9000.00",
-          current_price: "8300.00", // Below reserve
+          current_price: "8500.00",
           start_time: new Date(pastDate.getTime() - 2 * 24 * 60 * 60 * 1000),
           end_time: endedDate,
           status: "cancelled" as const,
@@ -362,7 +369,7 @@ async function seed() {
           start_price: "9200.00",
           reserve_price: "10000.00",
           buy_now_price: "11500.00",
-          current_price: "9500.00",
+          current_price: "10800.00",
           start_time: new Date(pastDate.getTime() - 3 * 24 * 60 * 60 * 1000),
           end_time: endedDate,
           status: "cancelled" as const,
@@ -407,7 +414,7 @@ async function seed() {
           start_price: "6800.00",
           reserve_price: "7500.00",
           buy_now_price: "8500.00",
-          current_price: "7200.00", // Was cancelled before ending
+          current_price: "6800.00", // Was cancelled before ending
           start_time: new Date(pastDate.getTime() - 6 * 24 * 60 * 60 * 1000),
           end_time: new Date(pastDate.getTime() - 1 * 24 * 60 * 60 * 1000),
           status: "cancelled" as const,
@@ -422,7 +429,7 @@ async function seed() {
           start_price: "4200.00",
           reserve_price: "4800.00",
           buy_now_price: "5500.00",
-          current_price: "4500.00", // Was cancelled before ending
+          current_price: "4200.00", // Was cancelled before ending
           start_time: new Date(pastDate.getTime() - 8 * 24 * 60 * 60 * 1000),
           end_time: new Date(pastDate.getTime() - 3 * 24 * 60 * 60 * 1000),
           status: "cancelled" as const,
