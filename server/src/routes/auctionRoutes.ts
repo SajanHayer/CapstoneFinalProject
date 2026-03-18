@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/db";
-import { eq, ne, and, desc} from "drizzle-orm";
+import { eq, ne, and, desc } from "drizzle-orm";
 import { listings, vehicles, bids, transactions } from "../db/schema";
 import { authRouter } from "./authRoutes";
 
@@ -40,7 +40,9 @@ auctionRouter.get("/:id/bids", async (req, res) => {
       })
       .from(bids)
       .innerJoin(listings, eq(listings.id, bids.listing_id))
-      .where(and(eq(bids.listing_id, listingId), ne(listings.status, "cancelled")));
+      .where(
+        and(eq(bids.listing_id, listingId), ne(listings.status, "cancelled")),
+      );
 
     // console.log(bidList);
     res.json({ result: bidList });
@@ -371,8 +373,6 @@ auctionRouter.get(
           ),
         )
         .limit(1);
-
-      console.log(findTransaction)
       if (findTransaction && findTransaction.length > 0) {
         return res.json({
           eligible: true,
@@ -380,7 +380,7 @@ auctionRouter.get(
         });
       }
 
-      res.json({eligible: false});
+      res.json({ eligible: false });
     } catch (err) {
       console.error(err);
       res.status(500).json({ message: "Server error" });
@@ -388,7 +388,7 @@ auctionRouter.get(
   },
 );
 
-// complete sale 
+// complete sale
 auctionRouter.post("/:listingId/sale", async (req, res) => {
   try {
     const listingId = Number(req.params.listingId);
@@ -405,32 +405,31 @@ auctionRouter.post("/:listingId/sale", async (req, res) => {
         sellerId: listings.seller_id,
       })
       .from(listings)
-      .where(eq(listings.id, listingId))
-    
-    console.log(row)
+      .where(eq(listings.id, listingId));
 
-    // get bidder id 
-    const [row1] = await db 
-          .select({
-            buyerId: bids.bidder_id
-          })
-          .from(bids)
-          .where(eq(bids.listing_id, listingId))
-          .orderBy(desc(bids.bid_time)) 
-          .limit(1);
-    
+    console.log(row);
+
+    // get bidder id
+    const [row1] = await db
+      .select({
+        buyerId: bids.bidder_id,
+      })
+      .from(bids)
+      .where(eq(bids.listing_id, listingId))
+      .orderBy(desc(bids.bid_time))
+      .limit(1);
 
     await db
-      .insert(transactions).values(
-        {
-          buyer_id: Number(row1.buyerId),
-          seller_id: Number(row.sellerId),
-          listing_id: listingId,
-          final_price: row.currentPrice,
-          payment_status: "pending",
-          created_at: new Date(Date.now()),
-        },
-    ).returning();
+      .insert(transactions)
+      .values({
+        buyer_id: Number(row1.buyerId),
+        seller_id: Number(row.sellerId),
+        listing_id: listingId,
+        final_price: row.currentPrice,
+        payment_status: "pending",
+        created_at: new Date(Date.now()),
+      })
+      .returning();
 
     res.json({ message: "Sale completed successfully" });
   } catch (err) {

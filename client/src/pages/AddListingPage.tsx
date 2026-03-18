@@ -98,7 +98,6 @@ export const AddListingPage: React.FC = () => {
         // console.log("Raw vehicle data fo vehicleIdFromParams:", data.vehicle);
         const { id, make, model, year } = data.vehicle;
         const vehicleDetails: Vehicle = { id, make, model, year };
-        console.log("Vehicl:", vehicleDetails);
         setVehicles([vehicleDetails]);
  
 
@@ -176,6 +175,26 @@ export const AddListingPage: React.FC = () => {
 
   return (
     <div className="add-listing-container">
+      <button
+        type="button"
+        onClick={() => navigate("/vehicle/" + selectedVehicleId, { state: { vehicleId: selectedVehicleId } })}
+        className="back-button"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 16px",
+          marginBottom: "24px",
+          backgroundColor: "transparent",
+          border: "1px solid #e5e7eb",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "14px",
+          color: "#4b5563",
+        }}
+      >
+        ← Back to Vehicle 
+      </button>
       <div className="add-listing-header">
         <h1>Create New Listing</h1>
         <p>Set up your vehicle for auction</p>

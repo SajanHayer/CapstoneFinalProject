@@ -113,7 +113,7 @@ export const AccountPage: React.FC = () => {
         setError(null);
 
         const res = await fetch(
-          `http://localhost:8080/api/listings/bids/user/${user.id}`,
+          `http://localhost:8080/api/listings/bids/user/all/${user.id}`,
         );
 
         if (!res.ok) {

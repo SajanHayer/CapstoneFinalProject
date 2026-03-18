@@ -174,12 +174,6 @@ export const ListingDetailPage: React.FC = () => {
       return;
     }
 
-    // Check if user is already highest bidder
-    if (highestBidderId === user?.id) {
-      alert("You are already the highest bidder");
-      return;
-    }
-
     if (!listing) {
       alert("Listing not loaded");
       return;
@@ -229,10 +223,10 @@ export const ListingDetailPage: React.FC = () => {
       value:
         vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
     },
-    {
-      title: "Price",
-      value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
-    },
+    // {
+    //   title: "Price",
+    //   value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
+    // },
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
@@ -321,12 +315,10 @@ export const ListingDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Bid History - Only show for ACTIVE auctions */}
-            {isAuctionActive && (
-              <div className="description-card" style={{ marginTop: "24px" }}>
-                <BidHistory listingId={id} />
-              </div>
-            )}
+            {/* Bid History - Show for all auctions */}
+            <div className="description-card" style={{ marginTop: "24px" }}>
+              <BidHistory listingId={id} />
+            </div>
           </div>
 
           {/* Bidding Section - Right Side */}
@@ -346,7 +338,7 @@ export const ListingDetailPage: React.FC = () => {
               {listing && (
                 <div className="pricing-section">
                   <div className="price-row">
-                    <span className="price-label">Current Price</span>
+                    <span className="price-label">Current Bid</span>
                     <span className="price-value current">
                       ${Number(listing.current_price || 0).toFixed(2)}
                     </span>
@@ -392,9 +384,9 @@ export const ListingDetailPage: React.FC = () => {
                   type="number"
                   value={bidAmount || ""}
                   onChange={(e) => setBidAmount(Number(e.target.value))}
-                  placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
+                  placeholder={`Minimum $${(Number(currentHighestBid) || 0).toLocaleString()}`}
                   className="bid-input"
-                  disabled={!isAuctionActive || highestBidderId === user?.id}
+                  disabled={!isAuctionActive}
                 />
               </div>
               <div className="bid-input-section">
@@ -406,23 +398,21 @@ export const ListingDetailPage: React.FC = () => {
                   onChange={(e) => setUserLocation(e.target.value)}
                   placeholder="Enter your location (e.g., Calgary, AB)"
                   className="bid-input"
-                  disabled={!isAuctionActive || highestBidderId === user?.id}
+                  disabled={!isAuctionActive}
                 />
               </div>
 
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation || highestBidderId === user?.id}
+                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation}
                 className="bid-button"
               >
-                {highestBidderId === user?.id && isAuctionActive
-                  ? "You Are Highest Bidder"
-                  : isAuctionUpcoming
-                    ? "Auction Not Started"
-                    : isAuctionActive
-                      ? "Place a Bid"
-                      : "Auction Ended"}
+                {isAuctionUpcoming
+                  ? "Auction Not Started"
+                  : isAuctionActive
+                    ? "Place a Bid"
+                    : "Auction Ended"}
               </button>
             </div>
           </aside>

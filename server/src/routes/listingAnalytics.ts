@@ -115,12 +115,14 @@ router.patch("/:listingId", async (req, res) => {
 
     const { description, end_time, reserve_price, buy_now_price, location } =
       req.body ?? {};
-
+    const start_price1 = Number(reserve_price) * 0.75;
     // Update listing fields
     await db
       .update(listings)
       .set({
         end_time: end_time ? new Date(end_time) : undefined,
+        start_price: String(start_price1),
+        current_price: String(start_price1),
         reserve_price:
           reserve_price !== undefined && reserve_price !== null
             ? String(reserve_price)

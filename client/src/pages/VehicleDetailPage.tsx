@@ -47,6 +47,11 @@ export const VehicleDetailPage: React.FC = () => {
   const [cancellingListingId, setCancellingListingId] = useState<number | null>(null);
   const [sellingListingId, setSellingListingId] = useState<number | null>(null);
 
+  // Check if vehicle has an active listing
+  const hasActiveListing = listings.some(
+    (listing) => listing.statusListing !== "cancelled" && listing.statusListing !== "sold"
+  );
+  
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -269,14 +274,35 @@ export const VehicleDetailPage: React.FC = () => {
                 marginTop: "24px",
                 marginBottom: "24px",
                 flexWrap: "wrap",
+                flexDirection: "column",
               }}
             >
-              <Button
-                variant="primary"
-                onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
-              >
-                + List Vehicle for Auction
-              </Button>
+              <div>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
+                  disabled={hasActiveListing}
+                  title={hasActiveListing ? "Remove active listing to create a new one" : ""}
+                >
+                  + List Vehicle for Auction
+                </Button>
+                {hasActiveListing && (
+                  <div
+                    style={{
+                      marginTop: "12px",
+                      padding: "12px",
+                      backgroundColor: "#fff3cd",
+                      border: "1px solid #ffc107",
+                      borderRadius: "6px",
+                      color: "#856404",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    This vehicle has an active listing. Remove it to relist the vehicle.
+                  </div>
+                )}
+              </div>
               <Button
                 variant="outline"
                 onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
