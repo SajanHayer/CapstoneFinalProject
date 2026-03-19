@@ -170,173 +170,6 @@ async function seed() {
     console.log("Inserted vehicles:", insertedVehicles);
 
     const [v1, v2, v3, v4, v5, v6, v7] = insertedVehicles;
-    // ---------------- Listings ----------------
-    const now = new Date();
-
-    const insertedListings = await db
-      .insert(listings)
-      .values([
-        {
-          vehicle_id: v1.id,
-          seller_id: user2.id,
-          type: "auction" as const,
-          start_price: "7899.00",
-          reserve_price: "8500.00",
-          buy_now_price: "9200.00",
-          current_price: "8300.00",
-          start_time: now,
-          end_time: secondsFromNow(30), // 30s
-          status: "active" as const,
-          views_count: 12,
-          location: "Calgary, AB",
-        },
-        {
-          vehicle_id: v2.id,
-          seller_id: user2.id,
-          type: "auction" as const,
-          start_price: "9499.00",
-          reserve_price: "10300.00",
-          buy_now_price: "11200.00",
-          current_price: "10000.00",
-          start_time: now,
-          end_time: secondsFromNow(60), // 1m
-          status: "active" as const,
-          views_count: 21,
-          location: "Edmonton, AB",
-        },
-        {
-          vehicle_id: v3.id,
-          seller_id: user3.id,
-          type: "fixed" as const,
-          start_price: "6999.00",
-          reserve_price: "6999.00",
-          buy_now_price: "6999.00",
-          current_price: "6999.00",
-          start_time: now,
-          end_time: secondsFromNow(120), // 2m
-          status: "active" as const,
-          views_count: 9,
-          location: "Red Deer, AB",
-        },
-        {
-          vehicle_id: v4.id,
-          seller_id: user2.id,
-          type: "auction" as const,
-          start_price: "18999.00",
-          reserve_price: "20500.00",
-          buy_now_price: "22500.00",
-          current_price: "19500.00",
-          start_time: now,
-          end_time: secondsFromNow(300), // 5m
-          status: "active" as const,
-          views_count: 33,
-          location: "Vancouver, BC",
-        },
-        {
-          vehicle_id: v5.id,
-          seller_id: user3.id,
-          type: "auction" as const,
-          start_price: "8499.00",
-          reserve_price: "9200.00",
-          buy_now_price: "10200.00",
-          current_price: "8800.00",
-          start_time: now,
-          end_time: secondsFromNow(600), // 10m
-          status: "active" as const,
-          views_count: 41,
-          location: "Toronto, ON",
-        },
-        {
-          vehicle_id: v6.id,
-          seller_id: user2.id,
-          type: "fixed" as const,
-          start_price: "21999.00",
-          reserve_price: "21999.00",
-          buy_now_price: "21999.00",
-          current_price: "21999.00",
-          start_time: now,
-          end_time: secondsFromNow(900), // 15m
-          status: "active" as const,
-          views_count: 18,
-          location: "Kelowna, BC",
-        },
-        {
-          vehicle_id: v7.id,
-          seller_id: user3.id,
-          type: "auction" as const,
-          start_price: "12999.00",
-          reserve_price: "14000.00",
-          buy_now_price: "15500.00",
-          current_price: "13400.00",
-          start_time: now,
-          end_time: secondsFromNow(1200), // 20m
-          status: "active" as const,
-          views_count: 27,
-          location: "Banff, AB",
-        },
-      ])
-      .returning({ id: listings.id });
-
-    console.log("Inserted listings:", insertedListings);
-
-    // ---------------- Bids (for analytics dashboard demo) ----------------
-    // Create a few bids across auction listings.
-    const [l1, l2, , l4, l5, , l7] = insertedListings;
-
-    await db.insert(bids).values([
-      {
-        listing_id: l1.id,
-        bidder_id: user1.id,
-        bid_amount: "8100.00",
-        location: "Calgary, AB",
-        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
-      },
-      {
-        listing_id: l1.id,
-        bidder_id: user3.id,
-        bid_amount: "8300.00",
-        location: "Edmonton, AB",
-        bid_time: new Date(Date.now()), // 5s from now
-      },
-      {
-        listing_id: l2.id,
-        bidder_id: user1.id,
-        bid_amount: "9700.00",
-        location: "Calgary, AB",
-        bid_time: new Date(Date.now() - 20 * 1000), // 20s from now
-      },
-      {
-        listing_id: l2.id,
-        bidder_id: user3.id,
-        bid_amount: "10000.00",
-        location: "Vancouver, BC",
-        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
-      },
-      {
-        listing_id: l4.id,
-        bidder_id: user1.id,
-        bid_amount: "19500.00",
-        location: "Red Deer, AB",
-        bid_time: new Date(Date.now()), // 30s from now
-      },
-      {
-        listing_id: l5.id,
-        bidder_id: user1.id,
-        bid_amount: "8800.00",
-        location: "Calgary, AB",
-        bid_time: new Date(Date.now()), // 15s from now
-      },
-      {
-        listing_id: l7.id,
-        bidder_id: user1.id,
-        bid_amount: "13400.00",
-        location: "Banff, AB",
-        bid_time: new Date(Date.now() - 5 * 1000), // 5s from now
-      },
-    ]);
-
-    console.log("Inserted bids (demo)");
-
     // ---------------- Historic Listings (Ended) ----------------
     // Add some ended listings for demonstration of bid history
     const pastDate = new Date();
@@ -522,6 +355,173 @@ async function seed() {
     ]);
 
     console.log("Inserted historic bids (user bid history demo)");
+
+    // ---------------- Listings ----------------
+    const now = new Date();
+
+    const insertedListings = await db
+      .insert(listings)
+      .values([
+        {
+          vehicle_id: v1.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "7899.00",
+          reserve_price: "8500.00",
+          buy_now_price: "9200.00",
+          current_price: "8300.00",
+          start_time: now,
+          end_time: secondsFromNow(30), // 30s
+          status: "active" as const,
+          views_count: 12,
+          location: "Calgary, AB",
+        },
+        {
+          vehicle_id: v2.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "9499.00",
+          reserve_price: "10300.00",
+          buy_now_price: "11200.00",
+          current_price: "10000.00",
+          start_time: now,
+          end_time: secondsFromNow(60), // 1m
+          status: "active" as const,
+          views_count: 21,
+          location: "Edmonton, AB",
+        },
+        {
+          vehicle_id: v3.id,
+          seller_id: user3.id,
+          type: "fixed" as const,
+          start_price: "6999.00",
+          reserve_price: "6999.00",
+          buy_now_price: "6999.00",
+          current_price: "6999.00",
+          start_time: now,
+          end_time: secondsFromNow(120), // 2m
+          status: "active" as const,
+          views_count: 9,
+          location: "Red Deer, AB",
+        },
+        {
+          vehicle_id: v4.id,
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "18999.00",
+          reserve_price: "20500.00",
+          buy_now_price: "22500.00",
+          current_price: "19500.00",
+          start_time: now,
+          end_time: secondsFromNow(300), // 5m
+          status: "active" as const,
+          views_count: 33,
+          location: "Vancouver, BC",
+        },
+        {
+          vehicle_id: v5.id,
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "8499.00",
+          reserve_price: "9200.00",
+          buy_now_price: "10200.00",
+          current_price: "8800.00",
+          start_time: now,
+          end_time: secondsFromNow(600), // 10m
+          status: "active" as const,
+          views_count: 41,
+          location: "Toronto, ON",
+        },
+        {
+          vehicle_id: v6.id,
+          seller_id: user2.id,
+          type: "fixed" as const,
+          start_price: "21999.00",
+          reserve_price: "21999.00",
+          buy_now_price: "21999.00",
+          current_price: "21999.00",
+          start_time: now,
+          end_time: secondsFromNow(900), // 15m
+          status: "active" as const,
+          views_count: 18,
+          location: "Kelowna, BC",
+        },
+        {
+          vehicle_id: v7.id,
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "12999.00",
+          reserve_price: "14000.00",
+          buy_now_price: "15500.00",
+          current_price: "13400.00",
+          start_time: now,
+          end_time: secondsFromNow(1200), // 20m
+          status: "active" as const,
+          views_count: 27,
+          location: "Banff, AB",
+        },
+      ])
+      .returning({ id: listings.id });
+
+    console.log("Inserted listings:", insertedListings);
+
+    // ---------------- Bids (for analytics dashboard demo) ----------------
+    // Create a few bids across auction listings.
+    const [l1, l2, , l4, l5, , l7] = insertedListings;
+
+    await db.insert(bids).values([
+      {
+        listing_id: l1.id,
+        bidder_id: user1.id,
+        bid_amount: "8100.00",
+        location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
+      },
+      {
+        listing_id: l1.id,
+        bidder_id: user3.id,
+        bid_amount: "8300.00",
+        location: "Edmonton, AB",
+        bid_time: new Date(Date.now()), // 5s from now
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user1.id,
+        bid_amount: "9700.00",
+        location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 20 * 1000), // 20s from now
+      },
+      {
+        listing_id: l2.id,
+        bidder_id: user3.id,
+        bid_amount: "10000.00",
+        location: "Vancouver, BC",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
+      },
+      {
+        listing_id: l4.id,
+        bidder_id: user1.id,
+        bid_amount: "19500.00",
+        location: "Red Deer, AB",
+        bid_time: new Date(Date.now()), // 30s from now
+      },
+      {
+        listing_id: l5.id,
+        bidder_id: user1.id,
+        bid_amount: "8800.00",
+        location: "Calgary, AB",
+        bid_time: new Date(Date.now()), // 15s from now
+      },
+      {
+        listing_id: l7.id,
+        bidder_id: user1.id,
+        bid_amount: "13400.00",
+        location: "Banff, AB",
+        bid_time: new Date(Date.now() - 5 * 1000), // 5s from now
+      },
+    ]);
+
+    console.log("Inserted bids (demo)");
     console.log("Database seeded successfully!");
   } catch (err) {
     console.error("Error seeding database:", err);

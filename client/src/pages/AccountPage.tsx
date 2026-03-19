@@ -12,6 +12,8 @@ interface GarageVehicle {
   year: number;
   condition: string;
   status: string;
+  hasActiveListing?: boolean;
+  listingStatus?: string;
 }
 
 interface BidItem {
@@ -53,6 +55,15 @@ export const AccountPage: React.FC = () => {
   const [wonListingId, setWonListingId] = useState<number | null>(null);
   const [endedListingAlert, setEndedListingAlert] = useState<string | null>(null);
   const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(new Set());
+  const [removedBidIds, setRemovedBidIds] = useState<Set<number>>(new Set());
+
+  // Load removed bids from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("removedBidIds");
+    if (stored) {
+      setRemovedBidIds(new Set(JSON.parse(stored)));
+    }
+  }, []);
 
   // Fetch garage vehicles (only once on mount)
   useEffect(() => {
@@ -75,17 +86,39 @@ export const AccountPage: React.FC = () => {
         const data = await res.json();
         const rows: any[] = Array.isArray(data?.result) ? data.result : [];
 
-        const garage: GarageVehicle[] = rows.map((vehicle: any) => ({
-          id: vehicle.id,
-          make: vehicle.make,
-          model: vehicle.model,
-          year: vehicle.year,
-          condition: vehicle.condition ?? "",
-          status: vehicle.status ?? "",
-        }));
+        // Fetch listings for each vehicle to determine listing status
+        const garageWithListings: GarageVehicle[] = await Promise.all(
+          rows.map(async (vehicle: any) => {
+            let listingStatus = undefined;
+            try {
+              const listingsRes = await fetch(
+                `http://localhost:8080/api/listings/vehicle/all/${vehicle.id}`,
+                { credentials: "include" }
+              );
+              if (listingsRes.ok) {
+                const listingsData = await listingsRes.json();
+                const listings = Array.isArray(listingsData?.result) ? listingsData.result : [];
+                const lastListing = listings.at(-1);
+                listingStatus =lastListing.status.charAt(0).toUpperCase() + lastListing.status.slice(1);
+              }
+            } catch (err) {
+              console.error(`Failed to fetch listings for vehicle ${vehicle.id}:`, err);
+            }
+
+            return {
+              id: vehicle.id,
+              make: vehicle.make,
+              model: vehicle.model,
+              year: vehicle.year,
+              condition: vehicle.condition ?? "",
+              status: vehicle.status ?? "",
+              listingStatus,
+            };
+          })
+        );
 
         if (isMounted) {
-          setGarageVehicles(garage);
+          setGarageVehicles(garageWithListings);
         }
       } catch (err) {
         if (isMounted) {
@@ -314,6 +347,21 @@ export const AccountPage: React.FC = () => {
                         <span className={`status ${vehicle.status}`}>
                           {vehicle.status}
                         </span>
+                        {vehicle.listingStatus && (
+                          <span
+                            style={{
+                              backgroundColor: vehicle.listingStatus === "Active" ? "#3b82f6" : "#f97316",
+                              color: "white",
+                              padding: "4px 12px",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                              fontWeight: "500",
+                              marginLeft: "8px",
+                            }}
+                          >
+                            Listing: {vehicle.listingStatus}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -337,7 +385,8 @@ export const AccountPage: React.FC = () => {
                   const startTime = new Date(bid.listing.start_time);
                   const endTime = new Date(bid.listing.end_time);
                   const isLive = now >= startTime && now < endTime && bid.listing.status === "active";
-                  const isEnded = bid.listing.status === "ended" || bid.listing.status === "sold";
+                  const isEnded = bid.listing.status === "ended" 
+                  const isSold = bid.listing.status === "sold";
                   const isCancelled = bid.listing.status === "cancelled";
                   const thumbnailUrl = bid.vehicle.image_url && Array.isArray(bid.vehicle.image_url) && bid.vehicle.image_url.length > 0
                     ? bid.vehicle.image_url[0]
@@ -400,7 +449,10 @@ export const AccountPage: React.FC = () => {
                               } else if (isLive) {
                                 displayStatus = "Active";
                                 statusClass = "active";
-                              }
+                              } else if (isSold) {
+                                displayStatus = "Sold";
+                                statusClass = "sold";
+                              } 
                               
                               return (
                                 <span className={`listing-status-tag status-${statusClass}`}>

@@ -49,7 +49,7 @@ export const VehicleDetailPage: React.FC = () => {
 
   // Check if vehicle has an active listing
   const hasActiveListing = listings.some(
-    (listing) => listing.statusListing !== "cancelled" && listing.statusListing !== "sold"
+    (listing) => listing.statusListing !== "cancelled"
   );
   
   useEffect(() => {
