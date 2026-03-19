@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "../components/common/Button";
+import { localToUTC, utcToLocalDateTimeString } from "../lib/dateUtils";
 
 type ListingEditForm = {
   description: string;
@@ -81,10 +82,8 @@ export const EditListingPage: React.FC = () => {
         const now = new Date();
         setHasStarted(startTime <= now);
 
-        // datetime-local expects "YYYY-MM-DDTHH:mm"
-        const endLocal = l.end_time
-          ? new Date(l.end_time).toISOString().slice(0, 16)
-          : "";
+        // Convert UTC end_time to local datetime string for datetime-local input
+        const endLocal = l.end_time ? utcToLocalDateTimeString(l.end_time) : "";
 
         setForm({
           description: l.description ?? "",
@@ -118,7 +117,7 @@ export const EditListingPage: React.FC = () => {
 
       const payload = {
         description: form.description,
-        end_time: new Date(form.end_time).toISOString(),
+        end_time: localToUTC(form.end_time),
         reserve_price: form.reserve_price,
         buy_now_price: form.buy_now_price ?? null,
         location: form.location,

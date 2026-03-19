@@ -46,9 +46,10 @@ export const ListingsPage: React.FC = () => {
       if (!res.ok) throw new Error("Failed to fetch listings");
 
       const data = await res.json();
+      console.log("Fetched listings:", data);
       // Map backend data to Listing type
       const mappedListings: Listing[] = data.listings
-        .filter((listing: any) => listing.status !== "cancelled") // Exclude cancelled listings
+        .filter((listing: any) => listing.status !== "cancelled" && listing.status !== "sold") // Exclude cancelled listings
         .map((listing: any) => {
           const v = listing.vehicle;
           const now = new Date();
@@ -70,7 +71,7 @@ export const ListingsPage: React.FC = () => {
           }
 
           return {
-            id: listing.vehicle.id.toString(),
+            id: listing.id.toString(),
             title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
             thumbnailUrl: v?.image_url
               ? Array.isArray(v.image_url)

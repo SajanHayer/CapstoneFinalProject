@@ -52,14 +52,28 @@ export const ListingDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        // const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
-        const res = await fetch(
-          `http://localhost:8080/api/listings/vehicle/${id}`,
+        // Fetch listing by listing ID
+        const listingRes = await fetch(
+          `http://localhost:8080/api/listings/${id}`,
         );
-        const data = await res.json();
-        setVehicle(data.result[0].vehicle);
-        setListing(data.result[0]);
-        setCurrentHighestBid(Number(data.result[0].current_price));
+        const listingData = await listingRes.json();
+        const fetchedListing = listingData.listing;
+        
+        if (!fetchedListing) {
+          setError("Listing not found");
+          setLoading(false);
+          return;
+        }
+        
+        setListing(fetchedListing);
+        setCurrentHighestBid(Number(fetchedListing.current_price));
+        
+        // Fetch vehicle details using vehicle_id from listing
+        const vehicleRes = await fetch(
+          `http://localhost:8080/api/vehicles/${fetchedListing.vehicle_id}`,
+        );
+        const vehicleData = await vehicleRes.json();
+        setVehicle(vehicleData.vehicle);
         
         // Fetch highest bidder info
         const bidsRes = await fetch(`http://localhost:8080/api/listings/${id}/all/bids`);

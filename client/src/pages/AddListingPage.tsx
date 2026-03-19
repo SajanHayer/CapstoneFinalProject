@@ -5,6 +5,7 @@ import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { localToUTC } from "../lib/dateUtils";
 import "../styles/addlisting.css";
 
 type Vehicle = {
@@ -150,9 +151,9 @@ export const AddListingPage: React.FC = () => {
     // console.log("Form data:", data);
     data.seller_id = user?.id || 0;
 
-    // Convert datetime-local strings to ISO format
-    const startTime = new Date(data.start_time).toISOString();
-    const endTime = new Date(data.end_time).toISOString();
+    // Convert local datetime strings to UTC
+    const startTime = localToUTC(data.start_time);
+    const endTime = localToUTC(data.end_time);
 
     try {
       const res = await fetch("http://localhost:8080/api/listings/create", {
