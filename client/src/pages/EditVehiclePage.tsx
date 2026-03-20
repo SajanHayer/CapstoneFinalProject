@@ -57,7 +57,7 @@ export const EditVehiclePage: React.FC = () => {
           `http://localhost:8080/api/vehicles/${vehicleId}`,
           {
             credentials: "include",
-          }
+          },
         );
 
         if (!res.ok) {
@@ -95,17 +95,16 @@ export const EditVehiclePage: React.FC = () => {
   function onPickImages(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    const totalImages =
-      existingImages.length + images.length + files.length;
+    const totalImages = existingImages.length + images.length + files.length;
     if (totalImages > MAX_IMAGES) {
       setError(
-        `Maximum ${MAX_IMAGES} images allowed. You currently have ${existingImages.length + images.length}.`
+        `Maximum ${MAX_IMAGES} images allowed. You currently have ${existingImages.length + images.length}.`,
       );
       return;
     }
     const next = [...images, ...files].slice(
       0,
-      MAX_IMAGES - existingImages.length
+      MAX_IMAGES - existingImages.length,
     );
     setImages(next);
     e.target.value = "";
@@ -161,7 +160,7 @@ export const EditVehiclePage: React.FC = () => {
           method: "PUT",
           credentials: "include",
           body: fd,
-        }
+        },
       );
 
       if (!res.ok) {

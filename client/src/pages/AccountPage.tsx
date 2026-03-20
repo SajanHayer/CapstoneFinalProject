@@ -53,8 +53,12 @@ export const AccountPage: React.FC = () => {
     null,
   );
   const [wonListingId, setWonListingId] = useState<number | null>(null);
-  const [endedListingAlert, setEndedListingAlert] = useState<string | null>(null);
-  const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(new Set());
+  const [endedListingAlert, setEndedListingAlert] = useState<string | null>(
+    null,
+  );
+  const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [removedBidIds, setRemovedBidIds] = useState<Set<number>>(new Set());
 
   // Load removed bids from localStorage on mount
@@ -93,16 +97,23 @@ export const AccountPage: React.FC = () => {
             try {
               const listingsRes = await fetch(
                 `http://localhost:8080/api/listings/vehicle/all/${vehicle.id}`,
-                { credentials: "include" }
+                { credentials: "include" },
               );
               if (listingsRes.ok) {
                 const listingsData = await listingsRes.json();
-                const listings = Array.isArray(listingsData?.result) ? listingsData.result : [];
+                const listings = Array.isArray(listingsData?.result)
+                  ? listingsData.result
+                  : [];
                 const lastListing = listings.at(-1);
-                listingStatus =lastListing.status.charAt(0).toUpperCase() + lastListing.status.slice(1);
+                listingStatus =
+                  lastListing.status.charAt(0).toUpperCase() +
+                  lastListing.status.slice(1);
               }
             } catch (err) {
-              console.error(`Failed to fetch listings for vehicle ${vehicle.id}:`, err);
+              console.error(
+                `Failed to fetch listings for vehicle ${vehicle.id}:`,
+                err,
+              );
             }
 
             return {
@@ -114,7 +125,7 @@ export const AccountPage: React.FC = () => {
               status: vehicle.status ?? "",
               listingStatus,
             };
-          })
+          }),
         );
 
         if (isMounted) {
@@ -207,7 +218,7 @@ export const AccountPage: React.FC = () => {
 
       // For each ended listing, check if user has a transaction
       for (const bid of bids) {
-        if (bid.listing.status === "sold"|| bid.listing.status === "ended") {
+        if (bid.listing.status === "sold" || bid.listing.status === "ended") {
           // Check if user has a transaction for this listing
           const transRes = await fetch(
             `http://localhost:8080/api/listings/transactions/check/${bid.listing_id}/${user?.id}`,
@@ -233,7 +244,7 @@ export const AccountPage: React.FC = () => {
       setTimeout(() => setEndedListingAlert(null), 3000);
       return;
     }
-    
+
     navigate(`/listings/${bid.listing_id}`);
   };
 
@@ -312,15 +323,17 @@ export const AccountPage: React.FC = () => {
 
           {error && <p className="error-text">{error}</p>}
           {endedListingAlert && (
-            <div style={{
-              padding: "12px 16px",
-              backgroundColor: "#fff3cd",
-              border: "1px solid #ffc107",
-              borderRadius: "6px",
-              color: "#856404",
-              marginBottom: "16px",
-              fontSize: "14px"
-            }}>
+            <div
+              style={{
+                padding: "12px 16px",
+                backgroundColor: "#fff3cd",
+                border: "1px solid #ffc107",
+                borderRadius: "6px",
+                color: "#856404",
+                marginBottom: "16px",
+                fontSize: "14px",
+              }}
+            >
               ⚠️ {endedListingAlert}
             </div>
           )}
@@ -341,16 +354,17 @@ export const AccountPage: React.FC = () => {
                         {vehicle.year} {vehicle.make} {vehicle.model}
                       </h3>
                       <div className="vehicle-details">
-                        <span className="condition">
-                          {vehicle.condition}
-                        </span>
+                        <span className="condition">{vehicle.condition}</span>
                         <span className={`status ${vehicle.status}`}>
                           {vehicle.status}
                         </span>
                         {vehicle.listingStatus && (
                           <span
                             style={{
-                              backgroundColor: vehicle.listingStatus === "Active" ? "#3b82f6" : "#f97316",
+                              backgroundColor:
+                                vehicle.listingStatus === "Active"
+                                  ? "#3b82f6"
+                                  : "#f97316",
                               color: "white",
                               padding: "4px 12px",
                               borderRadius: "4px",
@@ -377,181 +391,240 @@ export const AccountPage: React.FC = () => {
                   </Button>
                 </div>
               )
-            ) : (
-              // BIDS TAB
-              userBids.length > 0 ? (
-                userBids.map((bid) => {
-                  const now = new Date();
-                  const startTime = new Date(bid.listing.start_time);
-                  const endTime = new Date(bid.listing.end_time);
-                  const isLive = now >= startTime && now < endTime && bid.listing.status === "active";
-                  const isEnded = bid.listing.status === "ended" 
-                  const isSold = bid.listing.status === "sold";
-                  const isCancelled = bid.listing.status === "cancelled";
-                  const thumbnailUrl = bid.vehicle.image_url && Array.isArray(bid.vehicle.image_url) && bid.vehicle.image_url.length > 0
+            ) : // BIDS TAB
+            userBids.length > 0 ? (
+              userBids.map((bid) => {
+                const now = new Date();
+                const startTime = new Date(bid.listing.start_time);
+                const endTime = new Date(bid.listing.end_time);
+                const isLive =
+                  now >= startTime &&
+                  now < endTime &&
+                  bid.listing.status === "active";
+                const isEnded = bid.listing.status === "ended";
+                const isSold = bid.listing.status === "sold";
+                const isCancelled = bid.listing.status === "cancelled";
+                const thumbnailUrl =
+                  bid.vehicle.image_url &&
+                  Array.isArray(bid.vehicle.image_url) &&
+                  bid.vehicle.image_url.length > 0
                     ? bid.vehicle.image_url[0]
                     : "https://via.placeholder.com/100x80?text=No+Image";
 
-                  return (
+                return (
+                  <div
+                    key={bid.id}
+                    className="vehicle-item"
+                    onClick={() => handleBidItemClick(bid)}
+                    style={{
+                      cursor: "pointer",
+                      display: "flex",
+                      gap: "15px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    {/* Thumbnail Image */}
                     <div
-                      key={bid.id}
-                      className="vehicle-item"
-                      onClick={() => handleBidItemClick(bid)}
-                      style={{ cursor: "pointer", display: "flex", gap: "15px", alignItems: "flex-start" }}
+                      style={{
+                        minWidth: "120px",
+                        height: "100px",
+                        borderRadius: "6px",
+                        overflow: "hidden",
+                      }}
                     >
-                      {/* Thumbnail Image */}
-                      <div style={{ minWidth: "120px", height: "100px", borderRadius: "6px", overflow: "hidden" }}>
-                        <img 
-                          src={thumbnailUrl}
-                          alt={`${bid.vehicle.year} ${bid.vehicle.make} ${bid.vehicle.model}`}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                      </div>
+                      <img
+                        src={thumbnailUrl}
+                        alt={`${bid.vehicle.year} ${bid.vehicle.make} ${bid.vehicle.model}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </div>
 
-                      <div className="vehicle-info" style={{ flex: 1 }}>
-                        <h3>
-                          {bid.vehicle.year} {bid.vehicle.make}{" "}
-                          {bid.vehicle.model}
-                        </h3>
+                    <div className="vehicle-info" style={{ flex: 1 }}>
+                      <h3>
+                        {bid.vehicle.year} {bid.vehicle.make}{" "}
+                        {bid.vehicle.model}
+                      </h3>
 
-                        <div className="vehicle-details">
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-                            <div>
-                              <span className="detail-label">Your Bid:</span>
-                              <span className="price" style={{ display: "block" }}>
-                                ${bid.bid_amount.toLocaleString()}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="detail-label">Current:</span>
-                              <span className="price" style={{ display: "block" }}>
-                                ${bid.listing.current_price.toLocaleString()}
-                              </span>
-                            </div>
+                      <div className="vehicle-details">
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: "8px",
+                            marginBottom: "8px",
+                          }}
+                        >
+                          <div>
+                            <span className="detail-label">Your Bid:</span>
+                            <span
+                              className="price"
+                              style={{ display: "block" }}
+                            >
+                              ${bid.bid_amount.toLocaleString()}
+                            </span>
                           </div>
-                          
-                          <span className="detail-text">
-                            Start: ${bid.listing.start_price.toLocaleString()}
-                          </span>
+                          <div>
+                            <span className="detail-label">Current:</span>
+                            <span
+                              className="price"
+                              style={{ display: "block" }}
+                            >
+                              ${bid.listing.current_price.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
 
-                          <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                            {/* Tag 1: Auction Status */}
-                            {(() => {
-                              let displayStatus = "Upcoming";
-                              let statusClass = "upcoming";
-                              
-                              if (bid.listing.status === "cancelled") {
-                                displayStatus = "Cancelled";
-                                statusClass = "cancelled";
-                              } else if (isEnded) {
-                                displayStatus = "Ended";
-                                statusClass = "ended";
-                              } else if (isLive) {
-                                displayStatus = "Active";
-                                statusClass = "active";
-                              } else if (isSold) {
-                                displayStatus = "Sold";
-                                statusClass = "sold";
-                              } 
-                              
+                        <span className="detail-text">
+                          Start: ${bid.listing.start_price.toLocaleString()}
+                        </span>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                            marginTop: "8px",
+                            flexWrap: "wrap",
+                            alignItems: "center",
+                          }}
+                        >
+                          {/* Tag 1: Auction Status */}
+                          {(() => {
+                            let displayStatus = "Upcoming";
+                            let statusClass = "upcoming";
+
+                            if (bid.listing.status === "cancelled") {
+                              displayStatus = "Cancelled";
+                              statusClass = "cancelled";
+                            } else if (isEnded) {
+                              displayStatus = "Ended";
+                              statusClass = "ended";
+                            } else if (isLive) {
+                              displayStatus = "Active";
+                              statusClass = "active";
+                            } else if (isSold) {
+                              displayStatus = "Sold";
+                              statusClass = "sold";
+                            }
+
+                            return (
+                              <span
+                                className={`listing-status-tag status-${statusClass}`}
+                              >
+                                {displayStatus}
+                              </span>
+                            );
+                          })()}
+
+                          {/* Tag 2: Bid Status - Changes based on seller actions or bid outcome */}
+                          {(() => {
+                            const isHighestBid =
+                              bid.bid_amount === bid.listing.current_price;
+                            const isSold = bid.listing.status === "sold";
+                            const isCancelledListing =
+                              bid.listing.status === "cancelled";
+                            const isCancelledOrUnmet =
+                              bid.listing.end_reason === "cancelled" ||
+                              bid.listing.end_reason === "unmet";
+
+                            // If listing was cancelled by seller
+                            if (isCancelledListing) {
                               return (
-                                <span className={`listing-status-tag status-${statusClass}`}>
-                                  {displayStatus}
+                                <span className="listing-status-tag status-cancelled">
+                                  Cancelled
                                 </span>
                               );
-                            })()}
+                            }
 
-                            {/* Tag 2: Bid Status - Changes based on seller actions or bid outcome */}
-                            {(() => {
-                              const isHighestBid = bid.bid_amount === bid.listing.current_price;
-                              const isSold = bid.listing.status === "sold";
-                              const isCancelledListing = bid.listing.status === "cancelled";
-                              const isCancelledOrUnmet =
-                                bid.listing.end_reason === "cancelled" ||
-                                bid.listing.end_reason === "unmet";
+                            // If seller marked as sold and user has transaction
+                            if (isSold && transactionBidIds.has(bid.id)) {
+                              return (
+                                <span
+                                  className="listing-status-tag"
+                                  style={{
+                                    backgroundColor: "#27ae60",
+                                    color: "white",
+                                  }}
+                                >
+                                  Sold
+                                </span>
+                              );
+                            }
 
-                              // If listing was cancelled by seller
-                              if (isCancelledListing) {
-                                return (
-                                  <span className="listing-status-tag status-cancelled">
-                                    Cancelled
-                                  </span>
-                                );
-                              }
+                            // If outbid
+                            if (!isHighestBid && !isCancelledOrUnmet) {
+                              return (
+                                <span className="listing-status-tag status-outbid">
+                                  Outbid
+                                </span>
+                              );
+                            }
 
-                              // If seller marked as sold and user has transaction
-                              if (isSold && transactionBidIds.has(bid.id)) {
-                                return (
-                                  <span className="listing-status-tag" style={{ backgroundColor: "#27ae60", color: "white" }}>
-                                    Sold
-                                  </span>
-                                );
-                              }
+                            // If highest bid
+                            if (isHighestBid && !isEnded) {
+                              return (
+                                <span className="listing-status-tag status-highest-bid">
+                                  Highest Bid
+                                </span>
+                              );
+                            }
 
-                              // If outbid
-                              if (!isHighestBid && !isCancelledOrUnmet) {
-                                return (
-                                  <span className="listing-status-tag status-outbid">
-                                    Outbid
-                                  </span>
-                                );
-                              }
+                            return null;
+                          })()}
 
-                              // If highest bid
-                              if (isHighestBid && !isEnded) {
-                                return (
-                                  <span className="listing-status-tag status-highest-bid">
-                                    Highest Bid
-                                  </span>
-                                );
-                              }
-
-                              return null;
-                            })()}
-
-                            {/* You Won Button - Only show if user has transaction */}
-                            {(() => {
-                              if (transactionBidIds.has(bid.id) && bid.listing.status === "sold") {
-                                return (
-                                  <Button
-                                    variant="primary"
-                                    style={{
-                                      fontSize: "12px",
-                                      padding: "6px 12px",
-                                      backgroundColor: "#27ae60",
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleShowWinnerInfo(bid.listing.id);
-                                    }}
-                                  >
-                                    You Won
-                                  </Button>
-                                );
-                              }
-                              return null;
-                            })()}
-                          </div>
-                          
-                          <span className="detail-text" style={{ fontSize: "0.85em", color: "var(--muted)", marginTop: "6px" }}>
-                            Bid placed on: {new Date(bid.bid_time).toLocaleDateString()}
-                          </span>
+                          {/* You Won Button - Only show if user has transaction */}
+                          {(() => {
+                            if (
+                              transactionBidIds.has(bid.id) &&
+                              bid.listing.status === "sold"
+                            ) {
+                              return (
+                                <Button
+                                  variant="primary"
+                                  style={{
+                                    fontSize: "12px",
+                                    padding: "6px 12px",
+                                    backgroundColor: "#27ae60",
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShowWinnerInfo(bid.listing.id);
+                                  }}
+                                >
+                                  You Won
+                                </Button>
+                              );
+                            }
+                            return null;
+                          })()}
                         </div>
+
+                        <span
+                          className="detail-text"
+                          style={{
+                            fontSize: "0.85em",
+                            color: "var(--muted)",
+                            marginTop: "6px",
+                          }}
+                        >
+                          Bid placed on:{" "}
+                          {new Date(bid.bid_time).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                  );
-                })
-              ) : (
-                <div className="no-vehicles">
-                  <p>You haven't placed any bids yet.</p>
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate("/listings")}
-                  >
-                    Browse Listings
-                  </Button>
-                </div>
-              )
+                  </div>
+                );
+              })
+            ) : (
+              <div className="no-vehicles">
+                <p>You haven't placed any bids yet.</p>
+                <Button variant="primary" onClick={() => navigate("/listings")}>
+                  Browse Listings
+                </Button>
+              </div>
             )}
           </div>
 

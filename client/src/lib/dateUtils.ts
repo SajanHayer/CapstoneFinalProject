@@ -7,7 +7,7 @@ export const localToUTC = (localDateTimeString: string): string => {
   // Parse the local datetime string as a Date object
   // Browsers treat this as local time and convert to UTC internally
   const localDate = new Date(localDateTimeString);
-  
+
   // Convert to ISO string (UTC)
   return localDate.toISOString();
 };
@@ -19,14 +19,14 @@ export const localToUTC = (localDateTimeString: string): string => {
  */
 export const utcToLocalDateTimeString = (utcIsoString: string): string => {
   const date = new Date(utcIsoString);
-  
+
   // Get local time components
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  
+
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
@@ -37,7 +37,7 @@ export const utcToLocalDateTimeString = (utcIsoString: string): string => {
  */
 export const utcToLocalDisplay = (utcIsoString: string): string => {
   const date = new Date(utcIsoString);
-  
+
   return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",

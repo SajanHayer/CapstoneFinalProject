@@ -25,7 +25,7 @@ export const YouWonPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
   const [listingDetails, setListingDetails] = useState<ListingDetails | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export const YouWonPage: React.FC = () => {
 
         // Fetch listing details
         const listingRes = await fetch(
-          `http://localhost:8080/api/listings/${listingId}`
+          `http://localhost:8080/api/listings/${listingId}`,
         );
         if (!listingRes.ok) {
           throw new Error("Failed to fetch listing");
@@ -52,7 +52,7 @@ export const YouWonPage: React.FC = () => {
 
         // Fetch seller info
         const sellerRes = await fetch(
-          `http://localhost:8080/api/users/${listingData.listing.seller_id}`
+          `http://localhost:8080/api/users/${listingData.listing.seller_id}`,
         );
         if (!sellerRes.ok) {
           throw new Error("Failed to fetch seller info");
@@ -63,7 +63,9 @@ export const YouWonPage: React.FC = () => {
           email: sellerData.user.email,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load information");
+        setError(
+          err instanceof Error ? err.message : "Failed to load information",
+        );
         console.error(err);
       } finally {
         setLoading(false);
@@ -93,7 +95,13 @@ export const YouWonPage: React.FC = () => {
   }
 
   return (
-    <section style={{ padding: "40px 20px", backgroundColor: "#fafafa", minHeight: "100vh" }}>
+    <section
+      style={{
+        padding: "40px 20px",
+        backgroundColor: "#fafafa",
+        minHeight: "100vh",
+      }}
+    >
       <div style={{ maxWidth: "600px", margin: "0 auto" }}>
         {/* Back Link */}
         <div
@@ -123,7 +131,14 @@ export const YouWonPage: React.FC = () => {
         >
           {/* Header */}
           <div style={{ marginBottom: "32px" }}>
-            <h1 style={{ fontSize: "32px", fontWeight: 700, color: "#27ae60", marginBottom: "12px" }}>
+            <h1
+              style={{
+                fontSize: "32px",
+                fontWeight: 700,
+                color: "#27ae60",
+                marginBottom: "12px",
+              }}
+            >
               🎉 Congratulations!
             </h1>
             <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
@@ -142,10 +157,26 @@ export const YouWonPage: React.FC = () => {
                 border: "2px solid #27ae60",
               }}
             >
-              <p style={{ fontSize: "12px", fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#999",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  marginBottom: "8px",
+                }}
+              >
                 Winning Bid Amount
               </p>
-              <p style={{ fontSize: "36px", fontWeight: 700, color: "#27ae60", margin: 0 }}>
+              <p
+                style={{
+                  fontSize: "36px",
+                  fontWeight: 700,
+                  color: "#27ae60",
+                  margin: 0,
+                }}
+              >
                 ${listingDetails.current_price.toLocaleString()}
               </p>
             </div>
@@ -162,10 +193,26 @@ export const YouWonPage: React.FC = () => {
               textAlign: "left",
             }}
           >
-            <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#333", marginTop: 0, marginBottom: "12px" }}>
+            <h3
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#333",
+                marginTop: 0,
+                marginBottom: "12px",
+              }}
+            >
               Next Steps
             </h3>
-            <ol style={{ paddingLeft: "20px", margin: 0, color: "#666", fontSize: "14px", lineHeight: "1.8" }}>
+            <ol
+              style={{
+                paddingLeft: "20px",
+                margin: 0,
+                color: "#666",
+                fontSize: "14px",
+                lineHeight: "1.8",
+              }}
+            >
               <li>Contact the seller using the information below</li>
               <li>Arrange payment and delivery details</li>
               <li>Complete the transaction</li>
@@ -174,7 +221,16 @@ export const YouWonPage: React.FC = () => {
 
           {/* Seller Contact Section */}
           <div style={{ marginBottom: "32px" }}>
-            <h3 style={{ fontSize: "12px", fontWeight: 600, color: "#999", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "16px" }}>
+            <h3
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#999",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                marginBottom: "16px",
+              }}
+            >
               Seller Contact Information
             </h3>
             {sellerInfo && (
@@ -187,16 +243,41 @@ export const YouWonPage: React.FC = () => {
                 }}
               >
                 <div style={{ marginBottom: "24px", textAlign: "left" }}>
-                  <span style={{ fontSize: "12px", color: "#999", display: "block", marginBottom: "8px", textTransform: "uppercase", fontWeight: 600 }}>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#999",
+                      display: "block",
+                      marginBottom: "8px",
+                      textTransform: "uppercase",
+                      fontWeight: 600,
+                    }}
+                  >
                     Seller Name
                   </span>
-                  <p style={{ fontSize: "18px", fontWeight: 600, color: "#333", margin: 0 }}>
+                  <p
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      color: "#333",
+                      margin: 0,
+                    }}
+                  >
                     {sellerInfo.name}
                   </p>
                 </div>
 
                 <div style={{ textAlign: "left" }}>
-                  <span style={{ fontSize: "12px", color: "#999", display: "block", marginBottom: "8px", textTransform: "uppercase", fontWeight: 600 }}>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      color: "#999",
+                      display: "block",
+                      marginBottom: "8px",
+                      textTransform: "uppercase",
+                      fontWeight: 600,
+                    }}
+                  >
                     Email Address
                   </span>
                   <a

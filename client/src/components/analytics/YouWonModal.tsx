@@ -22,11 +22,16 @@ interface ListingDetails {
   seller_id: number;
 }
 
-export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) => {
+export const YouWonModal: React.FC<YouWonModalProps> = ({
+  listingId,
+  onClose,
+}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sellerInfo, setSellerInfo] = useState<SellerInfo | null>(null);
-  const [listingDetails, setListingDetails] = useState<ListingDetails | null>(null);
+  const [listingDetails, setListingDetails] = useState<ListingDetails | null>(
+    null,
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +41,7 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
 
         // Fetch listing details
         const listingRes = await fetch(
-          `http://localhost:8080/api/listings/${listingId}`
+          `http://localhost:8080/api/listings/${listingId}`,
         );
         if (!listingRes.ok) {
           throw new Error("Failed to fetch listing");
@@ -46,7 +51,7 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
 
         // Fetch seller info
         const sellerRes = await fetch(
-          `http://localhost:8080/api/auth/users/${listingData.listing?.seller_id || listingData.result?.seller_id}`
+          `http://localhost:8080/api/auth/users/${listingData.listing?.seller_id || listingData.result?.seller_id}`,
         );
         if (!sellerRes.ok) {
           throw new Error("Failed to fetch seller info");
@@ -58,7 +63,9 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
           email: sellerData.user.email,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load information");
+        setError(
+          err instanceof Error ? err.message : "Failed to load information",
+        );
         console.error(err);
       } finally {
         setLoading(false);
@@ -177,7 +184,14 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
           >
             Winning Bid Amount
           </p>
-          <p style={{ fontSize: "36px", fontWeight: 700, color: "#27ae60", margin: 0 }}>
+          <p
+            style={{
+              fontSize: "36px",
+              fontWeight: 700,
+              color: "#27ae60",
+              margin: 0,
+            }}
+          >
             ${listingDetails.current_price.toLocaleString()}
           </p>
         </div>
@@ -187,7 +201,14 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
       {sellerInfo && (
         <>
           <div style={{ marginBottom: "32px" }}>
-            <h2 style={{ fontSize: "14px", fontWeight: 600, color: "#333", marginBottom: "16px" }}>
+            <h2
+              style={{
+                fontSize: "14px",
+                fontWeight: 600,
+                color: "#333",
+                marginBottom: "16px",
+              }}
+            >
               Seller Information
             </h2>
             <div
@@ -199,20 +220,52 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({ listingId, onClose }) 
               }}
             >
               <div style={{ marginBottom: "12px" }}>
-                <p style={{ fontSize: "12px", color: "#999", margin: "0 0 4px 0" }}>Name</p>
-                <p style={{ fontSize: "16px", fontWeight: 600, margin: 0 }}>{sellerInfo.name}</p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#999",
+                    margin: "0 0 4px 0",
+                  }}
+                >
+                  Name
+                </p>
+                <p style={{ fontSize: "16px", fontWeight: 600, margin: 0 }}>
+                  {sellerInfo.name}
+                </p>
               </div>
               <div>
-                <p style={{ fontSize: "12px", color: "#999", margin: "0 0 4px 0" }}>Email</p>
-                <p style={{ fontSize: "14px", margin: 0, wordBreak: "break-all" }}>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#999",
+                    margin: "0 0 4px 0",
+                  }}
+                >
+                  Email
+                </p>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    margin: 0,
+                    wordBreak: "break-all",
+                  }}
+                >
                   {sellerInfo.email}
                 </p>
               </div>
             </div>
           </div>
 
-          <p style={{ fontSize: "12px", color: "#999", marginBottom: "24px", textAlign: "center" }}>
-              Contact the seller to arrange payment and pickup details. Thank you for using our platform!
+          <p
+            style={{
+              fontSize: "12px",
+              color: "#999",
+              marginBottom: "24px",
+              textAlign: "center",
+            }}
+          >
+            Contact the seller to arrange payment and pickup details. Thank you
+            for using our platform!
           </p>
         </>
       )}

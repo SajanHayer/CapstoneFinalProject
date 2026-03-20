@@ -221,7 +221,7 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
 
       if (!response.ok) throw new Error("Action failed");
 
-      // changes here 
+      // changes here
       if (action === "sold") {
         onStatusChange?.("sold");
         setIsEnded(false);
@@ -422,7 +422,7 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
                   disabled={actionLoading}
                 >
                   Relist Auction
-                </Button> 
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => handleListingAction("remove")}

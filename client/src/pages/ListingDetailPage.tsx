@@ -58,30 +58,32 @@ export const ListingDetailPage: React.FC = () => {
         );
         const listingData = await listingRes.json();
         const fetchedListing = listingData.listing;
-        
+
         if (!fetchedListing) {
           setError("Listing not found");
           setLoading(false);
           return;
         }
-        
+
         setListing(fetchedListing);
         setCurrentHighestBid(Number(fetchedListing.current_price));
-        
+
         // Fetch vehicle details using vehicle_id from listing
         const vehicleRes = await fetch(
           `http://localhost:8080/api/vehicles/${fetchedListing.vehicle_id}`,
         );
         const vehicleData = await vehicleRes.json();
         setVehicle(vehicleData.vehicle);
-        
+
         // Fetch highest bidder info
-        const bidsRes = await fetch(`http://localhost:8080/api/listings/${id}/all/bids`);
+        const bidsRes = await fetch(
+          `http://localhost:8080/api/listings/${id}/all/bids`,
+        );
         const bidsData = await bidsRes.json();
         if (bidsData.result && bidsData.result.length > 0) {
           // Find highest bid
           const highestBid = bidsData.result.reduce((max: any, bid: any) =>
-            Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max
+            Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max,
           );
           if (highestBid) {
             setHighestBidderId(highestBid.bidder_id);
@@ -109,13 +111,23 @@ export const ListingDetailPage: React.FC = () => {
   }, [listing]);
 
   useEffect(() => {
-    const handleBidUpdate = (data: { amount: number; bidder_id?: number; end_time?: string }) => {
+    const handleBidUpdate = (data: {
+      amount: number;
+      bidder_id?: number;
+      end_time?: string;
+    }) => {
       setCurrentHighestBid(data.amount);
       if (data.bidder_id) setHighestBidderId(data.bidder_id);
       if (data.end_time) {
         // Update end_time if auction was extended
         setListing((prev) =>
-          prev ? { ...prev, current_price: data.amount, end_time: data.end_time || prev.end_time } : null,
+          prev
+            ? {
+                ...prev,
+                current_price: data.amount,
+                end_time: data.end_time || prev.end_time,
+              }
+            : null,
         );
       } else {
         setListing((prev) =>
@@ -269,8 +281,9 @@ export const ListingDetailPage: React.FC = () => {
               <span
                 className={`tag tag-status tag-status-${listing?.status || "active"}`}
               >
-                {listing?.status && listing.status.charAt(0).toUpperCase() +
-                  listing.status.slice(1)}
+                {listing?.status &&
+                  listing.status.charAt(0).toUpperCase() +
+                    listing.status.slice(1)}
               </span>
               <span className="tag tag-location">📍 {listing?.location}</span>
             </div>
@@ -387,7 +400,10 @@ export const ListingDetailPage: React.FC = () => {
                 <div className="bid-info-message">This auction has ended.</div>
               )}
               {highestBidderId === user?.id && isAuctionActive && (
-                <div className="bid-info-message" style={{ backgroundColor: "#e3f2fd", color: "#1565c0" }}>
+                <div
+                  className="bid-info-message"
+                  style={{ backgroundColor: "#e3f2fd", color: "#1565c0" }}
+                >
                   ✓ You are the highest bidder!
                 </div>
               )}
@@ -419,7 +435,11 @@ export const ListingDetailPage: React.FC = () => {
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid || !isAuctionActive || !userLocation}
+                disabled={
+                  bidAmount <= currentHighestBid ||
+                  !isAuctionActive ||
+                  !userLocation
+                }
                 className="bid-button"
               >
                 {isAuctionUpcoming

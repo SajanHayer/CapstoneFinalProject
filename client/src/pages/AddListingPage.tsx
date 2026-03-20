@@ -98,14 +98,16 @@ export const AddListingPage: React.FC = () => {
           },
         );
 
-        const res2 = await fetch(`http://localhost:8080/api/vehicles/${vehicleIdFromParams}`,{credentials: "include"});
+        const res2 = await fetch(
+          `http://localhost:8080/api/vehicles/${vehicleIdFromParams}`,
+          { credentials: "include" },
+        );
         const data = await res2.json();
         // const vehicleDetails = data.vehicle;
         // console.log("Raw vehicle data fo vehicleIdFromParams:", data.vehicle);
         const { id, make, model, year } = data.vehicle;
         const vehicleDetails: Vehicle = { id, make, model, year };
         setVehicles([vehicleDetails]);
- 
 
         // setVehicles(vehicleDetails);
         // if (res.ok) {
@@ -183,7 +185,11 @@ export const AddListingPage: React.FC = () => {
     <div className="add-listing-container">
       <button
         type="button"
-        onClick={() => navigate("/vehicle/" + selectedVehicleId, { state: { vehicleId: selectedVehicleId } })}
+        onClick={() =>
+          navigate("/vehicle/" + selectedVehicleId, {
+            state: { vehicleId: selectedVehicleId },
+          })
+        }
         className="back-button"
         style={{
           display: "flex",
@@ -199,7 +205,7 @@ export const AddListingPage: React.FC = () => {
           color: "#4b5563",
         }}
       >
-        ← Back to Vehicle 
+        ← Back to Vehicle
       </button>
       <div className="add-listing-header">
         <h1>Create New Listing</h1>
@@ -241,7 +247,9 @@ export const AddListingPage: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  ⚠️ This vehicle has an active listing or a recent listing that has ended. Please complete or remove that listing before adding a new one.
+                  ⚠️ This vehicle has an active listing or a recent listing that
+                  has ended. Please complete or remove that listing before
+                  adding a new one.
                 </p>
               )}
             </>

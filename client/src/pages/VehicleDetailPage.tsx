@@ -43,15 +43,19 @@ export const VehicleDetailPage: React.FC = () => {
   const [listings, setListings] = useState<ListingInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dashboardListingId, setDashboardListingId] = useState<number | null>(null);
-  const [cancellingListingId, setCancellingListingId] = useState<number | null>(null);
+  const [dashboardListingId, setDashboardListingId] = useState<number | null>(
+    null,
+  );
+  const [cancellingListingId, setCancellingListingId] = useState<number | null>(
+    null,
+  );
   const [sellingListingId, setSellingListingId] = useState<number | null>(null);
 
   // Check if vehicle has an active listing
   const hasActiveListing = listings.some(
-    (listing) => listing.statusListing !== "cancelled"
+    (listing) => listing.statusListing !== "cancelled",
   );
-  
+
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -62,7 +66,7 @@ export const VehicleDetailPage: React.FC = () => {
 
         // Fetch vehicle details
         const vehicleRes = await fetch(
-          `http://localhost:8080/api/vehicles/${vehicleId}`
+          `http://localhost:8080/api/vehicles/${vehicleId}`,
         );
         if (!vehicleRes.ok) {
           throw new Error("Failed to fetch vehicle details");
@@ -70,52 +74,65 @@ export const VehicleDetailPage: React.FC = () => {
         const vehicleData = await vehicleRes.json();
         setVehicle(vehicleData.vehicle);
 
-        // Fetch all listings for this vehicle 
+        // Fetch all listings for this vehicle
         const listingsRes = await fetch(
-          `http://localhost:8080/api/listings/vehicle/all/${vehicleId}`
+          `http://localhost:8080/api/listings/vehicle/all/${vehicleId}`,
         );
         if (!listingsRes.ok) {
           throw new Error("Failed to fetch listings");
         }
         const listingsData = await listingsRes.json();
-        const mappedListings: ListingInfo[] = (listingsData.result || []).map((item: any) => ({
-          id: item.id,
-          vehicleId: item.vehicle_id,
-          make: item.vehicle?.make || "",
-          model: item.vehicle?.model || "",
-          year: item.vehicle?.year || 0,
-          start_price: Number(item.start_price),
-          reserve_price: Number(item.reserve_price),
-          buy_now_price: item.buy_now_price ? Number(item.buy_now_price) : undefined,
-          current_price: Number(item.current_price),
-          start_time: item.start_time,
-          end_time: item.end_time,
-          statusListing: item.status,
-          location: item.location || "",
-          end_reason: item.end_reason || "",
-        }));
+        const mappedListings: ListingInfo[] = (listingsData.result || []).map(
+          (item: any) => ({
+            id: item.id,
+            vehicleId: item.vehicle_id,
+            make: item.vehicle?.make || "",
+            model: item.vehicle?.model || "",
+            year: item.vehicle?.year || 0,
+            start_price: Number(item.start_price),
+            reserve_price: Number(item.reserve_price),
+            buy_now_price: item.buy_now_price
+              ? Number(item.buy_now_price)
+              : undefined,
+            current_price: Number(item.current_price),
+            start_time: item.start_time,
+            end_time: item.end_time,
+            statusListing: item.status,
+            location: item.location || "",
+            end_reason: item.end_reason || "",
+          }),
+        );
 
         // Fetch highest bid for each listing
         const listingsWithBids = await Promise.all(
           mappedListings.map(async (listing) => {
             try {
               const bidsRes = await fetch(
-                `http://localhost:8080/api/listings/${listing.id}/all/bids`
+                `http://localhost:8080/api/listings/${listing.id}/all/bids`,
               );
               if (bidsRes.ok) {
                 const bidsData = await bidsRes.json();
                 if (bidsData.result && bidsData.result.length > 0) {
-                  const highestBid = bidsData.result.reduce((max: any, bid: any) =>
-                    Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max
+                  const highestBid = bidsData.result.reduce(
+                    (max: any, bid: any) =>
+                      Number(bid.bid_amount) > Number(max.bid_amount)
+                        ? bid
+                        : max,
                   );
-                  return { ...listing, highest_bid: Number(highestBid.bid_amount) };
+                  return {
+                    ...listing,
+                    highest_bid: Number(highestBid.bid_amount),
+                  };
                 }
               }
             } catch (err) {
-              console.error(`Failed to fetch bids for listing ${listing.id}:`, err);
+              console.error(
+                `Failed to fetch bids for listing ${listing.id}:`,
+                err,
+              );
             }
             return listing;
-          })
+          }),
         );
 
         setListings(listingsWithBids);
@@ -131,16 +148,23 @@ export const VehicleDetailPage: React.FC = () => {
   }, [vehicleId]);
 
   const handleRemoveListing = async (listingId: number) => {
-    if (!window.confirm("Are you sure you want to remove this listing? This action cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to remove this listing? This action cannot be undone.",
+      )
+    ) {
       return;
     }
 
     setCancellingListingId(listingId);
     try {
-      const res = await fetch(`http://localhost:8080/api/listings/remove/${listingId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:8080/api/listings/remove/${listingId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        },
+      );
 
       if (!res.ok) {
         throw new Error("Failed to remove listing");
@@ -151,8 +175,8 @@ export const VehicleDetailPage: React.FC = () => {
         prevListings.map((listing) =>
           listing.id === listingId
             ? { ...listing, statusListing: "cancelled" }
-            : listing
-        )
+            : listing,
+        ),
       );
 
       alert("Listing removed successfully!");
@@ -165,16 +189,23 @@ export const VehicleDetailPage: React.FC = () => {
   };
 
   const handleSellVehicle = async (listingId: number) => {
-    if (!window.confirm("Are you sure you want to complete this sale? This will mark the listing as sold.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to complete this sale? This will mark the listing as sold.",
+      )
+    ) {
       return;
     }
 
     setSellingListingId(listingId);
     try {
-      const res = await fetch(`http://localhost:8080/api/listings/${listingId}/sale`, {
-        method: "POST",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:8080/api/listings/${listingId}/sale`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -186,8 +217,8 @@ export const VehicleDetailPage: React.FC = () => {
         prevListings.map((listing) =>
           listing.id === listingId
             ? { ...listing, statusListing: "sold" }
-            : listing
-        )
+            : listing,
+        ),
       );
 
       alert("Sale completed successfully! Payment is pending.");
@@ -236,11 +267,14 @@ export const VehicleDetailPage: React.FC = () => {
     },
     {
       title: "Condition",
-      value: vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
+      value:
+        vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
     },
     {
       title: "Price",
-      value: vehicle.price ? `$${Number(vehicle.price).toLocaleString()}` : "N/A",
+      value: vehicle.price
+        ? `$${Number(vehicle.price).toLocaleString()}`
+        : "N/A",
     },
     {
       title: "Status",
@@ -266,56 +300,58 @@ export const VehicleDetailPage: React.FC = () => {
         >
           ← Back to Account
         </div>
-          {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                marginTop: "24px",
-                marginBottom: "24px",
-                flexWrap: "wrap",
-                flexDirection: "column",
-              }}
+        {/* Action Buttons */}
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            marginTop: "24px",
+            marginBottom: "24px",
+            flexWrap: "wrap",
+            flexDirection: "column",
+          }}
+        >
+          <div>
+            <Button
+              variant="primary"
+              onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
+              disabled={hasActiveListing}
+              title={
+                hasActiveListing
+                  ? "Remove active listing to create a new one"
+                  : ""
+              }
             >
-              <div>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate(`/add-listing?vehicleId=${vehicle.id}`)}
-                  disabled={hasActiveListing}
-                  title={hasActiveListing ? "Remove active listing to create a new one" : ""}
-                >
-                  + List Vehicle for Auction
-                </Button>
-                {hasActiveListing && (
-                  <div
-                    style={{
-                      marginTop: "12px",
-                      padding: "12px",
-                      backgroundColor: "#fff3cd",
-                      border: "1px solid #ffc107",
-                      borderRadius: "6px",
-                      color: "#856404",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    This vehicle has an active listing. Remove it to relist the vehicle.
-                  </div>
-                )}
+              + List Vehicle for Auction
+            </Button>
+            {hasActiveListing && (
+              <div
+                style={{
+                  marginTop: "12px",
+                  padding: "12px",
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffc107",
+                  borderRadius: "6px",
+                  color: "#856404",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                This vehicle has an active listing. Remove it to relist the
+                vehicle.
               </div>
-              <Button
-                variant="outline"
-                onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
-              >
-                ✎ Edit Vehicle
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/account")}
-              >
-                ← Back to Account
-              </Button>
-            </div>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
+          >
+            ✎ Edit Vehicle
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/account")}>
+            ← Back to Account
+          </Button>
+        </div>
         {/* Header Section */}
         <div className="listing-header-card">
           <div>
@@ -328,8 +364,9 @@ export const VehicleDetailPage: React.FC = () => {
                   vehicle.condition.slice(1)}
               </span>
               <span className={`tag tag-status tag-status-${vehicle.status}`}>
-                {vehicle.status && vehicle.status.charAt(0).toUpperCase() +
-                  vehicle.status.slice(1)}
+                {vehicle.status &&
+                  vehicle.status.charAt(0).toUpperCase() +
+                    vehicle.status.slice(1)}
               </span>
             </div>
           </div>
@@ -392,10 +429,20 @@ export const VehicleDetailPage: React.FC = () => {
           <div className="listing-sidebar">
             <div className="sidebar-card">
               <h3>Auction History</h3>
-              {error && <p className="error-text" style={{ fontSize: "14px" }}>{error}</p>}
+              {error && (
+                <p className="error-text" style={{ fontSize: "14px" }}>
+                  {error}
+                </p>
+              )}
 
               {listings.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                  }}
+                >
                   {listings.map((listing) => (
                     <div
                       key={listing.id}
@@ -420,13 +467,16 @@ export const VehicleDetailPage: React.FC = () => {
                             color: "#333",
                           }}
                         >
-                          Current Highest Bid: ${listing.current_price.toLocaleString()}
+                          Current Highest Bid: $
+                          {listing.current_price.toLocaleString()}
                         </span>
                         {(() => {
                           const startTime = new Date(listing.start_time);
                           const now = new Date();
                           const displayStatus =
-                            startTime > now ? "Upcoming" : listing.statusListing;
+                            startTime > now
+                              ? "Upcoming"
+                              : listing.statusListing;
                           const statusClass =
                             startTime > now
                               ? "upcoming"
@@ -488,7 +538,11 @@ export const VehicleDetailPage: React.FC = () => {
                       >
                         <Button
                           variant="primary"
-                          style={{ flex: 1, fontSize: "12px", padding: "6px 10px" }}
+                          style={{
+                            flex: 1,
+                            fontSize: "12px",
+                            padding: "6px 10px",
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             setDashboardListingId(listing.id);
@@ -582,7 +636,9 @@ export const VehicleDetailPage: React.FC = () => {
                                   handleSellVehicle(listing.id);
                                 }}
                               >
-                                {sellingListingId === listing.id ? "Processing..." : "💰 Sell Vehicle"}
+                                {sellingListingId === listing.id
+                                  ? "Processing..."
+                                  : "💰 Sell Vehicle"}
                               </Button>
                               <Button
                                 variant="outline"

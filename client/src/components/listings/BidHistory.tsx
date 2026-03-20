@@ -23,14 +23,14 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
     const fetchBids = async () => {
       try {
         const res = await fetch(
-          `http://localhost:8080/api/listings/${listingId}/all/bids`
+          `http://localhost:8080/api/listings/${listingId}/all/bids`,
         );
         const data = await res.json();
         const bidList: Bid[] = Array.isArray(data?.result) ? data.result : [];
         // Sort by bid_time descending (most recent first)
         bidList.sort(
           (a, b) =>
-            new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+            new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime(),
         );
         setBids(bidList);
         setLoading(false);
@@ -50,14 +50,14 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
     const handleNewBid = (newBid: Bid) => {
       setBids((prevBids) => {
         // Check if this bid already exists (avoid duplicates)
-        const exists = prevBids.some(b => b.id === newBid.id);
+        const exists = prevBids.some((b) => b.id === newBid.id);
         if (exists) return prevBids;
-        
+
         // Add new bid and re-sort
         const updated = [newBid, ...prevBids];
         return updated.sort(
           (a, b) =>
-            new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+            new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime(),
         );
       });
     };
@@ -73,7 +73,11 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
   }, [listingId]);
 
   if (loading) {
-    return <div style={{ textAlign: "center", padding: "20px" }}>Loading bid history...</div>;
+    return (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        Loading bid history...
+      </div>
+    );
   }
 
   if (bids.length === 0) {
@@ -148,7 +152,8 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
                     fontSize: "16px",
                   }}
                 >
-                  ${Number(bid.bid_amount).toLocaleString("en-US", {
+                  $
+                  {Number(bid.bid_amount).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}

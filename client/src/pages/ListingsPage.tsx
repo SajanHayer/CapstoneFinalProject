@@ -49,7 +49,10 @@ export const ListingsPage: React.FC = () => {
       console.log("Fetched listings:", data);
       // Map backend data to Listing type
       const mappedListings: Listing[] = data.listings
-        .filter((listing: any) => listing.status !== "cancelled" && listing.status !== "sold") // Exclude cancelled listings
+        .filter(
+          (listing: any) =>
+            listing.status !== "cancelled" && listing.status !== "sold",
+        ) // Exclude cancelled listings
         .map((listing: any) => {
           const v = listing.vehicle;
           const now = new Date();
@@ -116,7 +119,9 @@ export const ListingsPage: React.FC = () => {
     }
 
     // Join auction rooms for all active listings
-    const activeListings = listings.filter((l) => l.status === "ACTIVE" || l.status === "UPCOMING");
+    const activeListings = listings.filter(
+      (l) => l.status === "ACTIVE" || l.status === "UPCOMING",
+    );
     activeListings.forEach((listing) => {
       socket.emit("join_auction", Number(listing.id));
     });
@@ -127,8 +132,8 @@ export const ListingsPage: React.FC = () => {
         prevListings.map((listing) =>
           Number(listing.id) === data.auctionId
             ? { ...listing, currentPrice: data.amount }
-            : listing
-        )
+            : listing,
+        ),
       );
     };
 
@@ -141,9 +146,7 @@ export const ListingsPage: React.FC = () => {
       });
       socket.off("bid_update", handleBidUpdate);
     };
-  }, [
-    listings.map((l) => `${l.id}-${l.status}`).join(","),
-  ]);
+  }, [listings.map((l) => `${l.id}-${l.status}`).join(",")]);
 
   // Derived filter/sort
   const makes = Array.from(
