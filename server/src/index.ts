@@ -35,14 +35,11 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
-feature/heatmap
 app.use("/api/listings", auctionRouter);
 app.use("/api/heatmap", heatmapRouter);
 
 
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
-app.use("/api/listings", auctionRouter);         
-main
 
 startAuctionCron();
 app.use("/api/analytics", analyticsRouter);

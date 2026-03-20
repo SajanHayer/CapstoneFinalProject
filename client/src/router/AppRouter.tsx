@@ -10,14 +10,12 @@ import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
-feature/heatmap
 import { HeatMapPage } from "../pages/HeatMapPage";
 
 
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
-main
 
 export const AppRouter: React.FC = () => {
   return (
@@ -37,13 +35,11 @@ export const AppRouter: React.FC = () => {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
-         feature/heatmap
         <Route path="/heatmap" element={<HeatMapPage />} />
 
 
         <Route path="/seller/:sellerId/analytics" element={<SellerAnalyticsPage />} />
         <Route path="/edit-listing/:listingId" element={<EditListingPage />} />
-        main
       </Route>
     </Routes>
   );

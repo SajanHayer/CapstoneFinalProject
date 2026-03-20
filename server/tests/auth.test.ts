@@ -23,7 +23,15 @@ app.use("/api/auth", authRouter);
 
 // Mock the query function to change it to what we want 
 vi.mock("../src/db/db", () => {
+  const mockSelect = vi.fn(() => ({
+    from: vi.fn(() => ({
+      where: vi.fn(() => [])
+    }))
+  }));
   return {
+    db: {
+      select: mockSelect,
+    },
     query: vi.fn(),
   };
 });
@@ -36,15 +44,15 @@ describe("Auth Routes", () => {
 
   // ---------------- LOGIN ----------------
   it("POST /api/auth/login should return 401 for invalid credentials (no user)", async () => {
-    // change the query mock to return no users only test the credentials 
-    // and logic in the code
-    (dbModule.query as any).mockResolvedValue({ rows: [] });
+    // Mock the database query to return no users
+    const mockWhere = (dbModule.db.select as any)().from().where;
+    mockWhere.mockResolvedValue([]);
 
     const res = await request(app)
       .post("/api/auth/login")
       .send({ email: "testuser@example.com", password: "wrongpassword" });
 
     expect(res.status).toBe(401);
-    expect(res.body.message).toBe("Invalid credentials");
+    expect(res.body.message).toBe("User does not exist");
   });
 });
