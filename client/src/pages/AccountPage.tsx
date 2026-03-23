@@ -60,15 +60,6 @@ export const AccountPage: React.FC = () => {
   const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(
     new Set(),
   );
-  const [removedBidIds, setRemovedBidIds] = useState<Set<number>>(new Set());
-
-  // Load removed bids from localStorage on mount
-  useEffect(() => {
-    const stored = localStorage.getItem("removedBidIds");
-    if (stored) {
-      setRemovedBidIds(new Set(JSON.parse(stored)));
-    }
-  }, []);
 
   // Fetch garage vehicles (only once on mount)
   useEffect(() => {
@@ -105,10 +96,16 @@ export const AccountPage: React.FC = () => {
                 const listings = Array.isArray(listingsData?.result)
                   ? listingsData.result
                   : [];
-                const lastListing = listings.at(-1);
-                listingStatus =
-                  lastListing.status.charAt(0).toUpperCase() +
-                  lastListing.status.slice(1);
+                // Find the most recent active listing, fallback to most recent overall
+                const activeListing = listings.find(
+                  (l: any) => l.status === "active"
+                );
+                const mostRecentListing = activeListing || listings.at(-1);
+                if (mostRecentListing) {
+                  listingStatus =
+                    mostRecentListing.status.charAt(0).toUpperCase() +
+                    mostRecentListing.status.slice(1);
+                }
               }
             } catch (err) {
               // Silently fail for individual vehicle listings
@@ -401,7 +398,6 @@ export const AccountPage: React.FC = () => {
                   bid.listing.status === "active";
                 const isEnded = bid.listing.status === "ended";
                 const isSold = bid.listing.status === "sold";
-                const isCancelled = bid.listing.status === "cancelled";
                 const thumbnailUrl =
                   bid.vehicle.image_url &&
                   Array.isArray(bid.vehicle.image_url) &&

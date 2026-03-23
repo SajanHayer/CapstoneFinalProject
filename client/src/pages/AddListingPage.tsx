@@ -5,7 +5,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { localToUTC } from "../lib/dateUtils";
 import "../styles/addlisting.css";
 
@@ -92,13 +92,6 @@ export const AddListingPage: React.FC = () => {
       }
 
       try {
-        const res = await fetch(
-          `http://localhost:8080/api/vehicles/user/${user.id}`,
-          {
-            credentials: "include",
-          },
-        );
-
         const res2 = await fetch(
           `http://localhost:8080/api/vehicles/${vehicleIdFromParams}`,
           { credentials: "include" },
