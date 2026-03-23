@@ -37,6 +37,9 @@ export const Navbar: React.FC = () => {
             <NavLink to="/heatmap" className="nav-link">
               Heat Map
             </NavLink>
+            <NavLink to="/add-card" className="nav-link">
+              Add Card
+            </NavLink>
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}

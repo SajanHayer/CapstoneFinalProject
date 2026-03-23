@@ -1,0 +1,172 @@
+/* Add Card Page Styles */
+
+.add-card-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ac-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ac-header {
+  padding: 24px;
+}
+
+.ac-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.ac-header-content {
+  flex: 1;
+}
+
+.ac-header-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.ac-header-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ac-header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ac-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ac-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ac-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ac-input {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.ac-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.ac-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.ac-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ac-alert {
+  border-radius: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.ac-alert-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.ac-alert-warning {
+  background-color: rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.3);
+  color: #f97316;
+}
+
+/* Dark mode support */
+:root[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #242424;
+  --border-color: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #707070;
+  --primary-color: #8b5cf6;
+}
+
+:root[data-theme="light"],
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9f9f9;
+  --border-color: #e0e0e0;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --primary-color: #8b5cf6;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .add-card-container {
+    padding: 12px;
+  }
+
+  .ac-card {
+    padding: 16px;
+  }
+
+  .ac-header-top {
+    flex-direction: column;
+  }
+
+  .ac-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ac-header-title {
+    font-size: 24px;
+  }
+
+  .ac-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}

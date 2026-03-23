@@ -19,6 +19,7 @@ import { EditListingPage } from "../pages/EditListingPage";
 import { VehicleDetailPage } from "../pages/VehicleDetailPage";
 import { EditVehiclePage } from "../pages/EditVehiclePage";
 import { YouWonPage } from "../pages/YouWonPage";
+import { AddCardPage } from "../pages/AddCardPage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -39,6 +40,7 @@ export const AppRouter: React.FC = () => {
         <Route path="/you-won/:listingId" element={<YouWonPage />} />
         <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
+        <Route path="/add-card" element={<AddCardPage />} />
         <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route path="/heatmap" element={<HeatMapPage />} />
