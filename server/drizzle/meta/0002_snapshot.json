@@ -1,5 +1,5 @@
 {
-  "id": "4c6b404f-422f-4a52-9234-50317b9ec816",
+  "id": "eca12252-50a8-4f7a-b9e6-8b3560e37992",
   "prevId": "a7f183e4-0b53-40ca-919d-6da20fdb0d79",
   "version": "7",
   "dialect": "postgresql",
@@ -170,18 +170,6 @@
         "location": {
           "name": "location",
           "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "latitude": {
-          "name": "latitude",
-          "type": "numeric(10, 7)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "numeric(10, 7)",
           "primaryKey": false,
           "notNull": false
         },
@@ -497,8 +485,7 @@
         "success",
         "unmet",
         "nobids",
-        "pending",
-        "cancelled"
+        "pending"
       ]
     },
     "public.listing_status": {
