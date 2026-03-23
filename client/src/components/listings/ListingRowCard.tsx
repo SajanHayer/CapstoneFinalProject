@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, Gauge, Heart, MapPin, TimerReset } from "lucide-react";
 import type { Listing } from "../../pages/ListingsPage";
-import { Heart, ArrowRight, Gauge, MapPin } from "lucide-react";
 
 export function ListingRowCard({ listing }: { listing: Listing }) {
   const navigate = useNavigate();
@@ -12,9 +12,10 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
     const calculateTimeRemaining = () => {
       const now = new Date();
-      const target = listing.status === "UPCOMING" 
-        ? new Date(listing.startsAt)
-        : new Date(listing.endsAt);
+      const target =
+        listing.status === "UPCOMING"
+          ? new Date(listing.startsAt)
+          : new Date(listing.endsAt);
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
@@ -27,7 +28,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     };
 
@@ -36,6 +37,18 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
     return () => clearInterval(interval);
   }, [listing.endsAt, listing.startsAt, listing.status]);
+
+  const statusLabel = useMemo(() => {
+    if (listing.status === "ACTIVE") return "Live auction";
+    if (listing.status === "UPCOMING") return "Upcoming";
+    return "Ended";
+  }, [listing.status]);
+
+  const statusBadgeClass = useMemo(() => {
+    if (listing.status === "ACTIVE") return "listing-row-badge";
+    if (listing.status === "UPCOMING") return "listing-row-badge listing-row-badge-upcoming";
+    return "listing-row-badge listing-row-badge-ended";
+  }, [listing.status]);
 
   return (
     <article
@@ -49,51 +62,55 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
     >
       <div className="listing-row-media">
         <img
-          src={listing.thumbnailUrl}
+          src={listing.thumbnailUrl || "https://placehold.co/800x500?text=Vehicle"}
           alt={listing.title}
           className="listing-row-thumb"
         />
-        {listing.status === "ACTIVE" && (
-          <div className="listing-row-badge">
-            Active
-          </div>
-        )}
-        {listing.status === "UPCOMING" && (
-          <div className="listing-row-badge listing-row-badge-upcoming">
-            Upcoming
-          </div>
-        )}
-        {listing.status === "EXPIRED" && (
-          <div className="listing-row-badge listing-row-badge-ended">
-            Ended
-          </div>
-        )}
+        <div className={statusBadgeClass}>{statusLabel}</div>
       </div>
 
       <div className="listing-row-main">
+        <div className="listing-row-topline">
+          <span className="listing-row-eyebrow">Premium marketplace</span>
+          <span className="listing-row-bids">{listing.bids} bids</span>
+        </div>
+
         <div className="listing-row-title">{listing.title}</div>
+
         <div className="listing-row-sub">
           <span className="row-pill">
-            <Gauge size={14} /> {listing.mileage.toLocaleString()} km
+            <Gauge size={14} />
+            {listing.mileage.toLocaleString()} km
           </span>
           <span className="row-pill">
-            <MapPin size={14} /> {listing.location}
+            <MapPin size={14} />
+            {listing.location}
           </span>
-          <span className="row-pill">{(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? timeRemaining : `${listing.bids} bids`}</span>
+          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
+            <span className="row-pill row-pill-timer">
+              <TimerReset size={14} />
+              {timeRemaining}
+            </span>
+          ) : (
+            <span className="row-pill">Auction closed</span>
+          )}
         </div>
       </div>
 
       <div className="listing-row-right" onClick={(e) => e.stopPropagation()}>
+        <div className="listing-row-price-label">Current bid</div>
         <div className="listing-row-price">${listing.currentPrice.toLocaleString()}</div>
         <div className="listing-row-actions">
-          <button className="icon-btn" title="Watchlist">
+          <button className="icon-btn" title="Watchlist preview" type="button">
             <Heart size={18} />
           </button>
           <button
             className="btn btn-primary listing-row-cta"
             onClick={() => navigate(`/listings/${listing.id}`)}
+            type="button"
           >
-            View <ArrowRight size={16} />
+            View listing
+            <ArrowRight size={16} />
           </button>
         </div>
       </div>

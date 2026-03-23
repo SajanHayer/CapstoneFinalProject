@@ -8,9 +8,10 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { isLoggedIn, isGuest, logout, exitGuest } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
   const handleLogout = async () => {
     await logout();
-    navigate("/"); // send user home
+    navigate("/");
   };
 
   return (
@@ -26,23 +27,25 @@ export const Navbar: React.FC = () => {
         <NavLink to="/" className="nav-link">
           Home
         </NavLink>
+
         <NavLink to="/listings" className="nav-link">
           Browse
         </NavLink>
+
         {isLoggedIn && (
           <>
-            <NavLink to="/listings" className="nav-link">
-              Browse
-            </NavLink>
             <NavLink to="/heatmap" className="nav-link">
               Heat Map
             </NavLink>
+
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}
+
             <NavLink to="/account" className="nav-link">
               Account
             </NavLink>
+
             {/* <NavLink to="/analytics" className="nav-link">
               Analytics
             </NavLink> */}
@@ -55,12 +58,13 @@ export const Navbar: React.FC = () => {
           className="btn btn-outline"
           onClick={toggleTheme}
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          type="button"
         >
           {theme === "dark" ? "☀️" : "🌙"}
         </button>
 
         {isLoggedIn ? (
-          <button className="btn btn-primary" onClick={handleLogout}>
+          <button className="btn btn-primary" onClick={handleLogout} type="button">
             Logout
           </button>
         ) : (
@@ -72,13 +76,16 @@ export const Navbar: React.FC = () => {
                   exitGuest();
                   navigate("/");
                 }}
+                type="button"
               >
                 Exit Guest
               </button>
             )}
+
             <Link to="/login" className="btn btn-outline">
               Sign In
             </Link>
+
             <Link to="/register" className="btn btn-primary">
               Join Now
             </Link>
