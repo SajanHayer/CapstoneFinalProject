@@ -37,6 +37,7 @@ export const AddListingPage: React.FC = () => {
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedVehicleHasActiveListing, setSelectedVehicleHasActiveListing] =
     useState(false);
   const { register, handleSubmit, watch, setValue } = useForm<AddListingProps>({
@@ -90,6 +91,12 @@ export const AddListingPage: React.FC = () => {
         setLoading(false);
         return;
       }
+      navigator.geolocation.getCurrentPosition((position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setCoords({ lat, lng });
+          // console.log(lat, lng);
+      });
 
       try {
         const res2 = await fetch(
@@ -161,6 +168,8 @@ export const AddListingPage: React.FC = () => {
           ...data,
           start_time: startTime,
           end_time: endTime,
+          latitude: coords?.lat,
+          longitude: coords?.lng,
         }),
       });
       const result = await res.json();

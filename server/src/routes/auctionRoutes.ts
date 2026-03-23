@@ -250,6 +250,8 @@ auctionRouter.post("/create", async (req, res) => {
       start_time,
       end_time,
       location,
+      latitude,
+      longitude,
     } = req.body;
 
     if (
@@ -279,6 +281,8 @@ auctionRouter.post("/create", async (req, res) => {
           status: "active",
           views_count: 0,
           location,
+          latitude: latitude,
+          longitude: longitude,
         },
       ])
       .returning();

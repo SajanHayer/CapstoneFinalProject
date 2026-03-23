@@ -15,6 +15,7 @@ interface GarageVehicle {
   status: string;
   hasActiveListing?: boolean;
   listingStatus?: string;
+  listingStartTime?: string;
 }
 
 interface BidItem {
@@ -86,6 +87,7 @@ export const AccountPage: React.FC = () => {
         const garageWithListings: GarageVehicle[] = await Promise.all(
           rows.map(async (vehicle: any) => {
             let listingStatus = undefined;
+            let listingStartTime = undefined;
             try {
               const listingsRes = await fetch(
                 `http://localhost:8080/api/listings/vehicle/all/${vehicle.id}`,
@@ -105,6 +107,7 @@ export const AccountPage: React.FC = () => {
                   listingStatus =
                     mostRecentListing.status.charAt(0).toUpperCase() +
                     mostRecentListing.status.slice(1);
+                  listingStartTime = mostRecentListing.start_time;
                 }
               }
             } catch (err) {
@@ -119,6 +122,7 @@ export const AccountPage: React.FC = () => {
               condition: vehicle.condition ?? "",
               status: vehicle.status ?? "",
               listingStatus,
+              listingStartTime,
             };
           }),
         );
@@ -353,24 +357,35 @@ export const AccountPage: React.FC = () => {
                         <span className={`status ${vehicle.status}`}>
                           {vehicle.status}
                         </span>
-                        {vehicle.listingStatus && (
-                          <span
-                            style={{
-                              backgroundColor:
-                                vehicle.listingStatus === "Active"
-                                  ? "#3b82f6"
-                                  : "#f97316",
-                              color: "white",
-                              padding: "4px 12px",
-                              borderRadius: "4px",
-                              fontSize: "12px",
-                              fontWeight: "500",
-                              marginLeft: "8px",
-                            }}
-                          >
-                            Listing: {vehicle.listingStatus}
-                          </span>
-                        )}
+                        {vehicle.listingStatus && (() => {
+                          const now = new Date();
+                          const startTime = vehicle.listingStartTime
+                            ? new Date(vehicle.listingStartTime)
+                            : null;
+                          const isUpcoming =
+                            startTime && now < startTime && vehicle.listingStatus === "Active";
+
+                          let bgColor = "#f97316";
+                          if (vehicle.listingStatus === "Active") {
+                            bgColor = isUpcoming ? "#8b5cf6" : "#3b82f6";
+                          }
+
+                          return (
+                            <span
+                              style={{
+                                backgroundColor: bgColor,
+                                color: "white",
+                                padding: "4px 12px",
+                                borderRadius: "4px",
+                                fontSize: "12px",
+                                fontWeight: "500",
+                                marginLeft: "8px",
+                              }}
+                            >
+                              Listing: {isUpcoming ? "Upcoming" : vehicle.listingStatus}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

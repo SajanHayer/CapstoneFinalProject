@@ -371,7 +371,8 @@ async function seed() {
           buy_now_price: "9200.00",
           current_price: "8300.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          // end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(30),
           status: "active" as const,
           views_count: 12,
           location: "79 Lucas Terrace NW, Calgary, AB",
@@ -387,7 +388,8 @@ async function seed() {
           buy_now_price: "11200.00",
           current_price: "10000.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          // end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(60),
           status: "active" as const,
           views_count: 21,
           location: "University of Calgary, Calgary, AB",
@@ -403,7 +405,8 @@ async function seed() {
           buy_now_price: "6999.00",
           current_price: "6999.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          // end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(90),
           status: "active" as const,
           views_count: 9,
           location: "59 East Lake Crescent NE, Airdrie, AB T4A 2H5",
@@ -419,7 +422,7 @@ async function seed() {
           buy_now_price: "22500.00",
           current_price: "19500.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(300), // 7 days
           status: "active" as const,
           views_count: 33,
           location: "Aspen Landing, Calgary, AB",
@@ -435,7 +438,7 @@ async function seed() {
           buy_now_price: "10200.00",
           current_price: "8800.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(600), // 7 days
           status: "active" as const,
           views_count: 41,
           location: "Bridgeland, Calgary, AB",
@@ -451,7 +454,7 @@ async function seed() {
           buy_now_price: "21999.00",
           current_price: "21999.00",
           start_time: now,
-          end_time: secondsFromNow(86400 * 7), // 7 days
+          end_time: secondsFromNow(86400 * 4), // 4 days
           status: "active" as const,
           views_count: 18,
           location: "Beltline, Calgary, AB",
