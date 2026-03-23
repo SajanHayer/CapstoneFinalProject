@@ -1,6 +1,7 @@
 // AuthContext.tsx
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const LOCALURL = import.meta.env.FETCHURL;
 interface User {
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (!res.ok) throw new Error("Failed to logout");
     } catch (err: any) {
-      console.error("Logout error", err);
+      toast.error("Logout failed. Please try again.");
     } finally {
       setUser(null); // clear user in context
       setIsGuest(false);

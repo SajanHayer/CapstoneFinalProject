@@ -106,7 +106,7 @@ export const SellerAnalyticsPage: React.FC = () => {
 
         setBids(Array.isArray(bidsJson.result) ? bidsJson.result : []);
       } catch (err) {
-        console.error(err);
+        toast.error("Failed to load analytics data");
       } finally {
         setLoading(false);
       }

@@ -7,6 +7,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { BarMiniChart, Sparkline } from "../components/analytics/Charts";
 
@@ -66,7 +67,10 @@ export const AnalyticsDashboardPage: React.FC = () => {
             credentials: "include",
           },
         );
-        if (!res.ok) throw new Error("Failed to load analytics");
+        if (!res.ok) {
+          toast.error("Failed to load analytics dashboard");
+          throw new Error("Failed to load analytics");
+        }
         const json = (await res.json()) as AnalyticsResponse;
         setData(json);
       } catch (e: any) {

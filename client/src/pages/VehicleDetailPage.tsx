@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
@@ -126,10 +127,7 @@ export const VehicleDetailPage: React.FC = () => {
                 }
               }
             } catch (err) {
-              console.error(
-                `Failed to fetch bids for listing ${listing.id}:`,
-                err,
-              );
+              // Silently fail for individual bid fetches
             }
             return listing;
           }),
@@ -137,8 +135,9 @@ export const VehicleDetailPage: React.FC = () => {
 
         setListings(listingsWithBids);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load data");
-        console.error(err);
+        const errorMsg = err instanceof Error ? err.message : "Failed to load data";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -179,10 +178,9 @@ export const VehicleDetailPage: React.FC = () => {
         ),
       );
 
-      alert("Listing removed successfully!");
+      toast.success("Listing removed successfully!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to remove listing");
-      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Failed to remove listing");
     } finally {
       setCancellingListingId(null);
     }
@@ -221,10 +219,9 @@ export const VehicleDetailPage: React.FC = () => {
         ),
       );
 
-      alert("Sale completed successfully! Payment is pending.");
+      toast.success("Sale completed successfully! Payment is pending.");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to complete sale");
-      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Failed to complete sale");
     } finally {
       setSellingListingId(null);
     }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import { socket } from "../../lib/socket";
 
 interface Bid {
@@ -35,7 +36,7 @@ export const BidHistory: React.FC<BidHistoryProps> = ({ listingId }) => {
         setBids(bidList);
         setLoading(false);
       } catch (err) {
-        console.error("Failed to load bid history", err);
+        toast.error("Failed to load bid history");
         setLoading(false);
       }
     };

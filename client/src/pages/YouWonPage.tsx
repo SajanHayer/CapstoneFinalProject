@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 
@@ -63,10 +64,9 @@ export const YouWonPage: React.FC = () => {
           email: sellerData.user.email,
         });
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load information",
-        );
-        console.error(err);
+        const errorMsg = err instanceof Error ? err.message : "Failed to load information";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }

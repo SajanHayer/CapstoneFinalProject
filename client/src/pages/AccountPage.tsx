@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import { ListingDashboard } from "../components/analytics/ListingDashboard";
@@ -110,10 +111,7 @@ export const AccountPage: React.FC = () => {
                   lastListing.status.slice(1);
               }
             } catch (err) {
-              console.error(
-                `Failed to fetch listings for vehicle ${vehicle.id}:`,
-                err,
-              );
+              // Silently fail for individual vehicle listings
             }
 
             return {
@@ -134,8 +132,8 @@ export const AccountPage: React.FC = () => {
       } catch (err) {
         if (isMounted) {
           setError("Failed to load vehicles");
+          toast.error("Failed to load your vehicles");
         }
-        console.error(err);
       }
     };
 
@@ -200,8 +198,8 @@ export const AccountPage: React.FC = () => {
       } catch (err) {
         if (isMounted) {
           setError("Failed to load bids");
+          toast.error("Failed to load your bids");
         }
-        console.error(err);
       }
     };
 
@@ -233,7 +231,7 @@ export const AccountPage: React.FC = () => {
       }
       setTransactionBidIds(bidIdsWithTransaction);
     } catch (err) {
-      console.error("Failed to fetch transactions:", err);
+      toast.error("Failed to load transaction information");
     }
   };
 

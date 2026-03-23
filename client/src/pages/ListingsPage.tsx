@@ -43,10 +43,12 @@ export const ListingsPage: React.FC = () => {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch listings");
+      if (!res.ok) {
+        toast.error("Failed to load listings");
+        throw new Error("Failed to fetch listings");
+      }
 
       const data = await res.json();
-      console.log("Fetched listings:", data);
       // Map backend data to Listing type
       const mappedListings: Listing[] = data.listings
         .filter(

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { toast } from "react-toastify";
 import "../styles/chatWidget.css";
 
 type ChatMessage = {
@@ -78,7 +79,7 @@ export const ChatWidget: React.FC = () => {
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err) {
-      console.error("Assistant request failed:", err);
+      toast.error("Failed to get assistant response. Please try again.");
       setMessages((prev) => [
         ...prev,
         {

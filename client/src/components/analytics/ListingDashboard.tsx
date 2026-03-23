@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { X, TrendingUp, Gavel, Users, DollarSign } from "lucide-react";
+import { toast } from "react-toastify";
 import { Button } from "../common/Button";
 import "../../styles/dashboard.css";
 
@@ -149,7 +150,7 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
           setIsEnded(now > endTime);
         }
       } catch (err) {
-        console.error(err);
+        toast.error("Failed to load bid information");
       } finally {
         setLoading(false);
       }
@@ -225,15 +226,18 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
       if (action === "sold") {
         onStatusChange?.("sold");
         setIsEnded(false);
+        toast.success("Listing marked as sold!");
       } else if (action === "relist") {
         onStatusChange?.("active");
         setIsEnded(false);
+        toast.success("Listing relisted!");
       } else if (action === "remove") {
         onClose();
+        toast.success("Listing removed!");
       }
     } catch (err) {
-      console.error("Action failed:", err);
-      alert("Failed to perform action. Please try again.");
+      toast.error("Action failed. Please try again.");
+      toast.error("Failed to perform action. Please try again.");
     } finally {
       setActionLoading(false);
     }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
@@ -140,7 +141,7 @@ export const AddListingPage: React.FC = () => {
         //   }
         // }
       } catch (err) {
-        console.error("Failed to fetch vehicles:", err);
+        toast.error("Failed to load vehicle information. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -171,13 +172,13 @@ export const AddListingPage: React.FC = () => {
       });
       const result = await res.json();
       if (!res.ok || result.error) {
-        alert(result.message || "Error uploading vehicle");
+        toast.error(result.message || "Error uploading vehicle");
       } else {
-        alert("Listing added successfully!");
+        toast.success("Listing added successfully!");
         navigate("/account");
       }
     } catch (err) {
-      console.error("Error creating listing:", err);
+      toast.error("Error creating listing. Please try again.");
     }
   };
 

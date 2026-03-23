@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
 import { BidHistory } from "../components/listings/BidHistory";
 import { socket } from "../lib/socket";
@@ -90,8 +91,9 @@ export const ListingDetailPage: React.FC = () => {
           }
         }
       } catch (err) {
-        setError("Failed to load vehicle details");
-        console.log(err);
+        const errorMsg = "Failed to load vehicle details";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -196,12 +198,12 @@ export const ListingDetailPage: React.FC = () => {
 
   const handlePlaceBid = () => {
     if (!bidAmount || !userLocation) {
-      alert("Please enter both a bid amount and your location");
+      toast.error("Please enter both a bid amount and your location");
       return;
     }
 
     if (!listing) {
-      alert("Listing not loaded");
+      toast.error("Listing not loaded");
       return;
     }
 

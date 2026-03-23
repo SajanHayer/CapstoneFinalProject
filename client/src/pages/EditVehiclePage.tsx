@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import "../styles/addvehicle.css";
@@ -61,6 +62,7 @@ export const EditVehiclePage: React.FC = () => {
         );
 
         if (!res.ok) {
+          toast.error("Failed to load vehicle information");
           throw new Error("Failed to fetch vehicle");
         }
 
@@ -79,7 +81,9 @@ export const EditVehiclePage: React.FC = () => {
 
         setExistingImages(vehicle.image_url || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load vehicle");
+        const errorMsg = err instanceof Error ? err.message : "Failed to load vehicle";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -165,7 +169,9 @@ export const EditVehiclePage: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || `Failed (${res.status})`);
+        const errorMsg = data.message || `Failed to update vehicle (${res.status})`;
+        toast.error(errorMsg);
+        throw new Error(errorMsg);
       }
 
       setOk("Vehicle updated successfully!");

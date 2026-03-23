@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Button } from "../components/common/Button";
 import { localToUTC, utcToLocalDateTimeString } from "../lib/dateUtils";
 
@@ -94,7 +95,7 @@ export const EditListingPage: React.FC = () => {
           location: l.location ?? "",
         });
       } catch (e: any) {
-        console.error(e);
+        toast.error(e instanceof Error ? e.message : "Failed to load listing details");
         setError(e?.message ?? "Failed to load listing.");
       } finally {
         setLoading(false);
@@ -141,9 +142,10 @@ export const EditListingPage: React.FC = () => {
         // if backend returns different shape, still navigate
       }
 
+      toast.success("Listing updated successfully!");
       navigate("/account");
     } catch (e: any) {
-      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Failed to update listing");
       setError(e?.message ?? "Failed to save changes.");
     } finally {
       setSaving(false);

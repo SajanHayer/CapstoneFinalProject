@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { toast } from "react-toastify";
 import { Button } from "../common/Button";
 import "../../styles/dashboard.css";
 
@@ -63,10 +64,9 @@ export const YouWonModal: React.FC<YouWonModalProps> = ({
           email: sellerData.user.email,
         });
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load information",
-        );
-        console.error(err);
+        const errorMsg = err instanceof Error ? err.message : "Failed to load information";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
