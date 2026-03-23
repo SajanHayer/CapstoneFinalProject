@@ -16,6 +16,9 @@ import { HeatMapPage } from "../pages/HeatMapPage";
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
+import { VehicleDetailPage } from "../pages/VehicleDetailPage";
+import { EditVehiclePage } from "../pages/EditVehiclePage";
+import { YouWonPage } from "../pages/YouWonPage";
 
 export const AppRouter: React.FC = () => {
   return (
@@ -33,12 +36,16 @@ export const AppRouter: React.FC = () => {
       {/* Auth-only */}
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/you-won/:listingId" element={<YouWonPage />} />
+        <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
+        <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route path="/heatmap" element={<HeatMapPage />} />
-
-
-        <Route path="/seller/:sellerId/analytics" element={<SellerAnalyticsPage />} />
+        <Route
+          path="/seller/:sellerId/analytics"
+          element={<SellerAnalyticsPage />}
+        />
         <Route path="/edit-listing/:listingId" element={<EditListingPage />} />
       </Route>
     </Routes>

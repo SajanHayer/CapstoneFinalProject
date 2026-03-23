@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import "../styles/addvehicle.css";
@@ -33,11 +34,12 @@ export const AddVehiclePage: React.FC = () => {
   });
 
   const [images, setImages] = useState<File[]>([]);
-  const previews = useMemo(() => images.map((f) => URL.createObjectURL(f)), [images]);
+  const previews = useMemo(
+    () => images.map((f) => URL.createObjectURL(f)),
+    [images],
+  );
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
 
   const canPublish = isLoggedIn && !isGuest;
 
@@ -58,26 +60,25 @@ export const AddVehiclePage: React.FC = () => {
   }
 
   async function publish() {
-    setError(null);
-    setOk(null);
-
     if (!canPublish) {
-      setError("Guest mode can't publish vehicles. Please sign in to list a vehicle.");
+      toast.error(
+        "Guest mode can't publish vehicles. Please sign in to list a vehicle.",
+      );
       return;
     }
 
     if (!form.make.trim() || !form.model.trim()) {
-      setError("Make and model are required.");
+      toast.error("Make and model are required.");
       return;
     }
 
     if (!form.year || Number.isNaN(Number(form.year))) {
-      setError("Year is required.");
+      toast.error("Year is required.");
       return;
     }
 
     if (!form.price || Number.isNaN(Number(form.price))) {
-      setError("Price is required.");
+      toast.error("Price is required.");
       return;
     }
 
@@ -103,13 +104,14 @@ export const AddVehiclePage: React.FC = () => {
 
       if (!res.ok) {
         const text = await res.text();
+        toast.error(text || `Failed to create vehicle (${res.status})`);
         throw new Error(text || `Failed (${res.status})`);
       }
 
-      setOk("Vehicle published!");
+      toast.success("Vehicle published!");
       setTimeout(() => navigate("/account"), 650);
     } catch (e: any) {
-      setError(e?.message || "Failed to publish vehicle.");
+      toast.error(e?.message || "Failed to publish vehicle.");
     } finally {
       setSaving(false);
     }
@@ -123,7 +125,8 @@ export const AddVehiclePage: React.FC = () => {
           <div className="av-header-content">
             <div className="av-header-title">List a vehicle</div>
             <div className="av-header-subtitle">
-              Sponsor-ready listings: clean data, crisp photos, and clear status.
+              Sponsor-ready listings: clean data, crisp photos, and clear
+              status.
             </div>
           </div>
           <div className="av-header-actions">
@@ -136,18 +139,15 @@ export const AddVehiclePage: React.FC = () => {
           </div>
         </div>
 
-        {(isGuest || error || ok) && (
-          <div className="av-alerts">
-            {isGuest && (
-              <div className="av-alert av-alert-info">
-                You're in Guest mode — you can browse everything, but you can't publish vehicles.
-              </div>
-            )}
-            {error && <div className="av-alert av-alert-error">{error}</div>}
-            {ok && <div className="av-alert av-alert-success">{ok}</div>}
+        {isGuest && (
+          <div className="av-alert av-alert-info">
+            You're in Guest mode — you can browse everything, but you can't
+            publish vehicles.
           </div>
         )}
       </div>
+
+    
 
       {/* Main */}
       <div className="av-grid">
@@ -253,8 +253,8 @@ export const AddVehiclePage: React.FC = () => {
                   <div key={src} className="av-photo-thumb">
                     <img src={src} alt={"preview-" + i} />
                     {i === 0 && <div className="av-photo-badge">Thumbnail</div>}
-                    <button 
-                      onClick={() => removeImage(i)} 
+                    <button
+                      onClick={() => removeImage(i)}
                       className="av-photo-remove-btn"
                       title="Remove"
                     >
@@ -270,7 +270,8 @@ export const AddVehiclePage: React.FC = () => {
             <div className="av-section-title">Listing preview</div>
             <div className="av-preview-vehicle">
               <div className="av-preview-title">
-                {form.year || "Year"} {form.make || "Make"} {form.model || "Model"}
+                {form.year || "Year"} {form.make || "Make"}{" "}
+                {form.model || "Model"}
               </div>
               <div className="av-preview-pills">
                 <Pill text={`Condition: ${form.condition}`} />
@@ -334,7 +335,11 @@ function LabeledSelect({
   return (
     <div className="av-input-group">
       <label className="av-label">{text}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="av-select">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="av-select"
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

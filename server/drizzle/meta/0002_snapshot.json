@@ -1,5 +1,5 @@
 {
-  "id": "eca12252-50a8-4f7a-b9e6-8b3560e37992",
+  "id": "4c6b404f-422f-4a52-9234-50317b9ec816",
   "prevId": "a7f183e4-0b53-40ca-919d-6da20fdb0d79",
   "version": "7",
   "dialect": "postgresql",
@@ -497,7 +497,8 @@
         "success",
         "unmet",
         "nobids",
-        "pending"
+        "pending",
+        "cancelled"
       ]
     },
     "public.listing_status": {

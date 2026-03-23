@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Select } from "../components/common/Select";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { localToUTC } from "../lib/dateUtils";
 import "../styles/addlisting.css";
 
 type Vehicle = {
@@ -12,6 +14,7 @@ type Vehicle = {
   make: string;
   model: string;
   year: number;
+  hasActiveListing?: boolean;
 };
 
 type AddListingProps = {
@@ -29,20 +32,49 @@ type AddListingProps = {
 export const AddListingPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const vehicleIdFromParams = searchParams.get("vehicleId");
+
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const { register, handleSubmit, watch } = useForm<AddListingProps>({
+  const [selectedVehicleHasActiveListing, setSelectedVehicleHasActiveListing] =
+    useState(false);
+  const { register, handleSubmit, watch, setValue } = useForm<AddListingProps>({
     defaultValues: {
       type: "auction",
+      vehicle_id: vehicleIdFromParams ? Number(vehicleIdFromParams) : undefined,
     },
   });
   const listingType = watch("type");
   const startTime = watch("start_time");
+  const reservePrice = watch("reserve_price");
+  const selectedVehicleId = watch("vehicle_id");
+
+  // Calculate starting price as 75% of reserve price
+  useEffect(() => {
+    if (reservePrice && !isNaN(Number(reservePrice))) {
+      const calculatedStartPrice = Number(reservePrice) * 0.75;
+      setValue("start_price", calculatedStartPrice);
+    }
+  }, [reservePrice, setValue]);
+
+  // Check if selected vehicle has active listing
+  useEffect(() => {
+    if (selectedVehicleId && vehicles.length > 0) {
+      const selected = vehicles.find((v) => v.id === selectedVehicleId);
+      setSelectedVehicleHasActiveListing(selected?.hasActiveListing || false);
+    }
+  }, [selectedVehicleId, vehicles]);
 
   // Get minimum datetime (now) in correct format for datetime-local
   const getMinDateTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   // Get minimum end time (start time or later)
@@ -66,22 +98,50 @@ export const AddListingPage: React.FC = () => {
             credentials: "include",
           },
         );
-        if (res.ok) {
-          const data = await res.json();
-          // Extract vehicles without listings from the result
-          if (data.result && Array.isArray(data.result)) {
-            const vehiclesWithoutListings = data.result
-              .filter((item: any) => !item.listings) // Only vehicles without listings
-              .map((item: any) => item.vehicles)
-              .filter(
-                (v: Vehicle | null, idx: number, arr: any[]) =>
-                  v && arr.findIndex((vehicle) => vehicle?.id === v.id) === idx,
-              );
-            setVehicles(vehiclesWithoutListings);
-          }
-        }
+
+        const res2 = await fetch(
+          `http://localhost:8080/api/vehicles/${vehicleIdFromParams}`,
+          { credentials: "include" },
+        );
+        const data = await res2.json();
+        // const vehicleDetails = data.vehicle;
+        // console.log("Raw vehicle data fo vehicleIdFromParams:", data.vehicle);
+        const { id, make, model, year } = data.vehicle;
+        const vehicleDetails: Vehicle = { id, make, model, year };
+        setVehicles([vehicleDetails]);
+
+        // setVehicles(vehicleDetails);
+        // if (res.ok) {
+        //   const data = await res.json();
+        //   console.log("Raw vehicles data from API:", vehicleIdFromParams);
+        //   console.log("Fetched vehicles data:", data);
+        //   // Extract all vehicles and check for active listings
+        //   if (data.result && Array.isArray(data.result)) {
+        //     const allVehicles = data.result
+        //       .map((item: any) => ({
+        //         id: item.vehicles.id,
+        //         make: item.vehicles.make,
+        //         model: item.vehicles.model,
+        //         year: item.vehicles.year,
+        //         hasActiveListing:
+        //           item.listings &&
+        //           item.listings.length > 0 &&
+        //           item.listings.some(
+        //             (listing: any) =>
+        //               listing.status === "active" ||
+        //               (new Date(listing.start_time) <= new Date() &&
+        //                 new Date(listing.end_time) >= new Date()),
+        //           ),
+        //       }))
+        //       .filter(
+        //         (v: Vehicle, idx: number, arr: Vehicle[]) =>
+        //           arr.findIndex((vehicle) => vehicle.id === v.id) === idx,
+        //       );
+        //     setVehicles(allVehicles);
+        //   }
+        // }
       } catch (err) {
-        console.error("Failed to fetch vehicles:", err);
+        toast.error("Failed to load vehicle information. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -94,9 +154,9 @@ export const AddListingPage: React.FC = () => {
     // console.log("Form data:", data);
     data.seller_id = user?.id || 0;
 
-    // Convert datetime-local strings to ISO format
-    const startTime = new Date(data.start_time).toISOString();
-    const endTime = new Date(data.end_time).toISOString();
+    // Convert local datetime strings to UTC
+    const startTime = localToUTC(data.start_time);
+    const endTime = localToUTC(data.end_time);
 
     try {
       const res = await fetch("http://localhost:8080/api/listings/create", {
@@ -112,18 +172,42 @@ export const AddListingPage: React.FC = () => {
       });
       const result = await res.json();
       if (!res.ok || result.error) {
-        alert(result.message || "Error uploading vehicle");
+        toast.error(result.message || "Error uploading vehicle");
       } else {
-        alert("Listing added successfully!");
+        toast.success("Listing added successfully!");
         navigate("/account");
       }
     } catch (err) {
-      console.error("Error creating listing:", err);
+      toast.error("Error creating listing. Please try again.");
     }
   };
 
   return (
     <div className="add-listing-container">
+      <button
+        type="button"
+        onClick={() =>
+          navigate("/vehicle/" + selectedVehicleId, {
+            state: { vehicleId: selectedVehicleId },
+          })
+        }
+        className="back-button"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 16px",
+          marginBottom: "24px",
+          backgroundColor: "transparent",
+          border: "1px solid #e5e7eb",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "14px",
+          color: "#4b5563",
+        }}
+      >
+        ← Back to Vehicle
+      </button>
       <div className="add-listing-header">
         <h1>Create New Listing</h1>
         <p>Set up your vehicle for auction</p>
@@ -134,27 +218,42 @@ export const AddListingPage: React.FC = () => {
         <div className="form-section">
           <h3>Vehicle</h3>
           {loading ? (
-            <p className="form-loading-text">
-              Loading your vehicles...
-            </p>
+            <p className="form-loading-text">Loading your vehicles...</p>
           ) : vehicles.length === 0 ? (
             <p className="form-error-text">
               No vehicles found. Please add a vehicle first.
             </p>
           ) : (
-            <Select
-              {...register("vehicle_id", {
-                required: true,
-                valueAsNumber: true,
-              })}
-            >
-              <option value="">Select a vehicle from your garage</option>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.year} {vehicle.make} {vehicle.model}
-                </option>
-              ))}
-            </Select>
+            <>
+              <Select
+                {...register("vehicle_id", {
+                  required: true,
+                  valueAsNumber: true,
+                })}
+              >
+                <option value="">Select a vehicle from your garage</option>
+                {vehicles.map((vehicle) => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.year} {vehicle.make} {vehicle.model}
+                    {vehicle.hasActiveListing ? " (Active Listing)" : ""}
+                  </option>
+                ))}
+              </Select>
+              {selectedVehicleHasActiveListing && (
+                <p
+                  style={{
+                    color: "#dc2626",
+                    fontSize: "14px",
+                    marginTop: "8px",
+                    fontWeight: 500,
+                  }}
+                >
+                  ⚠️ This vehicle has an active listing or a recent listing that
+                  has ended. Please complete or remove that listing before
+                  adding a new one.
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -181,10 +280,11 @@ export const AddListingPage: React.FC = () => {
           <h3>Pricing</h3>
           <div className="form-grid">
             <Input
-              label="Starting Price"
+              label="Starting Price (75% of Reserve Price)"
               type="number"
               step="0.01"
               placeholder="0.00"
+              disabled
               {...register("start_price", {
                 required: true,
                 valueAsNumber: true,
@@ -242,7 +342,19 @@ export const AddListingPage: React.FC = () => {
 
         {/* Submit Button */}
         <div className="form-actions">
-          <Button type="submit">Create Listing</Button>
+          <Button
+            type="submit"
+            disabled={!selectedVehicleId || selectedVehicleHasActiveListing}
+            title={
+              selectedVehicleHasActiveListing
+                ? "Cannot create listing - this vehicle already has an active listing"
+                : !selectedVehicleId
+                  ? "Please select a vehicle"
+                  : ""
+            }
+          >
+            Create Listing
+          </Button>
         </div>
       </form>
     </div>

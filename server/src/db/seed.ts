@@ -2,7 +2,6 @@
 import { db } from "./db";
 import { users, vehicles, listings, bids } from "./schema";
 import { hashPassword } from "../utils/auth";
-import { eq, inArray } from "drizzle-orm";
 
 async function seed() {
   const secondsFromNow = (seconds: number) =>
@@ -16,7 +15,6 @@ async function seed() {
     await db.delete(bids);
     await db.delete(listings);
     await db.delete(vehicles);
-
 
     // ---------------- Users ----------------
     const insertedUsers = await db
@@ -172,6 +170,192 @@ async function seed() {
     console.log("Inserted vehicles:", insertedVehicles);
 
     const [v1, v2, v3, v4, v5, v6, v7] = insertedVehicles;
+    // ---------------- Historic Listings (Ended) ----------------
+    // Add some ended listings for demonstration of bid history
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - 7); // 7 days ago
+    const endedDate = new Date();
+    endedDate.setDate(endedDate.getDate() - 5); // 5 days ago
+
+    const historicListings = await db
+      .insert(listings)
+      .values([
+        {
+          vehicle_id: v1.id, // Honda CRF250R (historic - unmet reserve)
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "7500.00",
+          reserve_price: "8500.00",
+          buy_now_price: "9000.00",
+          current_price: "8500.00",
+          start_time: new Date(pastDate.getTime() - 2 * 24 * 60 * 60 * 1000),
+          end_time: endedDate,
+          status: "cancelled" as const,
+          end_reason: "unmet" as const,
+          views_count: 45,
+          location: "Calgary, AB",
+        },
+        {
+          vehicle_id: v2.id, // Yamaha YZ450F (historic - cancelled)
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "9200.00",
+          reserve_price: "10000.00",
+          buy_now_price: "11500.00",
+          current_price: "10800.00",
+          start_time: new Date(pastDate.getTime() - 3 * 24 * 60 * 60 * 1000),
+          end_time: endedDate,
+          status: "cancelled" as const,
+          end_reason: "cancelled" as const,
+          views_count: 52,
+          location: "Edmonton, AB",
+        },
+        {
+          vehicle_id: v5.id, // Kawasaki Ninja 650 (same vehicle as l5)
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "8200.00",
+          reserve_price: "8900.00",
+          buy_now_price: "9800.00",
+          current_price: "8700.00", // Below reserve - unmet
+          start_time: new Date(pastDate.getTime() - 4 * 24 * 60 * 60 * 1000),
+          end_time: endedDate,
+          status: "cancelled" as const,
+          end_reason: "unmet" as const,
+          views_count: 38,
+          location: "Toronto, ON",
+        },
+        {
+          vehicle_id: v3.id, // KTM 300 XC
+          seller_id: user1.id,
+          type: "auction" as const,
+          start_price: "5500.00",
+          reserve_price: "6200.00",
+          buy_now_price: "7000.00",
+          current_price: "5900.00", // Below reserve - unmet
+          start_time: new Date(pastDate.getTime() - 5 * 24 * 60 * 60 * 1000),
+          end_time: new Date(pastDate.getTime() - 2 * 24 * 60 * 60 * 1000),
+          status: "cancelled" as const,
+          end_reason: "unmet" as const,
+          views_count: 22,
+          location: "Vancouver, BC",
+        },
+        {
+          vehicle_id: v4.id, // Husqvarna TE 250i
+          seller_id: user3.id,
+          type: "auction" as const,
+          start_price: "6800.00",
+          reserve_price: "7500.00",
+          buy_now_price: "8500.00",
+          current_price: "6800.00", // Was cancelled before ending
+          start_time: new Date(pastDate.getTime() - 6 * 24 * 60 * 60 * 1000),
+          end_time: new Date(pastDate.getTime() - 1 * 24 * 60 * 60 * 1000),
+          status: "cancelled" as const,
+          end_reason: "cancelled" as const,
+          views_count: 15,
+          location: "Montreal, QC",
+        },
+        {
+          vehicle_id: v6.id, // Royal Enfield Classic 350
+          seller_id: user2.id,
+          type: "auction" as const,
+          start_price: "4200.00",
+          reserve_price: "4800.00",
+          buy_now_price: "5500.00",
+          current_price: "4200.00", // Was cancelled before ending
+          start_time: new Date(pastDate.getTime() - 8 * 24 * 60 * 60 * 1000),
+          end_time: new Date(pastDate.getTime() - 3 * 24 * 60 * 60 * 1000),
+          status: "cancelled" as const,
+          end_reason: "cancelled" as const,
+          views_count: 8,
+          location: "Calgary, AB",
+        },
+      ])
+      .returning({ id: listings.id });
+
+    console.log("Inserted historic listings:", historicListings);
+
+    const [h1, h2, h3, h4, h5] = historicListings;
+
+    // Add bids for historic listings (showing bid history for different auction outcomes)
+    await db.insert(bids).values([
+      // h1: Successful auction (Honda CRF250R - reserve met)
+      {
+        listing_id: h1.id,
+        bidder_id: user1.id, // Alice
+        bid_amount: "8000.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: h1.id,
+        bidder_id: user3.id, // Charlie
+        bid_amount: "8350.00",
+        location: "Edmonton, AB",
+      },
+      {
+        listing_id: h1.id,
+        bidder_id: user1.id, // Alice (outbid)
+        bid_amount: "8500.00",
+        location: "Calgary, AB",
+      },
+      // h2: Successful auction (Yamaha YZ450F - reserve met)
+      {
+        listing_id: h2.id,
+        bidder_id: user1.id, // Alice
+        bid_amount: "9500.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: h2.id,
+        bidder_id: user3.id, // Charlie
+        bid_amount: "10200.00",
+        location: "Vancouver, BC",
+      },
+      {
+        listing_id: h2.id,
+        bidder_id: user1.id, // Alice (outbid)
+        bid_amount: "10800.00",
+        location: "Calgary, AB",
+      },
+      // h3: Unmet reserve (Kawasaki Ninja 650 - reserve 8900, highest bid 8700)
+      {
+        listing_id: h3.id,
+        bidder_id: user1.id, // Alice
+        bid_amount: "8300.00",
+        location: "Calgary, AB",
+      },
+      {
+        listing_id: h3.id,
+        bidder_id: user3.id, // Charlie
+        bid_amount: "8700.00", // Below reserve of 8900
+        location: "Toronto, ON",
+      },
+      // h4: Unmet reserve (KTM 300 XC - reserve 6200, highest bid 5900)
+      {
+        listing_id: h4.id,
+        bidder_id: user3.id, // Charlie
+        bid_amount: "5500.00",
+        location: "Vancouver, BC",
+      },
+      {
+        listing_id: h4.id,
+        bidder_id: user1.id, // Alice (outbid)
+        bid_amount: "5900.00", // Below reserve of 6200
+        location: "Calgary, AB",
+      },
+      // h5: Cancelled auction (Husqvarna TE 250i - minimal bidding before cancellation)
+      {
+        listing_id: h5.id,
+        bidder_id: user1.id, // Alice
+        bid_amount: "6800.00",
+        location: "Calgary, AB",
+      },
+      // h6: Cancelled auction (Royal Enfield Classic 350 - no bids)
+      // (no bids for this one to show variety)
+    ]);
+
+    console.log("Inserted historic bids (user bid history demo)");
+
     // ---------------- Listings ----------------
     const now = new Date();
 
@@ -185,7 +369,7 @@ async function seed() {
           start_price: "7899.00",
           reserve_price: "8500.00",
           buy_now_price: "9200.00",
-          current_price: "7899.00",
+          current_price: "8300.00",
           start_time: now,
           end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
@@ -201,7 +385,7 @@ async function seed() {
           start_price: "9499.00",
           reserve_price: "10300.00",
           buy_now_price: "11200.00",
-          current_price: "9499.00",
+          current_price: "10000.00",
           start_time: now,
           end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
@@ -233,7 +417,7 @@ async function seed() {
           start_price: "18999.00",
           reserve_price: "20500.00",
           buy_now_price: "22500.00",
-          current_price: "18999.00",
+          current_price: "19500.00",
           start_time: now,
           end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
@@ -249,7 +433,7 @@ async function seed() {
           start_price: "8499.00",
           reserve_price: "9200.00",
           buy_now_price: "10200.00",
-          current_price: "8499.00",
+          current_price: "8800.00",
           start_time: now,
           end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
@@ -281,7 +465,7 @@ async function seed() {
           start_price: "12999.00",
           reserve_price: "14000.00",
           buy_now_price: "15500.00",
-          current_price: "12999.00",
+          current_price: "13400.00",
           start_time: now,
           end_time: secondsFromNow(86400 * 7), // 7 days
           status: "active" as const,
@@ -297,7 +481,7 @@ async function seed() {
 
     // ---------------- Bids (for analytics dashboard demo) ----------------
     // Create a few bids across auction listings.
-    const [l1, l2, l3, l4, l5, l6, l7] = insertedListings;
+    const [l1, l2, , l4, l5, , l7] = insertedListings;
 
     await db.insert(bids).values([
       {
@@ -305,42 +489,49 @@ async function seed() {
         bidder_id: user1.id,
         bid_amount: "8100.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
       },
       {
         listing_id: l1.id,
         bidder_id: user3.id,
         bid_amount: "8300.00",
         location: "Edmonton, AB",
+        bid_time: new Date(Date.now()), // 5s from now
       },
       {
         listing_id: l2.id,
         bidder_id: user1.id,
         bid_amount: "9700.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now() - 20 * 1000), // 20s from now
       },
       {
         listing_id: l2.id,
         bidder_id: user3.id,
         bid_amount: "10000.00",
         location: "Vancouver, BC",
+        bid_time: new Date(Date.now() - 10 * 1000), // 10s from now
       },
       {
         listing_id: l4.id,
         bidder_id: user1.id,
         bid_amount: "19500.00",
         location: "Red Deer, AB",
+        bid_time: new Date(Date.now()), // 30s from now
       },
       {
         listing_id: l5.id,
         bidder_id: user1.id,
         bid_amount: "8800.00",
         location: "Calgary, AB",
+        bid_time: new Date(Date.now()), // 15s from now
       },
       {
         listing_id: l7.id,
         bidder_id: user1.id,
         bid_amount: "13400.00",
         location: "Banff, AB",
+        bid_time: new Date(Date.now() - 5 * 1000), // 5s from now
       },
     ]);
 

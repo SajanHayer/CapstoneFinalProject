@@ -3,6 +3,7 @@ import { ListingCard } from "../components/listings/ListingCard";
 import { ListingRowCard } from "../components/listings/ListingRowCard";
 import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { socket } from "../lib/socket";
 
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
@@ -42,44 +43,56 @@ export const ListingsPage: React.FC = () => {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch listings");
+      if (!res.ok) {
+        toast.error("Failed to load listings");
+        throw new Error("Failed to fetch listings");
+      }
 
       const data = await res.json();
       // Map backend data to Listing type
-      const mappedListings: Listing[] = data.listings.map((listing: any) => {
-        const v = listing.vehicle;
-        const now = new Date();
-        const startTime = new Date(listing.start_time);
-        const endTime = new Date(listing.end_time);
+      const mappedListings: Listing[] = data.listings
+        .filter(
+          (listing: any) =>
+            listing.status !== "cancelled" && listing.status !== "sold",
+        ) // Exclude cancelled listings
+        .map((listing: any) => {
+          const v = listing.vehicle;
+          const now = new Date();
+          const startTime = new Date(listing.start_time);
+          const endTime = new Date(listing.end_time);
 
-        // Determine status based on start_time and end_time
-        let status: ListingStatus;
-        if (now < startTime) {
-          status = "UPCOMING"; // Scheduled for future
-        } else if (now >= startTime && now < endTime && listing.status === "active") {
-          status = "ACTIVE"; // Currently running
-        } else {
-          status = "EXPIRED"; // Ended or cancelled
-        }
+          // Determine status based on start_time and end_time
+          let status: ListingStatus;
+          if (now < startTime) {
+            status = "UPCOMING"; // Scheduled for future
+          } else if (
+            now >= startTime &&
+            now < endTime &&
+            listing.status === "active"
+          ) {
+            status = "ACTIVE"; // Currently running
+          } else {
+            status = "EXPIRED"; // Ended or cancelled
+          }
 
-        return {
-          id: listing.vehicle.id.toString(),
-          title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
-          thumbnailUrl: v?.image_url
-            ? Array.isArray(v.image_url)
-              ? v.image_url[0]
-              : v.image_url
-            : undefined,
-          currentPrice: Number(listing.current_price),
-          location: listing.location || "Unknown",
-          mileage: Number(v?.mileage_hours ?? 0),
-          year: Number(v?.year ?? 0),
-          status: status,
-          startsAt: listing.start_time ?? new Date().toISOString(),
-          endsAt: listing.end_time ?? new Date().toISOString(),
-          bids: listing.bids_count ?? 0,
-        };
-      });
+          return {
+            id: listing.id.toString(),
+            title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
+            thumbnailUrl: v?.image_url
+              ? Array.isArray(v.image_url)
+                ? v.image_url[0]
+                : v.image_url
+              : undefined,
+            currentPrice: Number(listing.current_price),
+            location: listing.location || "Unknown",
+            mileage: Number(v?.mileage_hours ?? 0),
+            year: Number(v?.year ?? 0),
+            status: status,
+            startsAt: listing.start_time ?? new Date().toISOString(),
+            endsAt: listing.end_time ?? new Date().toISOString(),
+            bids: listing.bids_count ?? 0,
+          };
+        });
 
       setListings(mappedListings);
     } catch (err: any) {
@@ -97,6 +110,45 @@ export const ListingsPage: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Socket connection for real-time bid updates
+  useEffect(() => {
+    if (listings.length === 0) return;
+
+    // Connect to socket once
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // Join auction rooms for all active listings
+    const activeListings = listings.filter(
+      (l) => l.status === "ACTIVE" || l.status === "UPCOMING",
+    );
+    activeListings.forEach((listing) => {
+      socket.emit("join_auction", Number(listing.id));
+    });
+
+    // Listen for bid updates
+    const handleBidUpdate = (data: { auctionId: number; amount: number }) => {
+      setListings((prevListings) =>
+        prevListings.map((listing) =>
+          Number(listing.id) === data.auctionId
+            ? { ...listing, currentPrice: data.amount }
+            : listing,
+        ),
+      );
+    };
+
+    socket.on("bid_update", handleBidUpdate);
+
+    return () => {
+      // Leave only the rooms we joined
+      activeListings.forEach((listing) => {
+        socket.emit("leave_auction", Number(listing.id));
+      });
+      socket.off("bid_update", handleBidUpdate);
+    };
+  }, [listings.map((l) => `${l.id}-${l.status}`).join(",")]);
 
   // Derived filter/sort
   const makes = Array.from(
@@ -118,7 +170,9 @@ export const ListingsPage: React.FC = () => {
         l.location.toLowerCase().includes(q)
       );
     })
-    .filter((l) => (make === "all" ? true : l.title.toLowerCase().includes(make)))
+    .filter((l) =>
+      make === "all" ? true : l.title.toLowerCase().includes(make),
+    )
     .sort((a, b) => {
       if (sort === "price") return b.currentPrice - a.currentPrice;
       if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
@@ -131,7 +185,9 @@ export const ListingsPage: React.FC = () => {
       <header className="market-header">
         <div>
           <h1 className="market-title">Browse vehicles</h1>
-          <p className="market-sub">Find vehicles from across Lets Ride Canada auctions and sales.</p>
+          <p className="market-sub">
+            Find vehicles from across Lets Ride Canada auctions and sales.
+          </p>
         </div>
 
         <div className="market-header-actions">
@@ -150,10 +206,14 @@ export const ListingsPage: React.FC = () => {
         {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map((s) => (
           <button
             key={s}
-            className={s === status ? "market-tab market-tab-active" : "market-tab"}
+            className={
+              s === status ? "market-tab market-tab-active" : "market-tab"
+            }
             onClick={() => setStatus(s)}
           >
-            <div className="market-tab-label">{s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}</div>
+            <div className="market-tab-label">
+              {s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}
+            </div>
             <div className="market-tab-sub">
               {s === "UPCOMING"
                 ? "Preview & proxy before Active"
@@ -173,7 +233,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Make</div>
-            <select className="select select-outline" value={make} onChange={(e) => setMake(e.target.value)}>
+            <select
+              className="select select-outline"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+            >
               <option value="all">All</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
@@ -185,7 +249,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Sort</div>
-            <select className="select select-outline" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+            <select
+              className="select select-outline"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as any)}
+            >
               <option value="ending">Ending soonest</option>
               <option value="price">Price: high to low</option>
               <option value="bids">Most bids</option>
@@ -195,8 +263,18 @@ export const ListingsPage: React.FC = () => {
           <div className="sidebar-block">
             <div className="sidebar-label">View</div>
             <div className="view-toggle">
-              <button className={view === "list" ? "view-btn active" : "view-btn"} onClick={() => setView("list")}>List</button>
-              <button className={view === "grid" ? "view-btn active" : "view-btn"} onClick={() => setView("grid")}>Grid</button>
+              <button
+                className={view === "list" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("list")}
+              >
+                List
+              </button>
+              <button
+                className={view === "grid" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("grid")}
+              >
+                Grid
+              </button>
             </div>
           </div>
 
@@ -212,7 +290,7 @@ export const ListingsPage: React.FC = () => {
             <div className="results-count">
               {loading ? "Loading…" : `${visibleListings.length} results`}
             </div>
-            <button 
+            <button
               className="refresh-button"
               onClick={fetchListings}
               title="Refresh listings"
@@ -223,20 +301,20 @@ export const ListingsPage: React.FC = () => {
           </div>
 
           <div className={view === "grid" ? "listings-grid" : "listings-list"}>
-        {loading && <p>Loading listings...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && visibleListings.length === 0 && (
-          <p>No listings in this category yet.</p>
-        )}
-        {!loading &&
-          !error &&
-          visibleListings.map((l) =>
-            view === "grid" ? (
-              <ListingCard key={l.id} listing={l} />
-            ) : (
-              <ListingRowCard key={l.id} listing={l} />
-            ),
-          )}
+            {loading && <p>Loading listings...</p>}
+            {error && <p className="error">{error}</p>}
+            {!loading && !error && visibleListings.length === 0 && (
+              <p>No listings in this category yet.</p>
+            )}
+            {!loading &&
+              !error &&
+              visibleListings.map((l) =>
+                view === "grid" ? (
+                  <ListingCard key={l.id} listing={l} />
+                ) : (
+                  <ListingRowCard key={l.id} listing={l} />
+                ),
+              )}
           </div>
         </div>
       </div>

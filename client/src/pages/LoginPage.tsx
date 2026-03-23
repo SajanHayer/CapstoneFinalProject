@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
@@ -7,16 +8,14 @@ import { useAuth } from "../context/AuthContext";
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login, enterGuest } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (!email || !password) {
-      setError("Please enter both fields");
+      toast.error("Please enter both fields");
       return;
     }
 
@@ -36,7 +35,7 @@ export const LoginPage: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Login failed");
+        toast.error(data.message || "Login failed");
         return;
       }
 
@@ -44,11 +43,10 @@ export const LoginPage: React.FC = () => {
       const userRole = data.user.role;
       const userId = data.user.id;
       login({ email: userEmail, role: userRole, id: userId });
-      // console.log("Login successful:", data.user);
+      toast.success("Login successful!");
       navigate("/listings");
     } catch (err) {
-      console.error("Login error", err);
-      setError("Unable to login. Please try again.");
+      toast.error("Unable to login. Please try again.");
     }
   };
 
@@ -70,8 +68,6 @@ export const LoginPage: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-
-          {error && <p className="form-error">{error}</p>}
 
           <Button type="submit" className="auth-submit">
             Login

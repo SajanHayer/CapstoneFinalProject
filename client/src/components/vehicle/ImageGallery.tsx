@@ -51,9 +51,9 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     <>
       <div className="gallery-card">
         <p className="gallery-title">{title}</p>
-        
+
         {/* Main Image with Navigation */}
-        <div 
+        <div
           className="gallery-main-container"
           onClick={() => setIsModalOpen(true)}
           role="button"
@@ -67,7 +67,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
             alt={`Vehicle ${selectedIndex + 1}`}
             className="gallery-main-image"
           />
-          
+
           {images.length > 1 && (
             <>
               <button
@@ -92,7 +92,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
               </button>
             </>
           )}
-          
+
           {/* Image Counter */}
           <div className="gallery-counter">
             {selectedIndex + 1} / {images.length}

@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { DollarSign, Gavel, TrendingUp, Users, SlidersHorizontal } from "lucide-react";
+import {
+  DollarSign,
+  Gavel,
+  TrendingUp,
+  Users,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { BarMiniChart, Sparkline } from "../components/analytics/Charts";
 
@@ -54,10 +61,16 @@ export const AnalyticsDashboardPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:8080/api/analytics/bids/summary", {
-          credentials: "include",
-        });
-        if (!res.ok) throw new Error("Failed to load analytics");
+        const res = await fetch(
+          "http://localhost:8080/api/analytics/bids/summary",
+          {
+            credentials: "include",
+          },
+        );
+        if (!res.ok) {
+          toast.error("Failed to load analytics dashboard");
+          throw new Error("Failed to load analytics");
+        }
         const json = (await res.json()) as AnalyticsResponse;
         setData(json);
       } catch (e: any) {
@@ -78,7 +91,11 @@ export const AnalyticsDashboardPage: React.FC = () => {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      buckets.push({ label: `${d.getMonth() + 1}/${d.getDate()}`, count: 0, volume: 0 });
+      buckets.push({
+        label: `${d.getMonth() + 1}/${d.getDate()}`,
+        count: 0,
+        volume: 0,
+      });
 
       for (const b of bids) {
         const bd = new Date(b.bidTime);
@@ -105,7 +122,10 @@ export const AnalyticsDashboardPage: React.FC = () => {
     <section className="px-1">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold" style={{ letterSpacing: "-0.02em" }}>
+          <h1
+            className="text-3xl font-semibold"
+            style={{ letterSpacing: "-0.02em" }}
+          >
             Analytics
           </h1>
           <p className="text-sm" style={{ color: "var(--muted)" }}>
@@ -126,17 +146,30 @@ export const AnalyticsDashboardPage: React.FC = () => {
             }}
           >
             <span style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
-              {isLoggedIn && user?.email ? `Signed in: ${user.email}` : isGuest ? "Guest mode" : "Not signed in"}
+              {isLoggedIn && user?.email
+                ? `Signed in: ${user.email}`
+                : isGuest
+                  ? "Guest mode"
+                  : "Not signed in"}
             </span>
           </div>
 
           <button
             className="btn btn-outline"
-            onClick={() => setSort((s) => (s === "maxBid" ? "bidCount" : "maxBid"))}
+            onClick={() =>
+              setSort((s) => (s === "maxBid" ? "bidCount" : "maxBid"))
+            }
             title="Toggle table sort"
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem" }}>
-              <SlidersHorizontal size={16} /> Sort: {sort === "maxBid" ? "Max Bid" : "Bid Count"}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.45rem",
+              }}
+            >
+              <SlidersHorizontal size={16} /> Sort:{" "}
+              {sort === "maxBid" ? "Max Bid" : "Bid Count"}
             </span>
           </button>
         </div>
@@ -149,26 +182,81 @@ export const AnalyticsDashboardPage: React.FC = () => {
         <>
           {/* KPI cards + activity */}
           <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-12">
-            <div className="lg:col-span-8 rounded-2xl" style={{ border: "1px solid var(--border)", background: "var(--card)", boxShadow: "var(--shadow)", backdropFilter: "var(--backdrop)" }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div
+              className="lg:col-span-8 rounded-2xl"
+              style={{
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                boxShadow: "var(--shadow)",
+                backdropFilter: "var(--backdrop)",
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ borderBottom: "1px solid var(--border)" }}
+              >
                 <div>
-                  <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.12em",
+                      color: "var(--muted)",
+                    }}
+                  >
                     Bid activity
                   </div>
                   <div style={{ fontWeight: 600 }}>Last 7 days</div>
                 </div>
-                <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>{formatCurrency(activity.reduce((a, b) => a + b.volume, 0))} volume</div>
+                <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>
+                  {formatCurrency(activity.reduce((a, b) => a + b.volume, 0))}{" "}
+                  volume
+                </div>
               </div>
               <div style={{ padding: "1rem" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.9rem" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.9rem" }}>
-                    <div style={{ padding: "1rem", borderRadius: "1rem", background: "var(--card2)", border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr",
+                    gap: "0.9rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: "0.9rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "1rem",
+                        borderRadius: "1rem",
+                        background: "var(--card2)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <div>
-                          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.12em",
+                              color: "var(--muted)",
+                            }}
+                          >
                             bids
                           </div>
-                          <div style={{ fontSize: "1.6rem", fontWeight: 700 }}>{data.totals.bidCount}</div>
+                          <div style={{ fontSize: "1.6rem", fontWeight: 700 }}>
+                            {data.totals.bidCount}
+                          </div>
                         </div>
                         <Gavel size={20} />
                       </div>
@@ -177,13 +265,35 @@ export const AnalyticsDashboardPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div style={{ padding: "1rem", borderRadius: "1rem", background: "var(--card2)", border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        padding: "1rem",
+                        borderRadius: "1rem",
+                        background: "var(--card2)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <div>
-                          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.12em",
+                              color: "var(--muted)",
+                            }}
+                          >
                             bid volume
                           </div>
-                          <div style={{ fontSize: "1.6rem", fontWeight: 700 }}>{formatCurrency(data.totals.totalBidVolume)}</div>
+                          <div style={{ fontSize: "1.6rem", fontWeight: 700 }}>
+                            {formatCurrency(data.totals.totalBidVolume)}
+                          </div>
                         </div>
                         <TrendingUp size={20} />
                       </div>
@@ -193,34 +303,99 @@ export const AnalyticsDashboardPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.9rem" }}>
-                    <div style={{ padding: "1rem", borderRadius: "1rem", background: "var(--card2)", border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(220px, 1fr))",
+                      gap: "0.9rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "1rem",
+                        borderRadius: "1rem",
+                        background: "var(--card2)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <div>
-                          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.12em",
+                              color: "var(--muted)",
+                            }}
+                          >
                             unique bidders
                           </div>
-                          <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>{data.totals.uniqueBidders}</div>
+                          <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+                            {data.totals.uniqueBidders}
+                          </div>
                         </div>
                         <Users size={20} />
                       </div>
-                      <p style={{ margin: "0.55rem 0 0", fontSize: "0.85rem", color: "var(--muted)" }}>
-                        More unique bidders usually means higher competition (and better sell-through).
+                      <p
+                        style={{
+                          margin: "0.55rem 0 0",
+                          fontSize: "0.85rem",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        More unique bidders usually means higher competition
+                        (and better sell-through).
                       </p>
                     </div>
 
-                    <div style={{ padding: "1rem", borderRadius: "1rem", background: "var(--card2)", border: "1px solid var(--border)" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div
+                      style={{
+                        padding: "1rem",
+                        borderRadius: "1rem",
+                        background: "var(--card2)",
+                        border: "1px solid var(--border)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <div>
-                          <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              textTransform: "uppercase",
+                              letterSpacing: "0.12em",
+                              color: "var(--muted)",
+                            }}
+                          >
                             avg bid
                           </div>
-                          <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>{formatCurrency(data.totals.avgBidAmount)}</div>
+                          <div style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+                            {formatCurrency(data.totals.avgBidAmount)}
+                          </div>
                         </div>
                         <DollarSign size={20} />
                       </div>
-                      <p style={{ margin: "0.55rem 0 0", fontSize: "0.85rem", color: "var(--muted)" }}>
-                        Used as a pricing signal — compare it against reserve prices and starting bids.
+                      <p
+                        style={{
+                          margin: "0.55rem 0 0",
+                          fontSize: "0.85rem",
+                          color: "var(--muted)",
+                        }}
+                      >
+                        Used as a pricing signal — compare it against reserve
+                        prices and starting bids.
                       </p>
                     </div>
                   </div>
@@ -228,28 +403,65 @@ export const AnalyticsDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-4 rounded-2xl" style={{ border: "1px solid var(--border)", background: "var(--card)", boxShadow: "var(--shadow)", backdropFilter: "var(--backdrop)" }}>
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div
+              className="lg:col-span-4 rounded-2xl"
+              style={{
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                boxShadow: "var(--shadow)",
+                backdropFilter: "var(--backdrop)",
+              }}
+            >
+              <div
+                className="flex items-center justify-between px-4 py-3"
+                style={{ borderBottom: "1px solid var(--border)" }}
+              >
                 <div>
-                  <div style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.12em",
+                      color: "var(--muted)",
+                    }}
+                  >
                     Top listings
                   </div>
-                  <div style={{ fontWeight: 600 }}>{sort === "maxBid" ? "Highest max bids" : "Most bids"}</div>
+                  <div style={{ fontWeight: 600 }}>
+                    {sort === "maxBid" ? "Highest max bids" : "Most bids"}
+                  </div>
                 </div>
-                <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>Top 6</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
+                  Top 6
+                </span>
               </div>
               <div style={{ padding: "1rem" }}>
                 <BarMiniChart
-                  labels={sortedListings.slice(0, 6).map((r) => `#${r.listingId}`)}
-                  values={sortedListings.slice(0, 6).map((r) => (sort === "maxBid" ? r.maxBid : r.bidCount))}
+                  labels={sortedListings
+                    .slice(0, 6)
+                    .map((r) => `#${r.listingId}`)}
+                  values={sortedListings
+                    .slice(0, 6)
+                    .map((r) => (sort === "maxBid" ? r.maxBid : r.bidCount))}
                 />
               </div>
             </div>
           </div>
 
           {/* Top listings table */}
-          <div className="mt-6 rounded-2xl" style={{ border: "1px solid var(--border)", background: "var(--card)", boxShadow: "var(--shadow)", backdropFilter: "var(--backdrop)" }}>
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div
+            className="mt-6 rounded-2xl"
+            style={{
+              border: "1px solid var(--border)",
+              background: "var(--card)",
+              boxShadow: "var(--shadow)",
+              backdropFilter: "var(--backdrop)",
+            }}
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{ borderBottom: "1px solid var(--border)" }}
+            >
               <h2 className="font-semibold">Listing leaderboard</h2>
               <span className="text-xs" style={{ color: "var(--muted)" }}>
                 Click a listing to open
@@ -282,14 +494,23 @@ export const AnalyticsDashboardPage: React.FC = () => {
                         style={{ cursor: "pointer" }}
                         onClick={() => navigate(`/listings/${r.listingId}`)}
                       >
-                        <td className="px-4 py-3 font-medium" style={{ color: "var(--accent)" }}>
+                        <td
+                          className="px-4 py-3 font-medium"
+                          style={{ color: "var(--accent)" }}
+                        >
                           #{r.listingId}
                         </td>
                         <td className="px-4 py-3">{r.bidCount}</td>
                         <td className="px-4 py-3">{r.uniqueBidders}</td>
-                        <td className="px-4 py-3">{formatCurrency(r.maxBid)}</td>
-                        <td className="px-4 py-3">{formatCurrency(r.avgBid)}</td>
-                        <td className="px-4 py-3">{formatDateTime(r.lastBidTime)}</td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(r.maxBid)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(r.avgBid)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {formatDateTime(r.lastBidTime)}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -299,8 +520,19 @@ export const AnalyticsDashboardPage: React.FC = () => {
           </div>
 
           {/* Recent bids */}
-          <div className="mt-6 rounded-2xl" style={{ border: "1px solid var(--border)", background: "var(--card)", boxShadow: "var(--shadow)", backdropFilter: "var(--backdrop)" }}>
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+          <div
+            className="mt-6 rounded-2xl"
+            style={{
+              border: "1px solid var(--border)",
+              background: "var(--card)",
+              boxShadow: "var(--shadow)",
+              backdropFilter: "var(--backdrop)",
+            }}
+          >
+            <div
+              className="flex items-center justify-between px-4 py-3"
+              style={{ borderBottom: "1px solid var(--border)" }}
+            >
               <h2 className="font-semibold">Recent bids</h2>
               <span className="text-xs" style={{ color: "var(--muted)" }}>
                 Last 25
@@ -327,12 +559,20 @@ export const AnalyticsDashboardPage: React.FC = () => {
                   ) : (
                     data.recentBids.map((b) => (
                       <tr key={b.id} className="border-t">
-                        <td className="px-4 py-3">{formatDateTime(b.bidTime)}</td>
-                        <td className="px-4 py-3" style={{ color: "var(--accent)", cursor: "pointer" }} onClick={() => navigate(`/listings/${b.listingId}`)}>
+                        <td className="px-4 py-3">
+                          {formatDateTime(b.bidTime)}
+                        </td>
+                        <td
+                          className="px-4 py-3"
+                          style={{ color: "var(--accent)", cursor: "pointer" }}
+                          onClick={() => navigate(`/listings/${b.listingId}`)}
+                        >
                           #{b.listingId}
                         </td>
                         <td className="px-4 py-3">#{b.bidderId}</td>
-                        <td className="px-4 py-3">{formatCurrency(b.bidAmount)}</td>
+                        <td className="px-4 py-3">
+                          {formatCurrency(b.bidAmount)}
+                        </td>
                         <td className="px-4 py-3">{b.location ?? "—"}</td>
                       </tr>
                     ))

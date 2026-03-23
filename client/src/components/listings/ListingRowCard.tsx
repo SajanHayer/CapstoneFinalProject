@@ -12,13 +12,16 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
     const calculateTimeRemaining = () => {
       const now = new Date();
-      const target = listing.status === "UPCOMING" 
-        ? new Date(listing.startsAt)
-        : new Date(listing.endsAt);
+      const target =
+        listing.status === "UPCOMING"
+          ? new Date(listing.startsAt)
+          : new Date(listing.endsAt);
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
+        setTimeRemaining(
+          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
+        );
         return;
       }
 
@@ -27,7 +30,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
       setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
       );
     };
 
@@ -54,9 +57,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
           className="listing-row-thumb"
         />
         {listing.status === "ACTIVE" && (
-          <div className="listing-row-badge">
-            Active
-          </div>
+          <div className="listing-row-badge">Active</div>
         )}
         {listing.status === "UPCOMING" && (
           <div className="listing-row-badge listing-row-badge-upcoming">
@@ -64,9 +65,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
           </div>
         )}
         {listing.status === "EXPIRED" && (
-          <div className="listing-row-badge listing-row-badge-ended">
-            Ended
-          </div>
+          <div className="listing-row-badge listing-row-badge-ended">Ended</div>
         )}
       </div>
 
@@ -79,12 +78,19 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
           <span className="row-pill">
             <MapPin size={14} /> {listing.location}
           </span>
-          <span className="row-pill">{(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? timeRemaining : `${listing.bids} bids`}</span>
+          <span className="row-pill">
+            {(listing.status === "ACTIVE" || listing.status === "UPCOMING") &&
+            timeRemaining
+              ? timeRemaining
+              : `${listing.bids} bids`}
+          </span>
         </div>
       </div>
 
       <div className="listing-row-right" onClick={(e) => e.stopPropagation()}>
-        <div className="listing-row-price">${listing.currentPrice.toLocaleString()}</div>
+        <div className="listing-row-price">
+          ${listing.currentPrice.toLocaleString()}
+        </div>
         <div className="listing-row-actions">
           <button className="icon-btn" title="Watchlist">
             <Heart size={18} />

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { ImageGallery } from "../components/vehicle/ImageGallery";
+import { BidHistory } from "../components/listings/BidHistory";
 import { socket } from "../lib/socket";
 import { useAuth } from "../context/AuthContext";
 import "../styles/listingdetail.css";
@@ -44,22 +46,54 @@ export const ListingDetailPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [bidAmount, setBidAmount] = useState<number>(0);
   const [currentHighestBid, setCurrentHighestBid] = useState<number>(0);
+  const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
+  const [userLocation, setUserLocation] = useState<string>("");
 
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        // const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
-        const res = await fetch(
-          `http://localhost:8080/api/listings/vehicle/${id}`,
+        // Fetch listing by listing ID
+        const listingRes = await fetch(
+          `http://localhost:8080/api/listings/${id}`,
         );
-        const data = await res.json();
-        setVehicle(data.result.vehicle);
-        setListing(data.result);
-        setCurrentHighestBid(Number(data.result.current_price));
+        const listingData = await listingRes.json();
+        const fetchedListing = listingData.listing;
+
+        if (!fetchedListing) {
+          setError("Listing not found");
+          setLoading(false);
+          return;
+        }
+
+        setListing(fetchedListing);
+        setCurrentHighestBid(Number(fetchedListing.current_price));
+
+        // Fetch vehicle details using vehicle_id from listing
+        const vehicleRes = await fetch(
+          `http://localhost:8080/api/vehicles/${fetchedListing.vehicle_id}`,
+        );
+        const vehicleData = await vehicleRes.json();
+        setVehicle(vehicleData.vehicle);
+
+        // Fetch highest bidder info
+        const bidsRes = await fetch(
+          `http://localhost:8080/api/listings/${id}/all/bids`,
+        );
+        const bidsData = await bidsRes.json();
+        if (bidsData.result && bidsData.result.length > 0) {
+          // Find highest bid
+          const highestBid = bidsData.result.reduce((max: any, bid: any) =>
+            Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max,
+          );
+          if (highestBid) {
+            setHighestBidderId(highestBid.bidder_id);
+          }
+        }
       } catch (err) {
-        setError("Failed to load vehicle details");
-        console.error(err);
+        const errorMsg = "Failed to load vehicle details";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -68,20 +102,40 @@ export const ListingDetailPage: React.FC = () => {
   }, [id]); // when id changes, refetch vehicle
 
   useEffect(() => {
-    if (!id) return;
-    // join room
-    socket.emit("join_auction", id);
+    if (!listing) return;
+    // join room using LISTING ID, not vehicle ID
+    socket.connect();
+    socket.emit("join_auction", listing.id);
     return () => {
-      socket.emit("leave_auction", id);
+      socket.emit("leave_auction", listing.id);
+      socket.disconnect();
     };
-  }, [id]);
+  }, [listing]);
 
   useEffect(() => {
-    const handleBidUpdate = (data: { amount: number }) => {
+    const handleBidUpdate = (data: {
+      amount: number;
+      bidder_id?: number;
+      end_time?: string;
+    }) => {
       setCurrentHighestBid(data.amount);
-      setListing((prev) =>
-        prev ? { ...prev, current_price: data.amount } : null,
-      );
+      if (data.bidder_id) setHighestBidderId(data.bidder_id);
+      if (data.end_time) {
+        // Update end_time if auction was extended
+        setListing((prev) =>
+          prev
+            ? {
+                ...prev,
+                current_price: data.amount,
+                end_time: data.end_time || prev.end_time,
+              }
+            : null,
+        );
+      } else {
+        setListing((prev) =>
+          prev ? { ...prev, current_price: data.amount } : null,
+        );
+      }
     };
 
     socket.on("bid_update", handleBidUpdate);
@@ -143,13 +197,24 @@ export const ListingDetailPage: React.FC = () => {
   }
 
   const handlePlaceBid = () => {
-    if (!bidAmount) return;
+    if (!bidAmount || !userLocation) {
+      toast.error("Please enter both a bid amount and your location");
+      return;
+    }
+
+    if (!listing) {
+      toast.error("Listing not loaded");
+      return;
+    }
 
     socket.emit("place_bid", {
-      auctionId: id,
+      auctionId: listing.id,
       amount: bidAmount,
       userId: user?.id,
+      location: userLocation,
     });
+
+    setBidAmount(0);
   };
 
   // Determine listing status
@@ -160,7 +225,8 @@ export const ListingDetailPage: React.FC = () => {
     const endTime = new Date(listing.end_time);
 
     if (now < startTime) return "UPCOMING";
-    if (now >= startTime && now < endTime && listing.status === "active") return "ACTIVE";
+    if (now >= startTime && now < endTime && listing.status === "active")
+      return "ACTIVE";
     return "EXPIRED";
   };
 
@@ -185,10 +251,10 @@ export const ListingDetailPage: React.FC = () => {
       value:
         vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
     },
-    {
-      title: "Price",
-      value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
-    },
+    // {
+    //   title: "Price",
+    //   value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
+    // },
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
@@ -217,8 +283,9 @@ export const ListingDetailPage: React.FC = () => {
               <span
                 className={`tag tag-status tag-status-${listing?.status || "active"}`}
               >
-                {listing?.status.charAt(0).toUpperCase() +
-                  listing?.status.slice(1)}
+                {listing?.status &&
+                  listing.status.charAt(0).toUpperCase() +
+                    listing.status.slice(1)}
               </span>
               <span className="tag tag-location">📍 {listing?.location}</span>
             </div>
@@ -276,6 +343,11 @@ export const ListingDetailPage: React.FC = () => {
                 <p>{vehicle.description}</p>
               </div>
             )}
+
+            {/* Bid History - Show for all auctions */}
+            <div className="description-card" style={{ marginTop: "24px" }}>
+              <BidHistory listingId={id} />
+            </div>
           </div>
 
           {/* Bidding Section - Right Side */}
@@ -295,7 +367,7 @@ export const ListingDetailPage: React.FC = () => {
               {listing && (
                 <div className="pricing-section">
                   <div className="price-row">
-                    <span className="price-label">Current Price</span>
+                    <span className="price-label">Current Bid</span>
                     <span className="price-value current">
                       ${Number(listing.current_price || 0).toFixed(2)}
                     </span>
@@ -322,12 +394,19 @@ export const ListingDetailPage: React.FC = () => {
               {/* Bid Input */}
               {isAuctionUpcoming && (
                 <div className="bid-info-message">
-                  This auction hasn't started yet. Check back when it goes live to place bids!
+                  This auction hasn't started yet. Check back when it goes live
+                  to place bids!
                 </div>
               )}
               {!isAuctionActive && !isAuctionUpcoming && (
-                <div className="bid-info-message">
-                  This auction has ended.
+                <div className="bid-info-message">This auction has ended.</div>
+              )}
+              {highestBidderId === user?.id && isAuctionActive && (
+                <div
+                  className="bid-info-message"
+                  style={{ backgroundColor: "#e3f2fd", color: "#1565c0" }}
+                >
+                  ✓ You are the highest bidder!
                 </div>
               )}
               <div className="bid-input-section">
@@ -337,7 +416,19 @@ export const ListingDetailPage: React.FC = () => {
                   type="number"
                   value={bidAmount || ""}
                   onChange={(e) => setBidAmount(Number(e.target.value))}
-                  placeholder={`Minimum $${(Number(vehicle.price) || 0).toLocaleString()}`}
+                  placeholder={`Minimum $${(Number(currentHighestBid) || 0).toLocaleString()}`}
+                  className="bid-input"
+                  disabled={!isAuctionActive}
+                />
+              </div>
+              <div className="bid-input-section">
+                <label htmlFor="user-location">Your Location</label>
+                <input
+                  id="user-location"
+                  type="text"
+                  value={userLocation}
+                  onChange={(e) => setUserLocation(e.target.value)}
+                  placeholder="Enter your location (e.g., Calgary, AB)"
                   className="bid-input"
                   disabled={!isAuctionActive}
                 />
@@ -346,10 +437,18 @@ export const ListingDetailPage: React.FC = () => {
               {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
-                disabled={bidAmount <= currentHighestBid || !isAuctionActive}
+                disabled={
+                  bidAmount <= currentHighestBid ||
+                  !isAuctionActive ||
+                  !userLocation
+                }
                 className="bid-button"
               >
-                {isAuctionUpcoming ? "Auction Not Started" : isAuctionActive ? "Place a Bid" : "Auction Ended"}
+                {isAuctionUpcoming
+                  ? "Auction Not Started"
+                  : isAuctionActive
+                    ? "Place a Bid"
+                    : "Auction Ended"}
               </button>
             </div>
           </aside>

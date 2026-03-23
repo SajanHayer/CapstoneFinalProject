@@ -40,6 +40,7 @@ export const listingReasonEnum = pgEnum("listing_end_reason", [
   "unmet",
   "nobids",
   "pending",
+  "cancelled",
 ]);
 
 export const paymentStatusEnum = pgEnum("payment_status", [
