@@ -10,6 +10,8 @@ type HeatmapPoint = {
   weight: number;
 };
 
+const GEOCODING_TIMEOUT_MS = 8000;
+
 function assertMetric(m: string): Metric {
   if (m === "views" || m === "bids" || m === "transactions") return m;
   return "views";
@@ -24,12 +26,15 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
     return null;
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), GEOCODING_TIMEOUT_MS);
+
   try {
     const url =
       "https://maps.googleapis.com/maps/api/geocode/json?" +
       new URLSearchParams({ address, key }).toString();
 
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) {
       console.warn(`[Heatmap] Geocoding request failed: ${res.status}`);
       return null;
@@ -46,8 +51,15 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
     console.debug(`[Heatmap] Geocoded "${address}" → ${JSON.stringify(coords)}`);
     return coords;
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.warn(`[Heatmap] Geocoding timed out for "${address}"`);
+      return null;
+    }
+
     console.error(`[Heatmap] Geocoding error for "${address}":`, error);
     return null;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -92,7 +104,11 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
 
   // 1) Backfill some missing coordinates (safe + incremental)
   // If you prefer a separate admin job, you can remove this and run it via cron instead.
-  await backfillListingLatLng(25);
+  try {
+    await backfillListingLatLng(25);
+  } catch (error) {
+    console.error("[Heatmap] Backfill failed; continuing with cached coordinates only", error);
+  }
 
   // 2) Aggregate weights
   // We compute points at listing-level:

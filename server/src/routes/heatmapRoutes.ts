@@ -9,21 +9,24 @@ export const heatmapRouter = Router();
  * Returns: { metric, points: [{ lat, lng, weight }] }
  */
 heatmapRouter.get("/", requireAuth, async (req, res) => {
+  const startedAt = Date.now();
+
   try {
     const metric = (req.query.metric as string) || "views";
     console.log(`[HeatmapRoute] Fetching heatmap for metric: ${metric}`);
 
     const points = await getHeatmapPoints(metric);
-    
-    console.log(`[HeatmapRoute] Returning ${points.length} heatmap points`);
-    
-    // Validate response structure
+    const safePoints = Array.isArray(points) ? points : [];
+
     if (!Array.isArray(points)) {
-      console.error(`[HeatmapRoute] ERROR: getHeatmapPoints returned non-array:`, typeof points);
-      return res.status(500).json({ message: "Invalid response from heatmap service" });
+      console.error(`[HeatmapRoute] Invalid response from heatmap service:`, typeof points);
     }
 
-    res.json({ metric, points });
+    console.log(
+      `[HeatmapRoute] Returning ${safePoints.length} heatmap points in ${Date.now() - startedAt}ms`
+    );
+
+    res.json({ metric, points: safePoints });
   } catch (err) {
     console.error("[HeatmapRoute] Error:", err);
     res.status(500).json({ message: "Failed to generate heatmap data" });

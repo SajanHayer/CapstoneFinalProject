@@ -15,6 +15,13 @@
       "when": 1769728178028,
       "tag": "0001_late_smasher",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774281950555,
+      "tag": "0002_uneven_wild_pack",
+      "breakpoints": true
     }
   ]
 }
