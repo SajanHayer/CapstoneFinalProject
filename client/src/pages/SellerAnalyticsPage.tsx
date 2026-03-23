@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../components/common/Button";
+import { toast } from "react-toastify";
 
 /* ---------------- Types ---------------- */
 type BidPoint = {
