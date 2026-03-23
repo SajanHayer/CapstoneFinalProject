@@ -23,9 +23,7 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(
-          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
-        );
+        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
         return;
       }
 
@@ -90,16 +88,29 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
         </div>
 
         <h3>{listing.title}</h3>
-        <p className="listing-meta">
-          {listing.year} • {listing.mileage.toLocaleString()} km •{" "}
-          {listing.location}
-        </p>
-        <p className="listing-price">
-          ${listing.currentPrice.toLocaleString()}
-        </p>
-        <div className="listing-footer">
+
+        <div className="listing-meta-chips">
+          <span className="listing-chip">
+            <Gauge size={14} />
+            {listing.mileage.toLocaleString()} km
+          </span>
+          <span className="listing-chip">
+            <MapPin size={14} />
+            {listing.location}
+          </span>
+        </div>
+
+        <div className="listing-price-row">
+          <div>
+            <div className="listing-price-label">Current price</div>
+            <p className="listing-price">${listing.currentPrice.toLocaleString()}</p>
+          </div>
+
           {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
-            <p className="listing-timer">{timeRemaining}</p>
+            <div className="listing-timer-chip">
+              <TimerReset size={14} />
+              {timeRemaining}
+            </div>
           ) : (
             <div className="listing-ended-chip">Auction closed</div>
           )}

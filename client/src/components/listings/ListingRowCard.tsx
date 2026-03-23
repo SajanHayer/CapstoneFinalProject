@@ -19,9 +19,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(
-          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
-        );
+        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
         return;
       }
 
@@ -68,21 +66,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
           alt={listing.title}
           className="listing-row-thumb"
         />
-        {listing.status === "ACTIVE" && (
-          <div className="listing-row-badge">
-            Active
-          </div>
-        )}
-        {listing.status === "UPCOMING" && (
-          <div className="listing-row-badge listing-row-badge-upcoming">
-            Upcoming
-          </div>
-        )}
-        {listing.status === "EXPIRED" && (
-          <div className="listing-row-badge listing-row-badge-ended">
-            Ended
-          </div>
-        )}
+        <div className={statusBadgeClass}>{statusLabel}</div>
       </div>
 
       <div className="listing-row-main">
@@ -102,11 +86,19 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
             <MapPin size={14} />
             {listing.location}
           </span>
-          <span className="row-pill">{(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? timeRemaining : `${listing.bids} bids`}</span>
+          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
+            <span className="row-pill row-pill-timer">
+              <TimerReset size={14} />
+              {timeRemaining}
+            </span>
+          ) : (
+            <span className="row-pill">Auction closed</span>
+          )}
         </div>
       </div>
 
       <div className="listing-row-right" onClick={(e) => e.stopPropagation()}>
+        <div className="listing-row-price-label">Current bid</div>
         <div className="listing-row-price">${listing.currentPrice.toLocaleString()}</div>
         <div className="listing-row-actions">
           <button className="icon-btn" title="Watchlist preview" type="button">

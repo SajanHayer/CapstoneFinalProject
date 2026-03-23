@@ -10,8 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { socket } from "../lib/socket";
-import { toast } from "react-toastify";
+
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
 export interface Listing {
@@ -233,27 +232,23 @@ export const ListingsPage: React.FC = () => {
         credentials: "include",
       });
 
-      if (!res.ok) {
-        toast.error("Failed to load listings");
-        throw new Error("Failed to fetch listings");
-      }
+      if (!res.ok) throw new Error("Failed to fetch listings");
 
       const data = await res.json();
-      // Map backend data to Listing type
+
       const mappedListings: Listing[] = data.listings.map((listing: any) => {
         const v = listing.vehicle;
         const now = new Date();
         const startTime = new Date(listing.start_time);
         const endTime = new Date(listing.end_time);
 
-        // Determine status based on start_time and end_time
-        let status: ListingStatus;
+        let derivedStatus: ListingStatus;
         if (now < startTime) {
-          status = "UPCOMING"; // Scheduled for future
+          derivedStatus = "UPCOMING";
         } else if (now >= startTime && now < endTime && listing.status === "active") {
-          status = "ACTIVE"; // Currently running
+          derivedStatus = "ACTIVE";
         } else {
-          status = "EXPIRED"; // Ended or cancelled
+          derivedStatus = "EXPIRED";
         }
 
         return {
@@ -263,12 +258,12 @@ export const ListingsPage: React.FC = () => {
             ? Array.isArray(v.image_url)
               ? v.image_url[0]
               : v.image_url
-            : undefined,
+            : "",
           currentPrice: Number(listing.current_price),
           location: listing.location || "Unknown",
           mileage: Number(v?.mileage_hours ?? 0),
           year: Number(v?.year ?? 0),
-          status: status,
+          status: derivedStatus,
           startsAt: listing.start_time ?? new Date().toISOString(),
           endsAt: listing.end_time ?? new Date().toISOString(),
           bids: listing.bids_count ?? 0,
@@ -294,45 +289,6 @@ export const ListingsPage: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Socket connection for real-time bid updates
-  useEffect(() => {
-    if (listings.length === 0) return;
-
-    // Connect to socket once
-    if (!socket.connected) {
-      socket.connect();
-    }
-
-    // Join auction rooms for all active listings
-    const activeListings = listings.filter(
-      (l) => l.status === "ACTIVE" || l.status === "UPCOMING",
-    );
-    activeListings.forEach((listing) => {
-      socket.emit("join_auction", Number(listing.id));
-    });
-
-    // Listen for bid updates
-    const handleBidUpdate = (data: { auctionId: number; amount: number }) => {
-      setListings((prevListings) =>
-        prevListings.map((listing) =>
-          Number(listing.id) === data.auctionId
-            ? { ...listing, currentPrice: data.amount }
-            : listing,
-        ),
-      );
-    };
-
-    socket.on("bid_update", handleBidUpdate);
-
-    return () => {
-      // Leave only the rooms we joined
-      activeListings.forEach((listing) => {
-        socket.emit("leave_auction", Number(listing.id));
-      });
-      socket.off("bid_update", handleBidUpdate);
-    };
-  }, [listings.map((l) => `${l.id}-${l.status}`).join(",")]);
-
   const makeCounts = useMemo(() => {
     return listings.reduce<Record<string, number>>((acc, listing) => {
       const derivedMake = listing.title.split(" ")[1]?.toLowerCase();
@@ -344,30 +300,89 @@ export const ListingsPage: React.FC = () => {
 
   const makes = useMemo(() => Object.keys(makeCounts).sort(), [makeCounts]);
 
-  const visibleListings = listings
-    .filter((l) => l.status === status)
-    .filter((l) => {
-      const q = query.trim().toLowerCase();
-      if (!q) return true;
-      return (
-        l.title.toLowerCase().includes(q) ||
-        l.location.toLowerCase().includes(q)
-      );
-    })
-    .filter((l) => (make === "all" ? true : l.title.toLowerCase().includes(make)))
-    .sort((a, b) => {
-      if (sort === "price") return b.currentPrice - a.currentPrice;
-      if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
-      // ending
-      return new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime();
-    });
+  const visibleListings = useMemo(() => {
+    return listings
+      .filter((listing) => listing.status === status)
+      .filter((listing) => {
+        const q = query.trim().toLowerCase();
+        if (!q) return true;
+        return (
+          listing.title.toLowerCase().includes(q) ||
+          listing.location.toLowerCase().includes(q)
+        );
+      })
+      .filter((listing) =>
+        make === "all" ? true : listing.title.toLowerCase().includes(make),
+      )
+      .filter(
+        (listing) =>
+          listing.year >= yearRange[0] && listing.year <= yearRange[1],
+      )
+      .filter(
+        (listing) =>
+          listing.currentPrice >= priceRange[0] &&
+          listing.currentPrice <= priceRange[1],
+      )
+      .filter(
+        (listing) =>
+          listing.mileage >= mileageRange[0] &&
+          listing.mileage <= mileageRange[1],
+      )
+      .filter((listing) => {
+        if (!endingSoon) return true;
+        const hoursLeft =
+          (new Date(listing.endsAt).getTime() - Date.now()) / (1000 * 60 * 60);
+        return hoursLeft <= 24;
+      })
+      .sort((a, b) => {
+        if (sort === "price") return b.currentPrice - a.currentPrice;
+        if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
+        return new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime();
+      });
+  }, [listings, status, query, make, yearRange, priceRange, mileageRange, endingSoon, sort]);
+
+  const hasActiveFilters =
+    make !== "all" ||
+    yearRange[0] !== 1990 ||
+    yearRange[1] !== 2025 ||
+    priceRange[0] !== 5000 ||
+    priceRange[1] !== 120000 ||
+    mileageRange[0] !== 0 ||
+    mileageRange[1] !== 200000 ||
+    endingSoon ||
+    query.trim().length > 0;
+
+  const resetFilters = () => {
+    setMake("all");
+    setYearRange([1990, 2025]);
+    setPriceRange([0, 120000]);
+    setMileageRange([0, 200000]);
+    setEndingSoon(false);
+    setQuery("");
+    setSort("ending");
+  };
+
+  const createAlertPreview = () => {
+    setAlertCreated(true);
+    window.setTimeout(() => setAlertCreated(false), 2200);
+  };
+
+  const statusCounts = useMemo(() => {
+    return {
+      UPCOMING: listings.filter((l) => l.status === "UPCOMING").length,
+      ACTIVE: listings.filter((l) => l.status === "ACTIVE").length,
+      EXPIRED: listings.filter((l) => l.status === "EXPIRED").length,
+    };
+  }, [listings]);
 
   return (
     <section className="market-page">
       <header className="market-header">
         <div>
           <h1 className="market-title">Browse vehicles</h1>
-          <p className="market-sub">Find vehicles from across Lets Ride Canada auctions and sales.</p>
+          <p className="market-sub">
+            Find vehicles from across Let&apos;s Ride Canada auctions and sales.
+          </p>
         </div>
 
         <div className="market-header-actions">
@@ -395,11 +410,17 @@ export const ListingsPage: React.FC = () => {
       <div className="market-tabs">
         {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map((tabStatus) => (
           <button
-            key={s}
-            className={s === status ? "market-tab market-tab-active" : "market-tab"}
-            onClick={() => setStatus(s)}
+            key={tabStatus}
+            className={
+              tabStatus === status ? "market-tab market-tab-active" : "market-tab"
+            }
+            onClick={() => setStatus(tabStatus)}
           >
-            <div className="market-tab-label">{s === "EXPIRED" ? "Ended" : s[0] + s.slice(1).toLowerCase()}</div>
+            <div className="market-tab-label">
+              {tabStatus === "EXPIRED"
+                ? "Ended"
+                : tabStatus[0] + tabStatus.slice(1).toLowerCase()}
+            </div>
             <div className="market-tab-sub">
               {tabStatus === "UPCOMING"
                 ? `${statusCounts.UPCOMING} scheduled auctions`
@@ -419,8 +440,12 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Make</div>
-            <select className="select select-outline" value={make} onChange={(e) => setMake(e.target.value)}>
-              <option value="all">All</option>
+            <select
+              className="select select-outline"
+              value={make}
+              onChange={(e) => setMake(e.target.value)}
+            >
+              <option value="all">All makes</option>
               {makes.map((m) => (
                 <option key={m} value={m}>
                   {m.toUpperCase()} ({makeCounts[m]})
@@ -497,7 +522,11 @@ export const ListingsPage: React.FC = () => {
 
           <div className="sidebar-block">
             <div className="sidebar-label">Sort</div>
-            <select className="select select-outline" value={sort} onChange={(e) => setSort(e.target.value as any)}>
+            <select
+              className="select select-outline"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as "ending" | "price" | "bids")}
+            >
               <option value="ending">Ending soonest</option>
               <option value="price">Price: high to low</option>
               <option value="bids">Most bids</option>
@@ -507,8 +536,20 @@ export const ListingsPage: React.FC = () => {
           <div className="sidebar-block">
             <div className="sidebar-label">View</div>
             <div className="view-toggle">
-              <button className={view === "list" ? "view-btn active" : "view-btn"} onClick={() => setView("list")}>List</button>
-              <button className={view === "grid" ? "view-btn active" : "view-btn"} onClick={() => setView("grid")}>Grid</button>
+              <button
+                className={view === "list" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("list")}
+                type="button"
+              >
+                List
+              </button>
+              <button
+                className={view === "grid" ? "view-btn active" : "view-btn"}
+                onClick={() => setView("grid")}
+                type="button"
+              >
+                Grid
+              </button>
             </div>
           </div>
 
@@ -591,9 +632,10 @@ export const ListingsPage: React.FC = () => {
                     : "Recently closed marketplace listings"}
               </div>
             </div>
-            <button 
-              className="refresh-button"
-              onClick={fetchListings}
+
+            <button
+              className={`refresh-button ${refreshing ? "refreshing" : ""}`}
+              onClick={() => fetchListings(true)}
               title="Refresh listings"
               disabled={loading || refreshing}
               type="button"
@@ -603,21 +645,106 @@ export const ListingsPage: React.FC = () => {
             </button>
           </div>
 
-          <div className={view === "grid" ? "listings-grid" : "listings-list"}>
-        {loading && <p>Loading listings...</p>}
-        {error && <p className="error">{error}</p>}
-        {!loading && !error && visibleListings.length === 0 && (
-          <p>No listings in this category yet.</p>
-        )}
-        {!loading &&
-          !error &&
-          visibleListings.map((l) =>
-            view === "grid" ? (
-              <ListingCard key={l.id} listing={l} />
-            ) : (
-              <ListingRowCard key={l.id} listing={l} />
-            ),
+          {hasActiveFilters && (
+            <div className="active-filters">
+              {query.trim() && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setQuery("")}
+                  type="button"
+                >
+                  Search: {query}
+                  <X size={13} />
+                </button>
+              )}
+
+              {make !== "all" && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setMake("all")}
+                  type="button"
+                >
+                  {make.toUpperCase()}
+                  <X size={13} />
+                </button>
+              )}
+
+              {(yearRange[0] !== 1990 || yearRange[1] !== 2025) && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setYearRange([1990, 2025])}
+                  type="button"
+                >
+                  Year {yearRange[0]} - {yearRange[1]}
+                  <X size={13} />
+                </button>
+              )}
+
+              {(priceRange[0] !== 5000 || priceRange[1] !== 120000) && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setPriceRange([5000, 120000])}
+                  type="button"
+                >
+                  ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
+                  <X size={13} />
+                </button>
+              )}
+
+              {(mileageRange[0] !== 0 || mileageRange[1] !== 200000) && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setMileageRange([0, 200000])}
+                  type="button"
+                >
+                  {mileageRange[0].toLocaleString()} - {mileageRange[1].toLocaleString()} km
+                  <X size={13} />
+                </button>
+              )}
+
+              {endingSoon && (
+                <button
+                  className="filter-pill"
+                  onClick={() => setEndingSoon(false)}
+                  type="button"
+                >
+                  Ending soon
+                  <X size={13} />
+                </button>
+              )}
+            </div>
           )}
+
+          <div
+            className={view === "grid" ? "listings-grid listings-frame" : "listings-list listings-frame"}
+            style={{ minHeight: "540px" }}
+          >
+            {loading && <p className="loading-state-text">Loading listings...</p>}
+
+            {error && <p className="error">{error}</p>}
+
+            {!loading && !error && visibleListings.length === 0 && (
+              <div className="no-results-card">
+                <h3>No listings match those filters</h3>
+                <p>
+                  Try widening your price, mileage, or year range, or clear filters to
+                  see more inventory.
+                </p>
+                <button className="btn btn-primary" onClick={resetFilters} type="button">
+                  Reset filters
+                </button>
+              </div>
+            )}
+
+            {!loading &&
+              !error &&
+              visibleListings.map((listing) =>
+                view === "grid" ? (
+                  <ListingCard key={listing.id} listing={listing} />
+                ) : (
+                  <ListingRowCard key={listing.id} listing={listing} />
+                ),
+              )}
           </div>
         </div>
       </div>

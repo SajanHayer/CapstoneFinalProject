@@ -34,12 +34,10 @@ export const Navbar: React.FC = () => {
 
         {isLoggedIn && (
           <>
-            <NavLink to="/listings" className="nav-link">
-              Browse
-            </NavLink>
             <NavLink to="/heatmap" className="nav-link">
               Heat Map
             </NavLink>
+
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}
@@ -60,6 +58,7 @@ export const Navbar: React.FC = () => {
           className="btn btn-outline"
           onClick={toggleTheme}
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          type="button"
         >
           {theme === "dark" ? "☀️" : "🌙"}
         </button>
