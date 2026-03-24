@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-
+import { toast } from "react-toastify";
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
 export interface Listing {
@@ -232,7 +232,10 @@ export const ListingsPage: React.FC = () => {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to fetch listings");
+      if (!res.ok) {
+        toast.error("Failed to load listings");
+        throw new Error("Failed to fetch listings");
+      }
 
       const data = await res.json();
 
@@ -252,7 +255,7 @@ export const ListingsPage: React.FC = () => {
         }
 
         return {
-          id: listing.vehicle.id.toString(),
+          id: listing.id.toString(),
           title: v ? `${v.year} ${v.make} ${v.model}` : "Unknown Vehicle",
           thumbnailUrl: v?.image_url
             ? Array.isArray(v.image_url)

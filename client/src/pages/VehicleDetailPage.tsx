@@ -187,14 +187,38 @@ export const VehicleDetailPage: React.FC = () => {
   };
 
   const handleSellVehicle = async (listingId: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to complete this sale? This will mark the listing as sold.",
-      )
-    ) {
-      return;
-    }
+      toast(
+    ({ closeToast }) => (
+      <div>
+        <p className="font-semibold">Confirm sale?</p>
+        <p className="text-sm">This will mark the listing as sold.</p>
 
+        <div className="flex gap-2 mt-2">
+          <button
+            className="bg-red-500 text-white px-2 py-1 rounded"
+            onClick={() => {
+              completeSale();
+              closeToast();
+            }}
+          >
+            Confirm
+          </button>
+
+          <button
+            className="border px-2 py-1 rounded"
+            onClick={closeToast}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ),
+    {
+      autoClose: false, // important so user can click
+      closeOnClick: false,
+    }
+  );
+  async function completeSale() {
     setSellingListingId(listingId);
     try {
       const res = await fetch(
@@ -225,7 +249,7 @@ export const VehicleDetailPage: React.FC = () => {
     } finally {
       setSellingListingId(null);
     }
-  };
+  }};
 
   if (loading) {
     return (
