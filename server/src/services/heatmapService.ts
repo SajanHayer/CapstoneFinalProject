@@ -8,6 +8,8 @@ type HeatmapPoint = {
   lat: number;
   lng: number;
   weight: number;
+  location: string;
+  imageUrl: string | null;
 };
 
 const GEOCODING_TIMEOUT_MS = 8000;
@@ -120,12 +122,15 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
   if (metric === "views") {
     rows = await db.execute(sql`
       SELECT
-        latitude AS lat,
-        longitude AS lng,
-        GREATEST(views_count, 0) AS weight
-      FROM listings
-      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        AND status = 'active'
+        l.latitude AS lat,
+        l.longitude AS lng,
+        l.location AS location,
+        v.image_url AS image_url,
+        GREATEST(COALESCE(l.views_count, 0), 1) AS weight
+      FROM listings l
+      JOIN vehicles v ON v.id = l.vehicle_id
+      WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+        AND l.status = 'active'
     `);
   }
 
@@ -134,12 +139,15 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
       SELECT
         l.latitude AS lat,
         l.longitude AS lng,
+        l.location AS location,
+        v.image_url AS image_url,
         COUNT(b.id)::int AS weight
       FROM listings l
+      JOIN vehicles v ON v.id = l.vehicle_id
       JOIN bids b ON b.listing_id = l.id
       WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL
         AND l.status = 'active'
-      GROUP BY l.id, l.latitude, l.longitude
+      GROUP BY l.id, l.latitude, l.longitude, l.location, v.image_url
     `);
   }
 
@@ -148,12 +156,15 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
       SELECT
         l.latitude AS lat,
         l.longitude AS lng,
+        l.location AS location,
+        v.image_url AS image_url,
         COUNT(t.id)::int AS weight
       FROM listings l
+      JOIN vehicles v ON v.id = l.vehicle_id
       JOIN transactions t ON t.listing_id = l.id
       WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL
         AND l.status IN ('active', 'ended', 'sold')
-      GROUP BY l.id, l.latitude, l.longitude
+      GROUP BY l.id, l.latitude, l.longitude, l.location, v.image_url
     `);
   }
 
@@ -167,11 +178,33 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
       const lat = typeof r.lat === 'string' ? parseFloat(r.lat) : Number(r.lat);
       const lng = typeof r.lng === 'string' ? parseFloat(r.lng) : Number(r.lng);
       const weight = Number(r.weight);
+      const imageCandidates = Array.isArray(r.image_url)
+        ? r.image_url
+        : typeof r.image_url === "string"
+          ? (() => {
+              try {
+                const parsed = JSON.parse(r.image_url);
+                return Array.isArray(parsed) ? parsed : [];
+              } catch {
+                return [];
+              }
+            })()
+          : [];
+      const firstImage =
+        imageCandidates.find(
+          (value): value is string =>
+            typeof value === "string" && value.trim().length > 0,
+        ) ?? null;
 
       return {
         lat,
         lng,
         weight,
+        location:
+          typeof r.location === "string" && r.location.trim().length > 0
+            ? r.location.trim()
+            : "Unknown location",
+        imageUrl: firstImage,
       };
     })
     .filter((p) => {

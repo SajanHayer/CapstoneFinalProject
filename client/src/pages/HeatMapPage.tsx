@@ -1,9 +1,21 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GoogleMap, HeatmapLayer, useJsApiLoader } from "@react-google-maps/api";
+import {
+  Circle,
+  GoogleMap,
+  HeatmapLayer,
+  InfoWindow,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 
 type Metric = "views" | "bids" | "transactions";
 
-type HeatPoint = { lat: number; lng: number; weight: number };
+type HeatPoint = {
+  lat: number;
+  lng: number;
+  weight: number;
+  location: string;
+  imageUrl: string | null;
+};
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
@@ -26,6 +38,8 @@ const MapContent: React.FC<{
   center: { lat: number; lng: number };
   onRetry: () => void;
 }> = ({ metric, onMetricChange, points, loading, error, debugInfo, center, onRetry }) => {
+  const [hoveredPoint, setHoveredPoint] = useState<HeatPoint | null>(null);
+
   const heatmapData = useMemo(() => {
     if (points.length === 0 || typeof google === "undefined" || !google.maps?.LatLng) {
       return [];
@@ -45,6 +59,10 @@ const MapContent: React.FC<{
       })
       .filter((item): item is { location: google.maps.LatLng; weight: number } => item !== null);
   }, [points]);
+
+  useEffect(() => {
+    setHoveredPoint(null);
+  }, [metric, points]);
 
   return (
     <div style={{ padding: 16 }}>
@@ -129,6 +147,63 @@ const MapContent: React.FC<{
         }}
       >
         {heatmapData.length > 0 && <HeatmapLayer key={`${metric}-${heatmapData.length}`} data={heatmapData} />}
+        {points.map((point) => (
+          <Circle
+            key={`${metric}-${point.lat}-${point.lng}-${point.location}`}
+            center={{ lat: point.lat, lng: point.lng }}
+            radius={3500}
+            options={{
+              fillOpacity: 0,
+              strokeOpacity: 0,
+              clickable: true,
+              zIndex: 20,
+            }}
+            onMouseOver={() => setHoveredPoint(point)}
+            onMouseOut={() =>
+              setHoveredPoint((current) =>
+                current &&
+              current.lat === point.lat &&
+                current.lng === point.lng &&
+                current.location === point.location
+                  ? null
+                  : current,
+              )
+            }
+          />
+        ))}
+        {hoveredPoint && (
+          <InfoWindow
+            position={{ lat: hoveredPoint.lat, lng: hoveredPoint.lng }}
+            onCloseClick={() => setHoveredPoint(null)}
+          >
+            <div style={{ minWidth: 220, maxWidth: 260 }}>
+              {hoveredPoint.imageUrl && (
+                <img
+                  src={hoveredPoint.imageUrl}
+                  alt={hoveredPoint.location}
+                  style={{
+                    width: "100%",
+                    height: 120,
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    marginBottom: 10,
+                    display: "block",
+                  }}
+                />
+              )}
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                {hoveredPoint.location}
+              </div>
+              <div style={{ fontSize: "0.9em", opacity: 0.85 }}>
+                Address: {hoveredPoint.location}
+              </div>
+              <div style={{ fontSize: "0.9em", opacity: 0.85, marginTop: 4 }}>
+                {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
+                {hoveredPoint.weight}
+              </div>
+            </div>
+          </InfoWindow>
+        )}
         {heatmapData.length === 0 && !loading && (
           <div
             style={{
@@ -213,6 +288,14 @@ export const HeatMapPage: React.FC = () => {
             lat: Number(point.lat),
             lng: Number(point.lng),
             weight: Number(point.weight),
+            location:
+              typeof point.location === "string" && point.location.trim().length > 0
+                ? point.location.trim()
+                : "Unknown location",
+            imageUrl:
+              typeof point.imageUrl === "string" && point.imageUrl.trim().length > 0
+                ? point.imageUrl
+                : null,
           }))
           .filter((point: HeatPoint) => {
             const isValid =

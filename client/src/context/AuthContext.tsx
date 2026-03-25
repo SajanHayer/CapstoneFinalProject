@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const LOCALURL = import.meta.env.FETCHURL;
 interface User {
   email: string;
   role: string;
