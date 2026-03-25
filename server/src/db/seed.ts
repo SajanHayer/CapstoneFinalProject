@@ -25,19 +25,19 @@ async function seed() {
         {
           name: "Alice",
           email: "alice@example.com",
-          password_hash: await hashPassword("alice123"),
+          password_hash: await hashPassword("Alice1234@@"),
           role: "buyer",
         },
         {
           name: "Bob",
           email: "bob@example.com",
-          password_hash: await hashPassword("bob123"),
+          password_hash: await hashPassword("Bob1234@@"),
           role: "seller",
         },
         {
           name: "Charlie",
           email: "charlie@example.com",
-          password_hash: await hashPassword("charlie123"),
+          password_hash: await hashPassword("Charlie1234@@"),
           role: "seller",
         },
       ])
