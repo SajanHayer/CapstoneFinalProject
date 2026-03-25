@@ -25,6 +25,9 @@ export interface Listing {
   startsAt: string;
   endsAt: string;
   bids: number;
+  explanation?: string;
+  recommendationScore?: number;
+  explanationBullets?: string[];
 }
 
 type RangeTuple = [number, number];
@@ -199,7 +202,7 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
 };
 
 export const ListingsPage: React.FC = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
 
   const [status, setStatus] = useState<ListingStatus>("ACTIVE");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -218,6 +221,8 @@ export const ListingsPage: React.FC = () => {
   const [endingSoon, setEndingSoon] = useState<boolean>(false);
 
   const [alertCreated, setAlertCreated] = useState(false);
+  const [recommendedListings, setRecommendedListings] = useState<Listing[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   const fetchListings = async (isManualRefresh = false) => {
     try {
@@ -291,6 +296,62 @@ export const ListingsPage: React.FC = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setRecommendedListings([]);
+      return;
+    }
+
+    const fetchRecommendations = async () => {
+      try {
+        setRecommendationsLoading(true);
+        const res = await fetch(
+          "http://localhost:8080/api/recommendations/for-you?limit=4",
+          {
+            credentials: "include",
+          },
+        );
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch recommendations");
+        }
+
+        const data = await res.json();
+        const mapped: Listing[] = Array.isArray(data?.recommendations)
+          ? data.recommendations.map((item: any) => ({
+              id: String(item.id),
+              title: String(item.title),
+              thumbnailUrl: String(item.thumbnailUrl ?? ""),
+              currentPrice: Number(item.currentPrice ?? 0),
+              location: String(item.location ?? "Unknown"),
+              mileage: Number(item.mileage ?? 0),
+              year: Number(item.year ?? 0),
+              status: item.status as ListingStatus,
+              startsAt: String(item.startsAt ?? new Date().toISOString()),
+              endsAt: String(item.endsAt ?? new Date().toISOString()),
+              bids: Number(item.bids ?? 0),
+              explanation: Array.isArray(item.explanations)
+                ? item.explanations[0]
+                : "Recommended from your recent activity",
+              explanationBullets: Array.isArray(item.explanations)
+                ? item.explanations.map(String)
+                : [],
+              recommendationScore: Number(item.recommendationScore ?? 0),
+            }))
+          : [];
+
+        setRecommendedListings(mapped);
+      } catch (err) {
+        console.warn("[Recommendations] Failed to load recommendations", err);
+        setRecommendedListings([]);
+      } finally {
+        setRecommendationsLoading(false);
+      }
+    };
+
+    void fetchRecommendations();
+  }, [user?.id]);
 
   const makeCounts = useMemo(() => {
     return listings.reduce<Record<string, number>>((acc, listing) => {
@@ -434,6 +495,72 @@ export const ListingsPage: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {isLoggedIn && (
+        <section
+          style={{
+            marginBottom: "1.5rem",
+            padding: "1rem",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "18px",
+            background: "rgba(255,255,255,0.03)",
+          }}
+        >
+          <div style={{ marginBottom: "0.9rem" }}>
+            <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Recommended for you</h2>
+            <p style={{ margin: "0.35rem 0 0", opacity: 0.78 }}>
+              Transparent picks based on your recent listing views, bids, and similar marketplace activity.
+            </p>
+          </div>
+
+          {recommendationsLoading && <p style={{ margin: 0 }}>Loading recommendations...</p>}
+
+          {!recommendationsLoading && recommendedListings.length === 0 && (
+            <p style={{ margin: 0, opacity: 0.78 }}>
+              Browse a few listings or place a bid and we&apos;ll start tailoring suggestions here.
+            </p>
+          )}
+
+          {!recommendationsLoading && recommendedListings.length > 0 && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                gap: "1rem",
+              }}
+            >
+              {recommendedListings.map((listing) => (
+                <div key={`rec-${listing.id}`}>
+                  <ListingCard listing={listing} />
+                  <div
+                    style={{
+                      marginTop: "0.7rem",
+                      padding: "0.85rem",
+                      borderRadius: "14px",
+                      background: "rgba(0,0,0,0.18)",
+                    }}
+                  >
+                    <div style={{ fontSize: "0.82rem", opacity: 0.72, marginBottom: "0.35rem" }}>
+                      Why this was recommended
+                    </div>
+                    <div style={{ fontWeight: 600, marginBottom: "0.45rem" }}>
+                      {listing.explanation}
+                    </div>
+                    {listing.explanationBullets?.slice(1).map((bullet, index) => (
+                      <div
+                        key={`${listing.id}-reason-${index}`}
+                        style={{ fontSize: "0.9rem", opacity: 0.8, marginTop: "0.25rem" }}
+                      >
+                        {bullet}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="market-layout">
         <aside className="market-sidebar">

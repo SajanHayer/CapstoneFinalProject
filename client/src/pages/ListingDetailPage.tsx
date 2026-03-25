@@ -102,6 +102,27 @@ export const ListingDetailPage: React.FC = () => {
   }, [id]); // when id changes, refetch vehicle
 
   useEffect(() => {
+    if (!user?.id || !id) return;
+
+    const trackView = async () => {
+      try {
+        await fetch("http://localhost:8080/api/recommendations/interactions/view", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ listingId: Number(id) }),
+        });
+      } catch (error) {
+        console.warn("[Recommendations] Failed to track listing view", error);
+      }
+    };
+
+    void trackView();
+  }, [id, user?.id]);
+
+  useEffect(() => {
     if (!listing) return;
     // join room using LISTING ID, not vehicle ID
     socket.connect();

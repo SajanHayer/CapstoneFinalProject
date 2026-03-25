@@ -49,6 +49,11 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "failed",
 ]);
 
+export const interactionTypeEnum = pgEnum("interaction_type", [
+  "view",
+  "bid",
+]);
+
 // =====================
 // USERS TABLE
 // =====================
@@ -166,4 +171,19 @@ export const bids = pgTable("bids", {
   bid_time: timestamp("bid_time").defaultNow().notNull(),
 
   location: varchar("location", { length: 255 }),
+});
+
+export const listingInteractions = pgTable("listing_interactions", {
+  id: serial("id").primaryKey(),
+
+  listing_id: integer("listing_id")
+    .notNull()
+    .references(() => listings.id),
+
+  user_id: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+
+  interaction_type: interactionTypeEnum("interaction_type").notNull(),
+  occurred_at: timestamp("occurred_at").defaultNow().notNull(),
 });

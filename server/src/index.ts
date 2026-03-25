@@ -12,6 +12,7 @@ import { heatmapRouter } from "./routes/heatmapRoutes";
 import { startAuctionCron } from "./cron/auctionEnd.cron";
 import { analyticsRouter } from "./routes/analyticsRoutes";
 import listingAnalyticsRoutes from "./routes/listingAnalytics";
+import { recommendationRouter } from "./routes/recommendationRoutes";
 
 import { Server } from "socket.io";
 import http from "http";
@@ -36,6 +37,7 @@ app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/listings", auctionRouter);
 app.use("/api/heatmap", heatmapRouter);
+app.use("/api/recommendations", recommendationRouter);
 
 
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
@@ -77,6 +79,11 @@ app.get("/api/docs", (_req, res) => {
         method: "GET",
         path: "/api/analytics/bids/summary",
         description: "Bids analytics (seller-scoped if logged in)",
+      },
+      {
+        method: "GET",
+        path: "/api/recommendations/for-you",
+        description: "Personalized listing recommendations (auth)",
       },
     ],
   });

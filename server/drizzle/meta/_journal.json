@@ -22,6 +22,13 @@
       "when": 1773458607621,
       "tag": "0002_safe_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774509000000,
+      "tag": "0003_recommendation_engine",
+      "breakpoints": true
     }
   ]
 }

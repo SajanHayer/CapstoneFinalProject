@@ -1,6 +1,6 @@
 // src/services/bidding.ts
 import { db } from "../db/db";
-import { listings, bids } from "../db/schema";
+import { listings, bids, listingInteractions } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export async function placeBid({
@@ -45,6 +45,11 @@ export async function placeBid({
       bidder_id: bidderId,
       bid_amount: bidAmount,
       location: location || null,
+    });
+    await tx.insert(listingInteractions).values({
+      user_id: bidderId,
+      listing_id: listingId,
+      interaction_type: "bid",
     });
 
     const [updatedListing] = await tx

@@ -1,7 +1,8 @@
 // server/src/db/seed.ts
 import { db } from "./db";
-import { users, vehicles, listings, bids } from "./schema";
+import { users, vehicles, listings, bids, listingInteractions } from "./schema";
 import { hashPassword } from "../utils/auth";
+import { inArray } from "drizzle-orm";
 
 async function seed() {
   const secondsFromNow = (seconds: number) =>
@@ -12,9 +13,19 @@ async function seed() {
 
     // Clean previous seed data (keeps existing real users but clears demo data)
     // Order matters due to foreign keys.
+    await db.delete(listingInteractions);
     await db.delete(bids);
     await db.delete(listings);
     await db.delete(vehicles);
+    await db
+      .delete(users)
+      .where(
+        inArray(users.email, [
+          "alice@example.com",
+          "bob@example.com",
+          "charlie@example.com",
+        ]),
+      );
 
     // ---------------- Users ----------------
     const insertedUsers = await db
@@ -538,7 +549,41 @@ async function seed() {
       },
     ]);
 
+    await db.insert(listingInteractions).values([
+      {
+        listing_id: l1.id,
+        user_id: user1.id,
+        interaction_type: "view",
+      },
+      {
+        listing_id: l2.id,
+        user_id: user1.id,
+        interaction_type: "view",
+      },
+      {
+        listing_id: l5.id,
+        user_id: user1.id,
+        interaction_type: "view",
+      },
+      {
+        listing_id: l4.id,
+        user_id: user3.id,
+        interaction_type: "view",
+      },
+      {
+        listing_id: l7.id,
+        user_id: user3.id,
+        interaction_type: "view",
+      },
+      {
+        listing_id: h3.id,
+        user_id: user1.id,
+        interaction_type: "view",
+      },
+    ]);
+
     console.log("Inserted bids (demo)");
+    console.log("Inserted listing interactions (demo)");
     console.log("Database seeded successfully!");
   } catch (err) {
     console.error("Error seeding database:", err);
