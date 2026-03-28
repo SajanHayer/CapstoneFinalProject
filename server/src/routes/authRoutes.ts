@@ -7,6 +7,10 @@ import { eq } from "drizzle-orm";
 
 export const authRouter = Router();
 
+const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
+const stripe = require('stripe')(STRIPE_KEY);
+
+
 authRouter.post("/register", async (req, res) => {
   try {
     const { email, password, name, role } = req.body;
@@ -27,7 +31,17 @@ authRouter.post("/register", async (req, res) => {
       return res.status(409).json({ message: "User already Exists" });
     }
     const password_hash = await hashPassword(password);
+    // console.log(stripe.customers)
 
+    const {customer, error} = await stripe.customers.create({
+      name: name,
+      email: email,
+    });
+    if (error){
+      return res.json({message: 'Stripe Failed To Create Customer'})
+    }
+
+    
     const [user] = await db
       .insert(users)
       .values({ email, password_hash, name, role })
@@ -36,7 +50,9 @@ authRouter.post("/register", async (req, res) => {
         email: users.email,
         name: users.name,
         role: users.role,
+        customer_id: customer.id,
       });
+    
 
     res.status(201).json({ user });
   } catch (err) {

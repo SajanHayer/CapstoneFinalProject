@@ -8,6 +8,7 @@ import {
   numeric,
   pgEnum,
   json,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // =====================
@@ -59,6 +60,8 @@ export const users = pgTable("users", {
   password_hash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull().default("buyer"),
   created_at: timestamp("created_at").defaultNow().notNull(),
+  customer_id: varchar("customer_id", { length: 255 }),
+  is_verified: boolean("is_verified").default(false),
 });
 
 // =====================
