@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/db";
-import { eq, ne, and, desc } from "drizzle-orm";
+import { eq, ne, and, desc, count, sql } from "drizzle-orm";
 import { listings, vehicles, bids, transactions } from "../db/schema";
 import { authRouter } from "./authRoutes";
 
@@ -318,17 +318,31 @@ auctionRouter.delete("/remove/:id", async (req, res) => {
 ------------------------------------------------ */
 auctionRouter.get("/", async (_req, res) => {
   try {
+    // Create a subquery to count bids per listing
+    const bidsCountSubquery = db
+      .select({
+        listing_id: bids.listing_id,
+        bid_count: count().as("bid_count"),
+      })
+      .from(bids)
+      .groupBy(bids.listing_id)
+      .as("bstats");
+
     const rows = await db
       .select({
         listing: listings,
         vehicle: vehicles,
+        bids_count: sql<number>`COALESCE(${bidsCountSubquery.bid_count}, 0)`,
       })
       .from(listings)
       .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+      .leftJoin(bidsCountSubquery, eq(bidsCountSubquery.listing_id, listings.id))
       .where(ne(listings.status, "cancelled"));
-    const result = rows.map(({ listing, vehicle }) => ({
+    
+    const result = rows.map(({ listing, vehicle, bids_count }) => ({
       ...listing,
       vehicle,
+      bids_count: Number(bids_count),
     }));
     // console.log({listings: result});
     res.json({ listings: result });

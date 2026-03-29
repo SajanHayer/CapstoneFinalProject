@@ -28,8 +28,8 @@ type CandidateRow = {
   views_count: number;
   bid_count: number;
   image_url: string[] | string | null;
-  start_time: string;
-  end_time: string;
+  start_time: Date;
+  end_time: Date;
 };
 
 export type RecommendationResponse = {
@@ -170,8 +170,8 @@ async function getCandidateListings(userId: number): Promise<CandidateRow[]> {
       views_count: listings.views_count,
       bid_count: sql<number>`COALESCE(${bidsCountSubquery.bid_count}, 0)`,
       image_url: vehicles.image_url,
-      start_time: sql<string>`${listings.start_time}::text`,
-      end_time: sql<string>`${listings.end_time}::text`,
+      start_time: listings.start_time,
+      end_time: listings.end_time,
     })
     .from(listings)
     .innerJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
@@ -317,8 +317,8 @@ export async function getRecommendationsForUser(
 
 export function toRecommendationCard(listing: RankedListing) {
   const now = new Date();
-  const startTime = new Date(listing.start_time);
-  const endTime = new Date(listing.end_time);
+  const startTime = listing.start_time instanceof Date ? listing.start_time : new Date(listing.start_time);
+  const endTime = listing.end_time instanceof Date ? listing.end_time : new Date(listing.end_time);
 
   const status =
     now < startTime
@@ -336,8 +336,8 @@ export function toRecommendationCard(listing: RankedListing) {
     mileage: 0,
     year: Number(listing.year),
     status,
-    startsAt: listing.start_time,
-    endsAt: listing.end_time,
+    startsAt: startTime.toISOString(),
+    endsAt: endTime.toISOString(),
     bids: Number(listing.bid_count),
     recommendationScore: listing.score,
     behaviorScore: listing.behaviorScore,

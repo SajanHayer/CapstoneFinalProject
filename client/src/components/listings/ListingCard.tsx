@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Gauge, Heart, MapPin, TimerReset } from "lucide-react";
+import { ArrowRight, Gauge, MapPin, TimerReset } from "lucide-react";
 import type { Listing } from "../../pages/ListingsPage";
+import { formatTimeRemaining } from "../../lib/timeUtils";
 
 interface Props {
   listing: Listing;
@@ -27,13 +28,7 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-      );
+      setTimeRemaining(formatTimeRemaining(diff));
     };
 
     calculateTimeRemaining();
@@ -71,19 +66,10 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
           className="listing-thumb"
         />
         <div className={`listing-card-badge ${statusClass}`}>{statusLabel}</div>
-        <button
-          className="listing-save-btn"
-          onClick={(e) => e.stopPropagation()}
-          type="button"
-          title="Watchlist preview"
-        >
-          <Heart size={16} />
-        </button>
       </div>
 
       <div className="listing-body">
         <div className="listing-card-topline">
-          <span className="listing-eyebrow">Featured vehicle</span>
           <span className="listing-bid-count">{listing.bids} bids</span>
         </div>
 

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Gauge, Heart, MapPin, TimerReset } from "lucide-react";
+import { ArrowRight, Gauge, MapPin, TimerReset } from "lucide-react";
 import type { Listing } from "../../pages/ListingsPage";
+import { formatTimeRemaining } from "../../lib/timeUtils";
 
 export function ListingRowCard({ listing }: { listing: Listing }) {
   const navigate = useNavigate();
@@ -23,13 +24,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-      );
+      setTimeRemaining(formatTimeRemaining(diff));
     };
 
     calculateTimeRemaining();
@@ -71,7 +66,6 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
       <div className="listing-row-main">
         <div className="listing-row-topline">
-          <span className="listing-row-eyebrow">Premium marketplace</span>
           <span className="listing-row-bids">{listing.bids} bids</span>
         </div>
 
@@ -101,9 +95,6 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
         <div className="listing-row-price-label">Current bid</div>
         <div className="listing-row-price">${listing.currentPrice.toLocaleString()}</div>
         <div className="listing-row-actions">
-          <button className="icon-btn" title="Watchlist preview" type="button">
-            <Heart size={18} />
-          </button>
           <button
             className="btn btn-primary listing-row-cta"
             onClick={() => navigate(`/listings/${listing.id}`)}

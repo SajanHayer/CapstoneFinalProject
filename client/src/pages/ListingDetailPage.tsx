@@ -5,6 +5,7 @@ import { ImageGallery } from "../components/vehicle/ImageGallery";
 import { BidHistory } from "../components/listings/BidHistory";
 import { socket } from "../lib/socket";
 import { useAuth } from "../context/AuthContext";
+import { formatTimeRemaining } from "../lib/timeUtils";
 import "../styles/listingdetail.css";
 
 type VechileInfo = {
@@ -179,13 +180,7 @@ export const ListingDetailPage: React.FC = () => {
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeRemaining(
-        `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-      );
+      setTimeRemaining(formatTimeRemaining(diff));
     };
 
     calculateTimeRemaining();
