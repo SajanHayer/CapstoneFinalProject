@@ -14,3 +14,8 @@ CREATE TABLE "listing_interactions" (
 --> statement-breakpoint
 ALTER TABLE "listing_interactions" ADD CONSTRAINT "listing_interactions_listing_id_listings_id_fk" FOREIGN KEY ("listing_id") REFERENCES "public"."listings"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "listing_interactions" ADD CONSTRAINT "listing_interactions_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "users" ADD COLUMN "email_verified" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "email_verification_code_hash" text;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "email_verification_expires_at" timestamp;
+

@@ -34,20 +34,27 @@ async function seed() {
         {
           name: "Alice",
           email: "alice@example.com",
-          password_hash: await hashPassword("alice123"),
+          password_hash: await hashPassword("Alice1234@@"),
           role: "buyer",
+          is_verified: true,
+          email_verified: true,
         },
         {
           name: "Bob",
           email: "bob@example.com",
-          password_hash: await hashPassword("bob123"),
+          password_hash: await hashPassword("Bob1234@@"),
           role: "seller",
+          is_verified: true,
+          email_verified: true,
         },
         {
           name: "Charlie",
           email: "charlie@example.com",
-          password_hash: await hashPassword("charlie123"),
+          password_hash: await hashPassword("Charlie1234@@"),
           role: "seller",
+          is_verified: true,
+          email_verified: true,
+
         },
       ])
       .returning({ id: users.id });

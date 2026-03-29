@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "id": "eca12252-50a8-4f7a-b9e6-8b3560e37992",
+=======
+  "id": "54039947-81e5-4e36-8c2d-7c37bdb45089",
+>>>>>>> email-verification
   "prevId": "a7f183e4-0b53-40ca-919d-6da20fdb0d79",
   "version": "7",
   "dialect": "postgresql",
@@ -349,6 +353,25 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'buyer'"
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "email_verification_code_hash": {
+          "name": "email_verification_code_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email_verification_expires_at": {
+          "name": "email_verification_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",

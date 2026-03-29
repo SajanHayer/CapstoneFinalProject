@@ -4,6 +4,17 @@ import { toast } from "react-toastify";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 
+// Password policy
+const passwordPolicy =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+function getPasswordError(password: string): string {
+  if (!passwordPolicy.test(password)) {
+    return "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+  }
+  return "";
+}
+
 export const RegisterPage: React.FC = () => {
   const [form, setForm] = useState({
     firstName: "",
@@ -25,6 +36,7 @@ export const RegisterPage: React.FC = () => {
       toast.error("Please fill in all fields");
       return;
     }
+
     if (form.password !== form.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -38,18 +50,21 @@ export const RegisterPage: React.FC = () => {
           email: form.email,
           password: form.password,
           name: `${form.firstName} ${form.lastName}`,
-          role: "seller", // default role
+          role: "seller",
         }),
       });
 
       const data = await response.json();
+
       if (!response.ok) {
         toast.error(data.message || "Registration failed");
         return;
       }
 
-      toast.success("Registration successful! Redirecting to login...");
-      navigate("/login");
+      
+    toast.success("Registration successful! Redirecting to login...");
+     navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
+
     } catch (err) {
       toast.error("Server error. Please try again.");
     }

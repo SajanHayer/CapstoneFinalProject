@@ -8,7 +8,7 @@ import "../styles/addcard.css";
 
 export const AddCardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isGuest, login } = useAuth();
+  const { user, isGuest, login, refreshUser } = useAuth();
 
   const stripe = useStripe();
   const elements = useElements();
@@ -77,10 +77,8 @@ export const AddCardPage: React.FC = () => {
       }
 
       toast.success("Card verified successfully!");
-      // Update user in context with verification status
-      if (user) {
-        login({ ...user, is_verified: true });
-      }
+      // Refresh user data from backend to sync is_verified status
+      await refreshUser();
       setTimeout(() => navigate("/account"), 600);
     } catch (err) {
       toast.error("Something went wrong");

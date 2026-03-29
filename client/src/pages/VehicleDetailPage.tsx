@@ -79,30 +79,30 @@ export const VehicleDetailPage: React.FC = () => {
         const listingsRes = await fetch(
           `http://localhost:8080/api/listings/vehicle/all/${vehicleId}`,
         );
-        if (!listingsRes.ok) {
-          throw new Error("Failed to fetch listings");
+        let mappedListings: ListingInfo[] = [];
+        if (listingsRes.ok) {
+          const listingsData = await listingsRes.json();
+          mappedListings = (listingsData.result || []).map(
+            (item: any) => ({
+              id: item.id,
+              vehicleId: item.vehicle_id,
+              make: item.vehicle?.make || "",
+              model: item.vehicle?.model || "",
+              year: item.vehicle?.year || 0,
+              start_price: Number(item.start_price),
+              reserve_price: Number(item.reserve_price),
+              buy_now_price: item.buy_now_price
+                ? Number(item.buy_now_price)
+                : undefined,
+              current_price: Number(item.current_price),
+              start_time: item.start_time,
+              end_time: item.end_time,
+              statusListing: item.status,
+              location: item.location || "",
+              end_reason: item.end_reason || "",
+            }),
+          );
         }
-        const listingsData = await listingsRes.json();
-        const mappedListings: ListingInfo[] = (listingsData.result || []).map(
-          (item: any) => ({
-            id: item.id,
-            vehicleId: item.vehicle_id,
-            make: item.vehicle?.make || "",
-            model: item.vehicle?.model || "",
-            year: item.vehicle?.year || 0,
-            start_price: Number(item.start_price),
-            reserve_price: Number(item.reserve_price),
-            buy_now_price: item.buy_now_price
-              ? Number(item.buy_now_price)
-              : undefined,
-            current_price: Number(item.current_price),
-            start_time: item.start_time,
-            end_time: item.end_time,
-            statusListing: item.status,
-            location: item.location || "",
-            end_reason: item.end_reason || "",
-          }),
-        );
 
         // Fetch highest bid for each listing
         const listingsWithBids = await Promise.all(

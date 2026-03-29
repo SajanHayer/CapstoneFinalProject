@@ -19,6 +19,7 @@ interface AuthContextType {
   logout: () => void;
   enterGuest: () => void;
   exitGuest: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -108,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         enterGuest,
         exitGuest,
+        refreshUser,
       }}
     >
       {children}
