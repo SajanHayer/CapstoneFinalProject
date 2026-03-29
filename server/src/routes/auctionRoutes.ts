@@ -336,9 +336,12 @@ auctionRouter.get("/", async (_req, res) => {
       })
       .from(listings)
       .leftJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
-      .leftJoin(bidsCountSubquery, eq(bidsCountSubquery.listing_id, listings.id))
+      .leftJoin(
+        bidsCountSubquery,
+        eq(bidsCountSubquery.listing_id, listings.id),
+      )
       .where(ne(listings.status, "cancelled"));
-    
+
     const result = rows.map(({ listing, vehicle, bids_count }) => ({
       ...listing,
       vehicle,

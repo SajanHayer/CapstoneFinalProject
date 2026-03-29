@@ -24,7 +24,9 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
+        setTimeRemaining(
+          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
+        );
         return;
       }
 
@@ -61,7 +63,9 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
     >
       <div className="listing-card-media">
         <img
-          src={listing.thumbnailUrl || "https://placehold.co/800x500?text=Vehicle"}
+          src={
+            listing.thumbnailUrl || "https://placehold.co/800x500?text=Vehicle"
+          }
           alt={listing.title}
           className="listing-thumb"
         />
@@ -89,10 +93,13 @@ export const ListingCard: React.FC<Props> = ({ listing }) => {
         <div className="listing-price-row">
           <div>
             <div className="listing-price-label">Current price</div>
-            <p className="listing-price">${listing.currentPrice.toLocaleString()}</p>
+            <p className="listing-price">
+              ${listing.currentPrice.toLocaleString()}
+            </p>
           </div>
 
-          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
+          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") &&
+          timeRemaining ? (
             <div className="listing-timer-chip">
               <TimerReset size={14} />
               {timeRemaining}

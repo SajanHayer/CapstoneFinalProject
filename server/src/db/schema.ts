@@ -50,10 +50,7 @@ export const paymentStatusEnum = pgEnum("payment_status", [
   "failed",
 ]);
 
-export const interactionTypeEnum = pgEnum("interaction_type", [
-  "view",
-  "bid",
-]);
+export const interactionTypeEnum = pgEnum("interaction_type", ["view", "bid"]);
 
 // =====================
 // USERS TABLE

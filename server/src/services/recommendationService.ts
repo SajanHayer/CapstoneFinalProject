@@ -41,8 +41,7 @@ export type RecommendationResponse = {
   explanations: string[];
 };
 
-const RECOMMENDER_URL =
-  process.env.RECOMMENDER_URL || "http://localhost:5000";
+const RECOMMENDER_URL = process.env.RECOMMENDER_URL || "http://localhost:5000";
 
 function coerceImageUrl(value: CandidateRow["image_url"]): string {
   if (Array.isArray(value)) {
@@ -63,7 +62,9 @@ function coerceImageUrl(value: CandidateRow["image_url"]): string {
   return "";
 }
 
-async function getViewHistory(userId: number): Promise<RecommendationHistoryRow[]> {
+async function getViewHistory(
+  userId: number,
+): Promise<RecommendationHistoryRow[]> {
   // Create a subquery to count bids per listing
   const bidsCountSubquery = db
     .select({
@@ -107,7 +108,9 @@ async function getViewHistory(userId: number): Promise<RecommendationHistoryRow[
   })) as RecommendationHistoryRow[];
 }
 
-async function getBidHistory(userId: number): Promise<RecommendationHistoryRow[]> {
+async function getBidHistory(
+  userId: number,
+): Promise<RecommendationHistoryRow[]> {
   // Create a subquery to get bid stats per listing
   const bidStatsSubquery = db
     .select({
@@ -211,7 +214,7 @@ export async function trackListingView(userId: number, listingId: number) {
       listing_id: listingId,
       interaction_type: "view",
     });
-  
+
     await db
       .update(listings)
       .set({
@@ -242,7 +245,6 @@ export async function getRecommendationsForUser(
   ]);
   // console.log("HISTORY:", viewHistory, bidHistory);
   // console.log("CANDIDATES:", candidates.length);
-
 
   if (candidates.length === 0) {
     return [];
@@ -285,9 +287,14 @@ export async function getRecommendationsForUser(
         }))
       : [];
   } catch (error) {
-    console.error("[Recommendations] Service unavailable, falling back to popularity", error);
+    console.error(
+      "[Recommendations] Service unavailable, falling back to popularity",
+      error,
+    );
     recommendations = candidates
-      .sort((a, b) => b.bid_count + b.views_count - (a.bid_count + a.views_count))
+      .sort(
+        (a, b) => b.bid_count + b.views_count - (a.bid_count + a.views_count),
+      )
       .slice(0, limit)
       .map((candidate) => ({
         listingId: candidate.listing_id,
@@ -301,7 +308,9 @@ export async function getRecommendationsForUser(
       }));
   }
 
-  const candidateMap = new Map(candidates.map((candidate) => [candidate.listing_id, candidate]));
+  const candidateMap = new Map(
+    candidates.map((candidate) => [candidate.listing_id, candidate]),
+  );
 
   return recommendations
     .map((recommendation) => {
@@ -317,8 +326,14 @@ export async function getRecommendationsForUser(
 
 export function toRecommendationCard(listing: RankedListing) {
   const now = new Date();
-  const startTime = listing.start_time instanceof Date ? listing.start_time : new Date(listing.start_time);
-  const endTime = listing.end_time instanceof Date ? listing.end_time : new Date(listing.end_time);
+  const startTime =
+    listing.start_time instanceof Date
+      ? listing.start_time
+      : new Date(listing.start_time);
+  const endTime =
+    listing.end_time instanceof Date
+      ? listing.end_time
+      : new Date(listing.end_time);
 
   const status =
     now < startTime

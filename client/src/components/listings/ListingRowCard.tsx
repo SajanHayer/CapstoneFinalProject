@@ -20,7 +20,9 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
       const diff = target.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining(listing.status === "UPCOMING" ? "Starting soon" : "00:00:00");
+        setTimeRemaining(
+          listing.status === "UPCOMING" ? "Starting soon" : "00:00:00",
+        );
         return;
       }
 
@@ -41,7 +43,8 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
   const statusBadgeClass = useMemo(() => {
     if (listing.status === "ACTIVE") return "listing-row-badge";
-    if (listing.status === "UPCOMING") return "listing-row-badge listing-row-badge-upcoming";
+    if (listing.status === "UPCOMING")
+      return "listing-row-badge listing-row-badge-upcoming";
     return "listing-row-badge listing-row-badge-ended";
   }, [listing.status]);
 
@@ -57,7 +60,9 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
     >
       <div className="listing-row-media">
         <img
-          src={listing.thumbnailUrl || "https://placehold.co/800x500?text=Vehicle"}
+          src={
+            listing.thumbnailUrl || "https://placehold.co/800x500?text=Vehicle"
+          }
           alt={listing.title}
           className="listing-row-thumb"
         />
@@ -80,7 +85,8 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
             <MapPin size={14} />
             {listing.location}
           </span>
-          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") && timeRemaining ? (
+          {(listing.status === "ACTIVE" || listing.status === "UPCOMING") &&
+          timeRemaining ? (
             <span className="row-pill row-pill-timer">
               <TimerReset size={14} />
               {timeRemaining}
@@ -93,7 +99,9 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
 
       <div className="listing-row-right" onClick={(e) => e.stopPropagation()}>
         <div className="listing-row-price-label">Current bid</div>
-        <div className="listing-row-price">${listing.currentPrice.toLocaleString()}</div>
+        <div className="listing-row-price">
+          ${listing.currentPrice.toLocaleString()}
+        </div>
         <div className="listing-row-actions">
           <button
             className="btn btn-primary listing-row-cta"

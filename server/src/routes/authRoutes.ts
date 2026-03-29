@@ -10,8 +10,7 @@ import { sendVerificationEmail } from "../utils/email";
 export const authRouter = Router();
 
 // Password policy
-const passwordPolicy =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 const generateVerificationCode = (): string => {
   return Math.floor(10000 + Math.random() * 90000).toString();
@@ -61,7 +60,7 @@ authRouter.post("/register", async (req, res) => {
         email,
         password_hash,
         name,
-        role, 
+        role,
         customer_id: customer.id,
         email_verified: false,
         email_verification_code_hash,
@@ -99,10 +98,7 @@ authRouter.post("/verify-email", async (req, res) => {
       });
     }
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email));
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -125,7 +121,7 @@ authRouter.post("/verify-email", async (req, res) => {
 
     const isMatch = await comparePassword(
       code,
-      user.email_verification_code_hash
+      user.email_verification_code_hash,
     );
 
     if (!isMatch) {
@@ -153,10 +149,7 @@ authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email));
 
     if (!user) {
       return res.status(401).json({ message: "User does not exist" });

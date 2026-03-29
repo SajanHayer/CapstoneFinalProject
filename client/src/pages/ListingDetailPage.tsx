@@ -107,14 +107,17 @@ export const ListingDetailPage: React.FC = () => {
 
     const trackView = async () => {
       try {
-        await fetch("http://localhost:8080/api/recommendations/interactions/view", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        await fetch(
+          "http://localhost:8080/api/recommendations/interactions/view",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({ listingId: Number(id) }),
           },
-          credentials: "include",
-          body: JSON.stringify({ listingId: Number(id) }),
-        });
+        );
       } catch (error) {
         console.warn("[Recommendations] Failed to track listing view", error);
       }

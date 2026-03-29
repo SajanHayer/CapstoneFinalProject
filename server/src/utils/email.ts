@@ -4,7 +4,9 @@ const smtpUser = process.env.SMTP_USER;
 const smtpPass = process.env.SMTP_PASS;
 
 if (!smtpUser || !smtpPass) {
-  console.warn("SMTP_USER or SMTP_PASS is missing. Email sending will not work.");
+  console.warn(
+    "SMTP_USER or SMTP_PASS is missing. Email sending will not work.",
+  );
 }
 
 const transporter = nodemailer.createTransport({
@@ -20,7 +22,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendVerificationEmail = async (
   to: string,
-  code: string
+  code: string,
 ): Promise<void> => {
   await transporter.sendMail({
     from: smtpUser,

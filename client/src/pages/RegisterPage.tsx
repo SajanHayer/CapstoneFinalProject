@@ -5,8 +5,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 
 // Password policy
-const passwordPolicy =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 function getPasswordError(password: string): string {
   if (!passwordPolicy.test(password)) {
@@ -61,10 +60,8 @@ export const RegisterPage: React.FC = () => {
         return;
       }
 
-      
-    toast.success("Registration successful! Redirecting to login...");
-     navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
-
+      toast.success("Registration successful! Redirecting to login...");
+      navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
     } catch (err) {
       toast.error("Server error. Please try again.");
     }

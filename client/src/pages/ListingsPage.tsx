@@ -253,7 +253,11 @@ export const ListingsPage: React.FC = () => {
         let derivedStatus: ListingStatus;
         if (now < startTime) {
           derivedStatus = "UPCOMING";
-        } else if (now >= startTime && now < endTime && listing.status === "active") {
+        } else if (
+          now >= startTime &&
+          now < endTime &&
+          listing.status === "active"
+        ) {
           derivedStatus = "ACTIVE";
         } else {
           derivedStatus = "EXPIRED";
@@ -403,7 +407,17 @@ export const ListingsPage: React.FC = () => {
         if (sort === "bids") return (b.bids ?? 0) - (a.bids ?? 0);
         return new Date(a.endsAt).getTime() - new Date(b.endsAt).getTime();
       });
-  }, [listings, status, query, make, yearRange, priceRange, mileageRange, endingSoon, sort]);
+  }, [
+    listings,
+    status,
+    query,
+    make,
+    yearRange,
+    priceRange,
+    mileageRange,
+    endingSoon,
+    sort,
+  ]);
 
   const hasActiveFilters =
     make !== "all" ||
@@ -472,28 +486,32 @@ export const ListingsPage: React.FC = () => {
       </header>
 
       <div className="market-tabs">
-        {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map((tabStatus) => (
-          <button
-            key={tabStatus}
-            className={
-              tabStatus === status ? "market-tab market-tab-active" : "market-tab"
-            }
-            onClick={() => setStatus(tabStatus)}
-          >
-            <div className="market-tab-label">
-              {tabStatus === "EXPIRED"
-                ? "Ended"
-                : tabStatus[0] + tabStatus.slice(1).toLowerCase()}
-            </div>
-            <div className="market-tab-sub">
-              {tabStatus === "UPCOMING"
-                ? `${statusCounts.UPCOMING} scheduled auctions`
-                : tabStatus === "ACTIVE"
-                  ? `${statusCounts.ACTIVE} live opportunities`
-                  : `${statusCounts.EXPIRED} recently closed`}
-            </div>
-          </button>
-        ))}
+        {(["UPCOMING", "ACTIVE", "EXPIRED"] as ListingStatus[]).map(
+          (tabStatus) => (
+            <button
+              key={tabStatus}
+              className={
+                tabStatus === status
+                  ? "market-tab market-tab-active"
+                  : "market-tab"
+              }
+              onClick={() => setStatus(tabStatus)}
+            >
+              <div className="market-tab-label">
+                {tabStatus === "EXPIRED"
+                  ? "Ended"
+                  : tabStatus[0] + tabStatus.slice(1).toLowerCase()}
+              </div>
+              <div className="market-tab-sub">
+                {tabStatus === "UPCOMING"
+                  ? `${statusCounts.UPCOMING} scheduled auctions`
+                  : tabStatus === "ACTIVE"
+                    ? `${statusCounts.ACTIVE} live opportunities`
+                    : `${statusCounts.EXPIRED} recently closed`}
+              </div>
+            </button>
+          ),
+        )}
       </div>
 
       {isLoggedIn && (
@@ -507,17 +525,23 @@ export const ListingsPage: React.FC = () => {
           }}
         >
           <div style={{ marginBottom: "0.9rem" }}>
-            <h2 style={{ margin: 0, fontSize: "1.1rem" }}>Recommended for you</h2>
+            <h2 style={{ margin: 0, fontSize: "1.1rem" }}>
+              Recommended for you
+            </h2>
             <p style={{ margin: "0.35rem 0 0", opacity: 0.78 }}>
-              Transparent picks based on your recent listing views, bids, and similar marketplace activity.
+              Transparent picks based on your recent listing views, bids, and
+              similar marketplace activity.
             </p>
           </div>
 
-          {recommendationsLoading && <p style={{ margin: 0 }}>Loading recommendations...</p>}
+          {recommendationsLoading && (
+            <p style={{ margin: 0 }}>Loading recommendations...</p>
+          )}
 
           {!recommendationsLoading && recommendedListings.length === 0 && (
             <p style={{ margin: 0, opacity: 0.78 }}>
-              Browse a few listings or place a bid and we&apos;ll start tailoring suggestions here.
+              Browse a few listings or place a bid and we&apos;ll start
+              tailoring suggestions here.
             </p>
           )}
 
@@ -540,20 +564,32 @@ export const ListingsPage: React.FC = () => {
                       background: "rgba(0,0,0,0.18)",
                     }}
                   >
-                    <div style={{ fontSize: "0.82rem", opacity: 0.72, marginBottom: "0.35rem" }}>
+                    <div
+                      style={{
+                        fontSize: "0.82rem",
+                        opacity: 0.72,
+                        marginBottom: "0.35rem",
+                      }}
+                    >
                       Why this was recommended
                     </div>
                     <div style={{ fontWeight: 600, marginBottom: "0.45rem" }}>
                       {listing.explanation}
                     </div>
-                    {listing.explanationBullets?.slice(1).map((bullet, index) => (
-                      <div
-                        key={`${listing.id}-reason-${index}`}
-                        style={{ fontSize: "0.9rem", opacity: 0.8, marginTop: "0.25rem" }}
-                      >
-                        {bullet}
-                      </div>
-                    ))}
+                    {listing.explanationBullets
+                      ?.slice(1)
+                      .map((bullet, index) => (
+                        <div
+                          key={`${listing.id}-reason-${index}`}
+                          style={{
+                            fontSize: "0.9rem",
+                            opacity: 0.8,
+                            marginTop: "0.25rem",
+                          }}
+                        >
+                          {bullet}
+                        </div>
+                      ))}
                   </div>
                 </div>
               ))}
@@ -655,7 +691,9 @@ export const ListingsPage: React.FC = () => {
             <select
               className="select select-outline"
               value={sort}
-              onChange={(e) => setSort(e.target.value as "ending" | "price" | "bids")}
+              onChange={(e) =>
+                setSort(e.target.value as "ending" | "price" | "bids")
+              }
             >
               <option value="ending">Ending soonest</option>
               <option value="price">Price: high to low</option>
@@ -712,7 +750,8 @@ export const ListingsPage: React.FC = () => {
               Create email alert
             </div>
             <p className="alert-preview-copy">
-              Save your current filters and get notified when matching vehicles are listed.
+              Save your current filters and get notified when matching vehicles
+              are listed.
             </p>
             <div className="alert-preview-values">
               <span>{make === "all" ? "Any make" : make.toUpperCase()}</span>
@@ -720,10 +759,12 @@ export const ListingsPage: React.FC = () => {
                 {yearRange[0]} - {yearRange[1]}
               </span>
               <span>
-                ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
+                ${priceRange[0].toLocaleString()} - $
+                {priceRange[1].toLocaleString()}
               </span>
               <span>
-                {mileageRange[0].toLocaleString()} - {mileageRange[1].toLocaleString()} km
+                {mileageRange[0].toLocaleString()} -{" "}
+                {mileageRange[1].toLocaleString()} km
               </span>
             </div>
             <button
@@ -736,14 +777,16 @@ export const ListingsPage: React.FC = () => {
             </button>
             {alertCreated && (
               <div className="alert-success-banner">
-                Alert saved for these filters. Backend trigger can be connected later.
+                Alert saved for these filters. Backend trigger can be connected
+                later.
               </div>
             )}
           </div>
 
           {!isLoggedIn && (
             <div className="sidebar-hint">
-              Tip: Browse in Guest mode, then sign in to bid, watch, and save alerts.
+              Tip: Browse in Guest mode, then sign in to bid, watch, and save
+              alerts.
             </div>
           )}
         </aside>
@@ -816,7 +859,8 @@ export const ListingsPage: React.FC = () => {
                   onClick={() => setPriceRange([5000, 120000])}
                   type="button"
                 >
-                  ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
+                  ${priceRange[0].toLocaleString()} - $
+                  {priceRange[1].toLocaleString()}
                   <X size={13} />
                 </button>
               )}
@@ -827,7 +871,8 @@ export const ListingsPage: React.FC = () => {
                   onClick={() => setMileageRange([0, 200000])}
                   type="button"
                 >
-                  {mileageRange[0].toLocaleString()} - {mileageRange[1].toLocaleString()} km
+                  {mileageRange[0].toLocaleString()} -{" "}
+                  {mileageRange[1].toLocaleString()} km
                   <X size={13} />
                 </button>
               )}
@@ -846,10 +891,16 @@ export const ListingsPage: React.FC = () => {
           )}
 
           <div
-            className={view === "grid" ? "listings-grid listings-frame" : "listings-list listings-frame"}
+            className={
+              view === "grid"
+                ? "listings-grid listings-frame"
+                : "listings-list listings-frame"
+            }
             style={{ minHeight: "540px" }}
           >
-            {loading && <p className="loading-state-text">Loading listings...</p>}
+            {loading && (
+              <p className="loading-state-text">Loading listings...</p>
+            )}
 
             {error && <p className="error">{error}</p>}
 
@@ -857,10 +908,14 @@ export const ListingsPage: React.FC = () => {
               <div className="no-results-card">
                 <h3>No listings match those filters</h3>
                 <p>
-                  Try widening your price, mileage, or year range, or clear filters to
-                  see more inventory.
+                  Try widening your price, mileage, or year range, or clear
+                  filters to see more inventory.
                 </p>
-                <button className="btn btn-primary" onClick={resetFilters} type="button">
+                <button
+                  className="btn btn-primary"
+                  onClick={resetFilters}
+                  type="button"
+                >
                   Reset filters
                 </button>
               </div>

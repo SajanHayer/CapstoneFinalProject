@@ -83,26 +83,24 @@ export const VehicleDetailPage: React.FC = () => {
         let mappedListings: ListingInfo[] = [];
         if (listingsRes.ok) {
           const listingsData = await listingsRes.json();
-          mappedListings = (listingsData.result || []).map(
-            (item: any) => ({
-              id: item.id,
-              vehicleId: item.vehicle_id,
-              make: item.vehicle?.make || "",
-              model: item.vehicle?.model || "",
-              year: item.vehicle?.year || 0,
-              start_price: Number(item.start_price),
-              reserve_price: Number(item.reserve_price),
-              buy_now_price: item.buy_now_price
-                ? Number(item.buy_now_price)
-                : undefined,
-              current_price: Number(item.current_price),
-              start_time: item.start_time,
-              end_time: item.end_time,
-              statusListing: item.status,
-              location: item.location || "",
-              end_reason: item.end_reason || "",
-            }),
-          );
+          mappedListings = (listingsData.result || []).map((item: any) => ({
+            id: item.id,
+            vehicleId: item.vehicle_id,
+            make: item.vehicle?.make || "",
+            model: item.vehicle?.model || "",
+            year: item.vehicle?.year || 0,
+            start_price: Number(item.start_price),
+            reserve_price: Number(item.reserve_price),
+            buy_now_price: item.buy_now_price
+              ? Number(item.buy_now_price)
+              : undefined,
+            current_price: Number(item.current_price),
+            start_time: item.start_time,
+            end_time: item.end_time,
+            statusListing: item.status,
+            location: item.location || "",
+            end_reason: item.end_reason || "",
+          }));
         }
 
         // Fetch highest bid for each listing
@@ -641,12 +639,19 @@ export const VehicleDetailPage: React.FC = () => {
                                   padding: "6px 10px",
                                   backgroundColor: "#27ae60",
                                 }}
-                                disabled={sellingListingId === listing.id || !listing.bid_count}
+                                disabled={
+                                  sellingListingId === listing.id ||
+                                  !listing.bid_count
+                                }
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSellVehicle(listing.id);
                                 }}
-                                title={!listing.bid_count ? "Cannot sell with no bids" : "Mark listing as sold"}
+                                title={
+                                  !listing.bid_count
+                                    ? "Cannot sell with no bids"
+                                    : "Mark listing as sold"
+                                }
                               >
                                 {sellingListingId === listing.id
                                   ? "Processing..."

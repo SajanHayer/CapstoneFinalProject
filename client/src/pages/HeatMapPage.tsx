@@ -37,7 +37,16 @@ const MapContent: React.FC<{
   debugInfo: string;
   center: { lat: number; lng: number };
   onRetry: () => void;
-}> = ({ metric, onMetricChange, points, loading, error, debugInfo, center, onRetry }) => {
+}> = ({
+  metric,
+  onMetricChange,
+  points,
+  loading,
+  error,
+  debugInfo,
+  center,
+  onRetry,
+}) => {
   const [hoveredPoint, setHoveredPoint] = useState<HeatPoint | null>(null);
 
   const heatmapData = useMemo(() => {
@@ -153,7 +162,12 @@ const MapContent: React.FC<{
           mapTypeControl: true,
         }}
       >
-        {heatmapData.length > 0 && <HeatmapLayer key={`${metric}-${heatmapData.length}`} data={heatmapData} />}
+        {heatmapData.length > 0 && (
+          <HeatmapLayer
+            key={`${metric}-${heatmapData.length}`}
+            data={heatmapData}
+          />
+        )}
         {points.map((point) => (
           <Circle
             key={`${metric}-${point.lat}-${point.lng}-${point.location}`}
@@ -169,7 +183,7 @@ const MapContent: React.FC<{
             onMouseOut={() =>
               setHoveredPoint((current) =>
                 current &&
-              current.lat === point.lat &&
+                current.lat === point.lat &&
                 current.lng === point.lng &&
                 current.location === point.location
                   ? null
@@ -302,11 +316,13 @@ export const HeatMapPage: React.FC = () => {
             lng: Number(point.lng),
             weight: Number(point.weight),
             location:
-              typeof point.location === "string" && point.location.trim().length > 0
+              typeof point.location === "string" &&
+              point.location.trim().length > 0
                 ? point.location.trim()
                 : "Unknown location",
             imageUrl:
-              typeof point.imageUrl === "string" && point.imageUrl.trim().length > 0
+              typeof point.imageUrl === "string" &&
+              point.imageUrl.trim().length > 0
                 ? point.imageUrl
                 : null,
           }))

@@ -54,7 +54,6 @@ async function seed() {
           role: "seller",
           is_verified: true,
           email_verified: true,
-
         },
       ])
       .returning({ id: users.id });

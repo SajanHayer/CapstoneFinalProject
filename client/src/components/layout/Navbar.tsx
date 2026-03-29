@@ -61,14 +61,20 @@ export const Navbar: React.FC = () => {
         <button
           className="btn btn-outline"
           onClick={toggleTheme}
-          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          title={
+            theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+          }
           type="button"
         >
           {theme === "dark" ? "☀️" : "🌙"}
         </button>
 
         {isLoggedIn ? (
-          <button className="btn btn-primary" onClick={handleLogout} type="button">
+          <button
+            className="btn btn-primary"
+            onClick={handleLogout}
+            type="button"
+          >
             Logout
           </button>
         ) : (
