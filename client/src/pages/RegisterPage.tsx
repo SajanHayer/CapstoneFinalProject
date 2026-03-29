@@ -3,6 +3,17 @@ import { useNavigate, Link } from "react-router-dom";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 
+// Password policy
+const passwordPolicy =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+function getPasswordError(password: string): string {
+  if (!passwordPolicy.test(password)) {
+    return "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+  }
+  return "";
+}
+
 export const RegisterPage: React.FC = () => {
   const [form, setForm] = useState({
     firstName: "",
@@ -26,8 +37,15 @@ export const RegisterPage: React.FC = () => {
       setError("Please fill in all fields");
       return;
     }
+
     if (form.password !== form.confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+
+    const passwordError = getPasswordError(form.password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -39,18 +57,20 @@ export const RegisterPage: React.FC = () => {
           email: form.email,
           password: form.password,
           name: `${form.firstName} ${form.lastName}`,
-          role: "seller", // default role
+          role: "seller",
         }),
       });
 
       const data = await response.json();
-      // console.log("Registration response:", data);
+
       if (!response.ok) {
         setError(data.message || "Registration failed");
         return;
       }
 
-      navigate("/login");
+      // 🔥 NEW: go to verify page instead of login
+     navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
+
     } catch (err) {
       setError("Server error");
       console.error(err);
