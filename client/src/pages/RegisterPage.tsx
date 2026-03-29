@@ -68,7 +68,7 @@ export const RegisterPage: React.FC = () => {
         return;
       }
 
-      // 🔥 NEW: go to verify page instead of login
+    
      navigate(`/verify-email?email=${encodeURIComponent(form.email)}`);
 
     } catch (err) {
