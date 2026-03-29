@@ -1,6 +1,6 @@
 // src/services/bidding.ts
 import { db } from "../db/db";
-import { listings, bids } from "../db/schema";
+import { listings, bids, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 
 export async function placeBid({
@@ -15,6 +15,15 @@ export async function placeBid({
   location?: string;
 }) {
   return db.transaction(async (tx) => {
+    // Check if bidder is verified
+    const [bidder] = await tx
+      .select()
+      .from(users)
+      .where(eq(users.id, bidderId));
+
+    if (!bidder) throw new Error("Bidder not found");
+    if (!bidder.is_verified) throw new Error("Account not verified. Please add a card before bidding");
+
     const [listing] = await tx
       .select()
       .from(listings)

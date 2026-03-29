@@ -4,12 +4,8 @@ import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
-
+import { stripe } from "../services/stripe"
 export const authRouter = Router();
-
-const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;
-const stripe = require('stripe')(STRIPE_KEY);
-
 
 authRouter.post("/register", async (req, res) => {
   try {
@@ -32,25 +28,21 @@ authRouter.post("/register", async (req, res) => {
     }
     const password_hash = await hashPassword(password);
     // console.log(stripe.customers)
-
-    const {customer, error} = await stripe.customers.create({
+    // console.log(stripe)
+    const customer = await stripe.customers.create({
       name: name,
       email: email,
     });
-    if (error){
-      return res.json({message: 'Stripe Failed To Create Customer'})
-    }
-
-    
+    console.log(customer.id)    
     const [user] = await db
       .insert(users)
-      .values({ email, password_hash, name, role })
+      .values({ email, password_hash, name, role, customer_id:customer.id})
       .returning({
         id: users.id,
         email: users.email,
         name: users.name,
         role: users.role,
-        customer_id: customer.id,
+        is_verified: users.is_verified,
       });
     
 
@@ -85,8 +77,7 @@ authRouter.post("/login", async (req, res) => {
     const token = signToken({
       id: user.id,
       email: user.email,
-      role: user.role,
-    });
+      role: user.role,      is_verified: user.is_verified,    });
 
     // Store token in HTTP-only cookie
     res.cookie("jwt", token, {

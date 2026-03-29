@@ -8,14 +8,13 @@ import { assistantRouter } from "./routes/assistantRoutes";
 import { healthRouter } from "./routes/healthRoutes";
 import { auctionRouter } from "./routes/auctionRoutes.ts";
 import { heatmapRouter } from "./routes/heatmapRoutes";
-
 import { startAuctionCron } from "./cron/auctionEnd.cron";
 import { analyticsRouter } from "./routes/analyticsRoutes";
 import listingAnalyticsRoutes from "./routes/listingAnalytics";
-
 import { Server } from "socket.io";
 import http from "http";
 import { registerAuctionSockets } from "./sockets/auction.socket.ts";
+import { stripeRouter } from "./routes/stripeRoutes.ts";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
@@ -36,8 +35,7 @@ app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/listings", auctionRouter);
 app.use("/api/heatmap", heatmapRouter);
-
-
+app.use("/api/stripe", stripeRouter)
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
 app.use("/api/listings", auctionRouter);
 

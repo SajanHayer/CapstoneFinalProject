@@ -3,108 +3,91 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
-import { loadStripe } from '@stripe/stripe-js';
+import {
+  useStripe,
+  useElements,
+  CardElement,
+} from "@stripe/react-stripe-js";
 import "../styles/addcard.css";
 
 export const AddCardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isGuest } = useAuth();
+  const { user, isGuest, login } = useAuth();
+
+  const stripe = useStripe();
+  const elements = useElements();
 
   const [form, setForm] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvc: "",
     cardholderName: "",
   });
 
   const [saving, setSaving] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [e.target.name]: e.target.value,
     }));
   };
 
-  const formatCardNumber = (value: string) => {
-    return value
-      .replace(/\s/g, "")
-      .replace(/(\d{4})/g, "$1 ")
-      .trim();
-  };
+  const handleSubmit = async () => {
+    if (!stripe || !elements) {
+      toast.error("Stripe not loaded yet");
+      return;
+    }
 
-  const formatExpiryDate = (value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
-    }
-    return cleaned;
-  };
-
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\s/g, "");
-    if (/^\d*$/.test(value) && value.length <= 16) {
-      setForm((prev) => ({
-        ...prev,
-        cardNumber: formatCardNumber(value),
-      }));
-    }
-  };
-
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 4) {
-      setForm((prev) => ({
-        ...prev,
-        expiryDate: formatExpiryDate(value),
-      }));
-    }
-  };
-
-  const handleCVCChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 3) {
-      setForm((prev) => ({
-        ...prev,
-        cvc: value,
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    if (!form.cardNumber.replace(/\s/g, "").match(/^\d{16}$/)) {
-      toast.error("Please enter a valid 16-digit card number");
-      return false;
-    }
-    if (!form.expiryDate.match(/^\d{2}\/\d{2}$/)) {
-      toast.error("Please enter expiry date in MM/YY format");
-      return false;
-    }
-    if (!form.cvc.match(/^\d{3}$/)) {
-      toast.error("Please enter a valid 3-digit CVC");
-      return false;
-    }
     if (!form.cardholderName.trim()) {
       toast.error("Please enter cardholder name");
-      return false;
+      return;
     }
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
 
     setSaving(true);
-    try {
-      // Simulate payment processing
-      // In a real app, you would send this to your backend
-      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      toast.success("Card added successfully!");
-      setTimeout(() => navigate("/account"), 650);
-    } catch (error) {
-      toast.error("Failed to add card. Please try again.");
+    try {
+      const cardElement = elements.getElement(CardElement);
+
+      if (!cardElement) {
+        toast.error("Card input not found");
+        return;
+      }
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement,
+        billing_details: {
+          name: form.cardholderName,
+        },
+      });
+      if (error) {
+        toast.error(error.message || "Card error");
+        return;
+      }
+      // // 
+      const res = await fetch("http://localhost:8080/api/stripe/verfify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user: user,
+          paymentMethodId: paymentMethod.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Verification failed");
+        return;
+      }
+
+      toast.success("Card verified successfully!");
+      // Update user in context with verification status
+      if (user) {
+        login({ ...user, is_verified: true });
+      }
+      setTimeout(() => navigate("/account"), 600);
+    } catch (err) {
+      toast.error("Something went wrong");
     } finally {
       setSaving(false);
     }
@@ -133,7 +116,7 @@ export const AddCardPage: React.FC = () => {
 
         {isGuest && (
           <div className="ac-alert ac-alert-info">
-            You're in Guest mode — you need to sign in to add a payment method.
+            You're in Guest mode — sign in to add a payment method.
           </div>
         )}
       </div>
@@ -142,6 +125,7 @@ export const AddCardPage: React.FC = () => {
       <div className="ac-card">
         <div className="ac-section-title">Card Details</div>
 
+        {/* Name */}
         <div className="ac-input-group">
           <label className="ac-label">Cardholder Name</label>
           <input
@@ -154,49 +138,29 @@ export const AddCardPage: React.FC = () => {
           />
         </div>
 
+        {/* Stripe Card Element */}
         <div className="ac-input-group">
-          <label className="ac-label">Card Number</label>
-          <input
-            type="text"
-            name="cardNumber"
-            value={form.cardNumber}
-            onChange={handleCardNumberChange}
-            placeholder="1234 5678 9012 3456"
-            className="ac-input"
-            maxLength={19}
-          />
-        </div>
-
-        <div className="ac-grid-2">
-          <div className="ac-input-group">
-            <label className="ac-label">Expiry (MM/YY)</label>
-            <input
-              type="text"
-              name="expiryDate"
-              value={form.expiryDate}
-              onChange={handleExpiryChange}
-              placeholder="12/25"
-              className="ac-input"
-              maxLength={5}
-            />
-          </div>
-          <div className="ac-input-group">
-            <label className="ac-label">CVC</label>
-            <input
-              type="text"
-              name="cvc"
-              value={form.cvc}
-              onChange={handleCVCChange}
-              placeholder="123"
-              className="ac-input"
-              maxLength={3}
+          <label className="ac-label">Card Details</label>
+          <div className="ac-input">
+            <CardElement
+              options={{
+                hidePostalCode: true,
+                style: {
+                  base: {
+                    fontSize: "16px",
+                    color: "#424770",
+                    "::placeholder": {
+                      color: "#aab7c4",
+                    },
+                  },
+                  invalid: {
+                    color: "#e5424d",
+                  },
+                },
+              }}
             />
           </div>
         </div>
-
-        {/* <div className="ac-alert ac-alert-warning">
-          This is a simulated payment flow. No real card charges are made.
-        </div> */}
       </div>
     </div>
   );

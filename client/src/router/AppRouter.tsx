@@ -21,6 +21,12 @@ import { EditVehiclePage } from "../pages/EditVehiclePage";
 import { YouWonPage } from "../pages/YouWonPage";
 import { AddCardPage } from "../pages/AddCardPage";
 
+
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISH_KEY);
+
 export const AppRouter: React.FC = () => {
   return (
     <Routes>
@@ -40,7 +46,14 @@ export const AppRouter: React.FC = () => {
         <Route path="/you-won/:listingId" element={<YouWonPage />} />
         <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
-        <Route path="/add-card" element={<AddCardPage />} />
+        <Route
+          path="/add-card"
+          element={
+            <Elements stripe={stripePromise}>
+              <AddCardPage />
+            </Elements>
+          }
+        />
         <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route path="/heatmap" element={<HeatMapPage />} />

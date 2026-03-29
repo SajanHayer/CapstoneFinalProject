@@ -8,6 +8,7 @@ interface User {
   email: string;
   role: string;
   id: number;
+  is_verified?: boolean;
 }
 
 interface AuthContextType {
@@ -53,6 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }
+
+
 
   // User login
   async function login(data: User) {
