@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import { LandingPage } from "../pages/LandingPage";
 import { LoginPage } from "../pages/LoginPage";
 import { RegisterPage } from "../pages/RegisterPage";
+import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { AccountPage } from "../pages/AccountPage";
 import { ListingsPage } from "../pages/ListingsPage";
 import { ListingDetailPage } from "../pages/ListingDetailPage";
@@ -21,6 +22,8 @@ export const AppRouter: React.FC = () => {
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+
       {/* Public browsing (Guest-friendly) */}
       <Route path="/listings" element={<ListingsPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
