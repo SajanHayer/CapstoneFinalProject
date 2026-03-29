@@ -22,7 +22,8 @@ export async function placeBid({
       .where(eq(users.id, bidderId));
 
     if (!bidder) throw new Error("Bidder not found");
-    if (!bidder.is_verified) throw new Error("Account not verified. Please add a card before bidding");
+    if (!bidder.is_verified)
+      throw new Error("Account not verified. Please add a card before bidding");
 
     const [listing] = await tx
       .select()

@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/common/Button";
 import { useAuth } from "../context/AuthContext";
-import {
-  useStripe,
-  useElements,
-  CardElement,
-} from "@stripe/react-stripe-js";
+import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import "../styles/addcard.css";
 
 export const AddCardPage: React.FC = () => {
@@ -61,7 +57,7 @@ export const AddCardPage: React.FC = () => {
         toast.error(error.message || "Card error");
         return;
       }
-      // // 
+      // //
       const res = await fetch("http://localhost:8080/api/stripe/verfify", {
         method: "POST",
         headers: {

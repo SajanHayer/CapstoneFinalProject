@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GoogleMap, HeatmapLayer, useJsApiLoader } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  HeatmapLayer,
+  useJsApiLoader,
+} from "@react-google-maps/api";
 
 type Metric = "views" | "bids" | "transactions";
 
@@ -8,7 +12,7 @@ type HeatPoint = { lat: number; lng: number; weight: number };
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const HEATMAP_REQUEST_TIMEOUT_MS = 15000;
-const GOOGLE_MAP_LIBRARIES: ("visualization")[] = ["visualization"];
+const GOOGLE_MAP_LIBRARIES: "visualization"[] = ["visualization"];
 
 const containerStyle: React.CSSProperties = {
   width: "100%",
@@ -25,9 +29,22 @@ const MapContent: React.FC<{
   debugInfo: string;
   center: { lat: number; lng: number };
   onRetry: () => void;
-}> = ({ metric, onMetricChange, points, loading, error, debugInfo, center, onRetry }) => {
+}> = ({
+  metric,
+  onMetricChange,
+  points,
+  loading,
+  error,
+  debugInfo,
+  center,
+  onRetry,
+}) => {
   const heatmapData = useMemo(() => {
-    if (points.length === 0 || typeof google === "undefined" || !google.maps?.LatLng) {
+    if (
+      points.length === 0 ||
+      typeof google === "undefined" ||
+      !google.maps?.LatLng
+    ) {
       return [];
     }
 
@@ -43,7 +60,10 @@ const MapContent: React.FC<{
           weight: Math.max(1, Math.min(100, point.weight)),
         };
       })
-      .filter((item): item is { location: google.maps.LatLng; weight: number } => item !== null);
+      .filter(
+        (item): item is { location: google.maps.LatLng; weight: number } =>
+          item !== null,
+      );
   }, [points]);
 
   return (
@@ -128,7 +148,12 @@ const MapContent: React.FC<{
           mapTypeControl: true,
         }}
       >
-        {heatmapData.length > 0 && <HeatmapLayer key={`${metric}-${heatmapData.length}`} data={heatmapData} />}
+        {heatmapData.length > 0 && (
+          <HeatmapLayer
+            key={`${metric}-${heatmapData.length}`}
+            data={heatmapData}
+          />
+        )}
         {heatmapData.length === 0 && !loading && (
           <div
             style={{
@@ -193,7 +218,11 @@ export const HeatMapPage: React.FC = () => {
       setDebugInfo(`Loading ${metric} heatmap...`);
 
       const url = `${API_BASE}/api/heatmap?metric=${metric}`;
-      console.log(`[HeatMap] [request ${requestId}] Fetch start`, { metric, url, retryNonce });
+      console.log(`[HeatMap] [request ${requestId}] Fetch start`, {
+        metric,
+        url,
+        retryNonce,
+      });
 
       try {
         const response = await fetch(url, {
@@ -203,7 +232,9 @@ export const HeatMapPage: React.FC = () => {
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch heatmap (${response.status} ${response.statusText})`);
+          throw new Error(
+            `Failed to fetch heatmap (${response.status} ${response.statusText})`,
+          );
         }
 
         const payload = await response.json();
@@ -229,7 +260,9 @@ export const HeatMapPage: React.FC = () => {
           });
 
         if (!isActive || requestId !== requestIdRef.current) {
-          console.log(`[HeatMap] [request ${requestId}] Ignoring stale success`);
+          console.log(
+            `[HeatMap] [request ${requestId}] Ignoring stale success`,
+          );
           return;
         }
 
@@ -239,10 +272,14 @@ export const HeatMapPage: React.FC = () => {
         });
 
         setPoints(validPoints);
-        setDebugInfo(`Received ${rawPoints.length} points, ${validPoints.length} valid`);
+        setDebugInfo(
+          `Received ${rawPoints.length} points, ${validPoints.length} valid`,
+        );
       } catch (caughtError) {
         if (!isActive || requestId !== requestIdRef.current) {
-          console.log(`[HeatMap] [request ${requestId}] Ignoring stale failure`);
+          console.log(
+            `[HeatMap] [request ${requestId}] Ignoring stale failure`,
+          );
           return;
         }
 
@@ -251,14 +288,16 @@ export const HeatMapPage: React.FC = () => {
           return;
         }
 
-        const message =
-          didTimeout
-            ? "Heatmap request timed out. Please try again."
-            : caughtError instanceof Error
-              ? caughtError.message
-              : "Failed to load heatmap";
+        const message = didTimeout
+          ? "Heatmap request timed out. Please try again."
+          : caughtError instanceof Error
+            ? caughtError.message
+            : "Failed to load heatmap";
 
-        console.error(`[HeatMap] [request ${requestId}] Fetch failed`, caughtError);
+        console.error(
+          `[HeatMap] [request ${requestId}] Fetch failed`,
+          caughtError,
+        );
         setPoints([]);
         setError(message);
         setDebugInfo(`Error: ${message}`);

@@ -35,7 +35,7 @@ app.use("/api/vehicles", vehicleRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/listings", auctionRouter);
 app.use("/api/heatmap", heatmapRouter);
-app.use("/api/stripe", stripeRouter)
+app.use("/api/stripe", stripeRouter);
 app.use("/api/listings-analytics", listingAnalyticsRoutes);
 app.use("/api/listings", auctionRouter);
 

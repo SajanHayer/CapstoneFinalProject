@@ -6,8 +6,8 @@ import { useTheme } from "../../context/ThemeContext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { user,isLoggedIn, isGuest, logout, exitGuest } = useAuth();
-  console.log(user?.is_verified)
+  const { user, isLoggedIn, isGuest, logout, exitGuest } = useAuth();
+  console.log(user?.is_verified);
   const { theme, toggleTheme } = useTheme();
   const handleLogout = async () => {
     await logout();

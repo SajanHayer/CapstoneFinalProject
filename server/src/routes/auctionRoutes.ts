@@ -411,8 +411,6 @@ auctionRouter.post("/:listingId/sale", async (req, res) => {
       .from(listings)
       .where(eq(listings.id, listingId));
 
-    console.log(row);
-
     // get bidder id
     const [row1] = await db
       .select({

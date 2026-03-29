@@ -100,7 +100,7 @@ export const AccountPage: React.FC = () => {
                   : [];
                 // Find the most recent active listing, fallback to most recent overall
                 const activeListing = listings.find(
-                  (l: any) => l.status === "active"
+                  (l: any) => l.status === "active",
                 );
                 const mostRecentListing = activeListing || listings.at(-1);
                 if (mostRecentListing) {
@@ -357,35 +357,41 @@ export const AccountPage: React.FC = () => {
                         <span className={`status ${vehicle.status}`}>
                           {vehicle.status}
                         </span>
-                        {vehicle.listingStatus && (() => {
-                          const now = new Date();
-                          const startTime = vehicle.listingStartTime
-                            ? new Date(vehicle.listingStartTime)
-                            : null;
-                          const isUpcoming =
-                            startTime && now < startTime && vehicle.listingStatus === "Active";
+                        {vehicle.listingStatus &&
+                          (() => {
+                            const now = new Date();
+                            const startTime = vehicle.listingStartTime
+                              ? new Date(vehicle.listingStartTime)
+                              : null;
+                            const isUpcoming =
+                              startTime &&
+                              now < startTime &&
+                              vehicle.listingStatus === "Active";
 
-                          let bgColor = "#f97316";
-                          if (vehicle.listingStatus === "Active") {
-                            bgColor = isUpcoming ? "#8b5cf6" : "#3b82f6";
-                          }
+                            let bgColor = "#f97316";
+                            if (vehicle.listingStatus === "Active") {
+                              bgColor = isUpcoming ? "#8b5cf6" : "#3b82f6";
+                            }
 
-                          return (
-                            <span
-                              style={{
-                                backgroundColor: bgColor,
-                                color: "white",
-                                padding: "4px 12px",
-                                borderRadius: "4px",
-                                fontSize: "12px",
-                                fontWeight: "500",
-                                marginLeft: "8px",
-                              }}
-                            >
-                              Listing: {isUpcoming ? "Upcoming" : vehicle.listingStatus}
-                            </span>
-                          );
-                        })()}
+                            return (
+                              <span
+                                style={{
+                                  backgroundColor: bgColor,
+                                  color: "white",
+                                  padding: "4px 12px",
+                                  borderRadius: "4px",
+                                  fontSize: "12px",
+                                  fontWeight: "500",
+                                  marginLeft: "8px",
+                                }}
+                              >
+                                Listing:{" "}
+                                {isUpcoming
+                                  ? "Upcoming"
+                                  : vehicle.listingStatus}
+                              </span>
+                            );
+                          })()}
                       </div>
                     </div>
                   </div>

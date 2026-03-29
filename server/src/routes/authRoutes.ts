@@ -4,7 +4,7 @@ import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { stripe } from "../services/stripe"
+import { stripe } from "../services/stripe";
 export const authRouter = Router();
 
 authRouter.post("/register", async (req, res) => {
@@ -33,10 +33,9 @@ authRouter.post("/register", async (req, res) => {
       name: name,
       email: email,
     });
-    console.log(customer.id)    
     const [user] = await db
       .insert(users)
-      .values({ email, password_hash, name, role, customer_id:customer.id})
+      .values({ email, password_hash, name, role, customer_id: customer.id })
       .returning({
         id: users.id,
         email: users.email,
@@ -44,7 +43,6 @@ authRouter.post("/register", async (req, res) => {
         role: users.role,
         is_verified: users.is_verified,
       });
-    
 
     res.status(201).json({ user });
   } catch (err) {
@@ -61,7 +59,6 @@ authRouter.post("/login", async (req, res) => {
     const [user] = await db.select().from(users).where(eq(users.email, email));
 
     if (!user) {
-      console.log("user");
       return res.status(401).json({ message: "User does not exist" });
     }
 
@@ -77,7 +74,9 @@ authRouter.post("/login", async (req, res) => {
     const token = signToken({
       id: user.id,
       email: user.email,
-      role: user.role,      is_verified: user.is_verified,    });
+      role: user.role,
+      is_verified: user.is_verified,
+    });
 
     // Store token in HTTP-only cookie
     res.cookie("jwt", token, {

@@ -102,9 +102,15 @@ export const listings = pgTable("listings", {
   type: listingTypeEnum("type").notNull(),
 
   start_price: numeric("start_price", { precision: 12, scale: 2 }).notNull(),
-  reserve_price: numeric("reserve_price", { precision: 12, scale: 2 }).notNull(),
+  reserve_price: numeric("reserve_price", {
+    precision: 12,
+    scale: 2,
+  }).notNull(),
   buy_now_price: numeric("buy_now_price", { precision: 12, scale: 2 }),
-  current_price: numeric("current_price", { precision: 12, scale: 2 }).notNull(),
+  current_price: numeric("current_price", {
+    precision: 12,
+    scale: 2,
+  }).notNull(),
 
   start_time: timestamp("start_time").notNull(),
   end_time: timestamp("end_time").notNull(),

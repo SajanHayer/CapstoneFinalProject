@@ -55,8 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-
-
   // User login
   async function login(data: User) {
     setUser(data);

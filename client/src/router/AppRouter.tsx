@@ -12,7 +12,6 @@ import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
 import { HeatMapPage } from "../pages/HeatMapPage";
 
-
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
@@ -20,7 +19,6 @@ import { VehicleDetailPage } from "../pages/VehicleDetailPage";
 import { EditVehiclePage } from "../pages/EditVehiclePage";
 import { YouWonPage } from "../pages/YouWonPage";
 import { AddCardPage } from "../pages/AddCardPage";
-
 
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";

@@ -17,12 +17,16 @@ function assertMetric(m: string): Metric {
   return "views";
 }
 
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+async function geocodeAddress(
+  address: string,
+): Promise<{ lat: number; lng: number } | null> {
   const key = process.env.GOOGLE_GEOCODING_API_KEY;
   if (!key) {
     // If you only use Maps on the frontend, you can skip geocoding entirely.
     // But with your current schema (location string), server-side geocoding is required.
-    console.warn("[Heatmap] Missing GOOGLE_GEOCODING_API_KEY - geocoding disabled");
+    console.warn(
+      "[Heatmap] Missing GOOGLE_GEOCODING_API_KEY - geocoding disabled",
+    );
     return null;
   }
 
@@ -42,13 +46,17 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
 
     const data = await res.json();
     if (data.status !== "OK" || !data.results?.length) {
-      console.debug(`[Heatmap] No geocoding results for: "${address}" (status: ${data.status})`);
+      console.debug(
+        `[Heatmap] No geocoding results for: "${address}" (status: ${data.status})`,
+      );
       return null;
     }
 
     const loc = data.results[0].geometry.location;
     const coords = { lat: Number(loc.lat), lng: Number(loc.lng) };
-    console.debug(`[Heatmap] Geocoded "${address}" → ${JSON.stringify(coords)}`);
+    console.debug(
+      `[Heatmap] Geocoded "${address}" → ${JSON.stringify(coords)}`,
+    );
     return coords;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
@@ -75,7 +83,12 @@ async function backfillListingLatLng(batchSize = 25): Promise<void> {
       location: listings.location,
     })
     .from(listings)
-    .where(and(isNotNull(listings.location), sql`${listings.latitude} is null or ${listings.longitude} is null`))
+    .where(
+      and(
+        isNotNull(listings.location),
+        sql`${listings.latitude} is null or ${listings.longitude} is null`,
+      ),
+    )
     .limit(batchSize);
 
   for (const row of missing) {
@@ -99,7 +112,9 @@ async function backfillListingLatLng(batchSize = 25): Promise<void> {
   }
 }
 
-export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[]> {
+export async function getHeatmapPoints(
+  metricRaw: string,
+): Promise<HeatmapPoint[]> {
   const metric = assertMetric(metricRaw);
 
   // 1) Backfill some missing coordinates (safe + incremental)
@@ -107,7 +122,10 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
   try {
     await backfillListingLatLng(25);
   } catch (error) {
-    console.error("[Heatmap] Backfill failed; continuing with cached coordinates only", error);
+    console.error(
+      "[Heatmap] Backfill failed; continuing with cached coordinates only",
+      error,
+    );
   }
 
   // 2) Aggregate weights
@@ -164,8 +182,8 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
   const points = (resultRows as any[])
     .map((r) => {
       // Handle cases where PostgreSQL numeric type returns string
-      const lat = typeof r.lat === 'string' ? parseFloat(r.lat) : Number(r.lat);
-      const lng = typeof r.lng === 'string' ? parseFloat(r.lng) : Number(r.lng);
+      const lat = typeof r.lat === "string" ? parseFloat(r.lat) : Number(r.lat);
+      const lng = typeof r.lng === "string" ? parseFloat(r.lng) : Number(r.lng);
       const weight = Number(r.weight);
 
       return {
@@ -175,13 +193,19 @@ export async function getHeatmapPoints(metricRaw: string): Promise<HeatmapPoint[
       };
     })
     .filter((p) => {
-      const isValid = Number.isFinite(p.lat) && Number.isFinite(p.lng) && Number.isFinite(p.weight) && p.weight > 0;
+      const isValid =
+        Number.isFinite(p.lat) &&
+        Number.isFinite(p.lng) &&
+        Number.isFinite(p.weight) &&
+        p.weight > 0;
       if (!isValid) {
         console.warn(`[Heatmap] Filtered invalid point:`, p);
       }
       return isValid;
     });
 
-  console.log(`[Heatmap] Generated ${points.length} valid points for metric: ${metric}`);
+  console.log(
+    `[Heatmap] Generated ${points.length} valid points for metric: ${metric}`,
+  );
   return points;
 }
