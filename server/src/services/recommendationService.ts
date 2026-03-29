@@ -221,6 +221,9 @@ export async function getRecommendationsForUser(
     getBidHistory(userId),
     getCandidateListings(userId),
   ]);
+  // console.log("HISTORY:", viewHistory, bidHistory);
+  // console.log("CANDIDATES:", candidates.length);
+
 
   if (candidates.length === 0) {
     return [];
@@ -232,6 +235,7 @@ export async function getRecommendationsForUser(
     candidates,
     limit,
   };
+  // console.log("PAYLOAD:", JSON.stringify(payload, null, 2));
 
   let recommendations: RecommendationResponse[] = [];
 
@@ -248,7 +252,7 @@ export async function getRecommendationsForUser(
       throw new Error(`Recommendation service returned ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { recommendations?: Array<any> };
     recommendations = Array.isArray(data?.recommendations)
       ? data.recommendations.map((item: any) => ({
           listingId: Number(item.listing_id),

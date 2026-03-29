@@ -161,7 +161,7 @@ def generate_recommendations(payload: dict[str, Any]) -> dict[str, Any]:
         frame["condition"] = frame.get("condition", "").map(_safe_text)
 
     interacted_ids = set(history_df.get("listing_id", pd.Series(dtype=int)).tolist())
-    candidates_df = candidates_df[~candidates_df["listing_id"].isin(interacted_ids)].copy()
+    # candidates_df = candidates_df[~candidates_df["listing_id"].isin(interacted_ids)].copy()
 
     if candidates_df.empty:
         return {"recommendations": []}
@@ -197,7 +197,7 @@ def generate_recommendations(payload: dict[str, Any]) -> dict[str, Any]:
                 + component_scores["content_score"] * 0.45
                 + component_scores["popularity_score"] * 0.15
             )
-
+            if candidate["listing_id"] in interacted_ids: final_score *= 0.7
             recommendations.append(
                 RecommendationResult(
                     listing_id=int(candidate["listing_id"]),
