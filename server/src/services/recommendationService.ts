@@ -1,7 +1,6 @@
 import { db } from "../db/db";
-import { listingInteractions, listings } from "../db/schema";
-import { and, desc, eq, gte, sql } from "drizzle-orm";
-import { query } from "../db/db";
+import { listingInteractions, listings, vehicles, bids } from "../db/schema";
+import { and, desc, eq, gte, sql, count, asc } from "drizzle-orm";
 
 type RecommendationHistoryRow = {
   listing_id: number;
@@ -65,111 +64,131 @@ function coerceImageUrl(value: CandidateRow["image_url"]): string {
 }
 
 async function getViewHistory(userId: number): Promise<RecommendationHistoryRow[]> {
-  const result = await query(
-    `
-      SELECT
-        li.listing_id::int AS listing_id,
-        1.25 AS interaction_score,
-        l.type::text AS type,
-        l.location AS location,
-        l.current_price::float8 AS price,
-        v.make AS make,
-        v.model AS model,
-        v.condition::text AS condition,
-        v.year::int AS year,
-        l.views_count::int AS views_count,
-        COALESCE(bstats.bid_count, 0)::int AS bid_count
-      FROM listing_interactions li
-      JOIN listings l ON l.id = li.listing_id
-      JOIN vehicles v ON v.id = l.vehicle_id
-      LEFT JOIN (
-        SELECT listing_id, COUNT(*)::int AS bid_count
-        FROM bids
-        GROUP BY listing_id
-      ) bstats ON bstats.listing_id = l.id
-      WHERE li.user_id = $1
-        AND li.interaction_type = 'view'
-      ORDER BY li.occurred_at DESC
-      LIMIT 25
-    `,
-    [userId],
-  );
+  // Create a subquery to count bids per listing
+  const bidsCountSubquery = db
+    .select({
+      listing_id: bids.listing_id,
+      bid_count: count().as("bid_count"),
+    })
+    .from(bids)
+    .groupBy(bids.listing_id)
+    .as("bstats");
 
-  return result.rows as RecommendationHistoryRow[];
+  const result = await db
+    .select({
+      listing_id: listingInteractions.listing_id,
+      interaction_score: sql<number>`1.25`,
+      type: listings.type,
+      location: listings.location,
+      price: listings.current_price,
+      make: vehicles.make,
+      model: vehicles.model,
+      condition: vehicles.condition,
+      year: vehicles.year,
+      views_count: listings.views_count,
+      bid_count: sql<number>`COALESCE(${bidsCountSubquery.bid_count}, 0)`,
+    })
+    .from(listingInteractions)
+    .innerJoin(listings, eq(listings.id, listingInteractions.listing_id))
+    .innerJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+    .leftJoin(bidsCountSubquery, eq(bidsCountSubquery.listing_id, listings.id))
+    .where(
+      and(
+        eq(listingInteractions.user_id, userId),
+        eq(listingInteractions.interaction_type, "view"),
+      ),
+    )
+    .orderBy(desc(listingInteractions.occurred_at))
+    .limit(25);
+
+  return result.map((row) => ({
+    ...row,
+    price: Number(row.price),
+  })) as RecommendationHistoryRow[];
 }
 
 async function getBidHistory(userId: number): Promise<RecommendationHistoryRow[]> {
-  const result = await query(
-    `
-      SELECT
-        b.listing_id::int AS listing_id,
-        (2.5 + COUNT(*)::float8 * 0.5) AS interaction_score,
-        l.type::text AS type,
-        l.location AS location,
-        l.current_price::float8 AS price,
-        v.make AS make,
-        v.model AS model,
-        v.condition::text AS condition,
-        v.year::int AS year,
-        l.views_count::int AS views_count,
-        COUNT(*)::int AS bid_count
-      FROM bids b
-      JOIN listings l ON l.id = b.listing_id
-      JOIN vehicles v ON v.id = l.vehicle_id
-      WHERE b.bidder_id = $1
-      GROUP BY
-        b.listing_id,
-        l.type,
-        l.location,
-        l.current_price,
-        v.make,
-        v.model,
-        v.condition,
-        v.year,
-        l.views_count
-      ORDER BY MAX(b.bid_time) DESC
-      LIMIT 25
-    `,
-    [userId],
-  );
+  // Create a subquery to get bid stats per listing
+  const bidStatsSubquery = db
+    .select({
+      listing_id: bids.listing_id,
+      bid_count: count().as("bid_count"),
+      max_bid_time: sql<Date>`MAX(${bids.bid_time})`.as("max_bid_time"),
+    })
+    .from(bids)
+    .where(eq(bids.bidder_id, userId))
+    .groupBy(bids.listing_id)
+    .as("bid_stats");
 
-  return result.rows as RecommendationHistoryRow[];
+  const result = await db
+    .select({
+      listing_id: bidStatsSubquery.listing_id,
+      interaction_score: sql<number>`2.5 + ${bidStatsSubquery.bid_count}::float8 * 0.5`,
+      type: listings.type,
+      location: listings.location,
+      price: listings.current_price,
+      make: vehicles.make,
+      model: vehicles.model,
+      condition: vehicles.condition,
+      year: vehicles.year,
+      views_count: listings.views_count,
+      bid_count: bidStatsSubquery.bid_count,
+    })
+    .from(bidStatsSubquery)
+    .innerJoin(listings, eq(listings.id, bidStatsSubquery.listing_id))
+    .innerJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+    .orderBy(desc(bidStatsSubquery.max_bid_time))
+    .limit(25);
+
+  return result.map((row) => ({
+    ...row,
+    price: Number(row.price),
+  })) as RecommendationHistoryRow[];
 }
 
 async function getCandidateListings(userId: number): Promise<CandidateRow[]> {
-  const result = await query(
-    `
-      SELECT
-        l.id::int AS listing_id,
-        l.type::text AS type,
-        l.location AS location,
-        l.current_price::float8 AS price,
-        v.make AS make,
-        v.model AS model,
-        v.condition::text AS condition,
-        v.year::int AS year,
-        l.views_count::int AS views_count,
-        COALESCE(bstats.bid_count, 0)::int AS bid_count,
-        v.image_url AS image_url,
-        l.start_time::text AS start_time,
-        l.end_time::text AS end_time
-      FROM listings l
-      JOIN vehicles v ON v.id = l.vehicle_id
-      LEFT JOIN (
-        SELECT listing_id, COUNT(*)::int AS bid_count
-        FROM bids
-        GROUP BY listing_id
-      ) bstats ON bstats.listing_id = l.id
-      WHERE l.status = 'active'
-        AND l.seller_id <> $1
-      ORDER BY l.end_time ASC
-    `,
-    [userId],
-  );
+  // Create a subquery to count bids per listing
+  const bidsCountSubquery = db
+    .select({
+      listing_id: bids.listing_id,
+      bid_count: count().as("bid_count"),
+    })
+    .from(bids)
+    .groupBy(bids.listing_id)
+    .as("bstats");
 
-  return result.rows as CandidateRow[];
+  const result = await db
+    .select({
+      listing_id: listings.id,
+      type: listings.type,
+      location: listings.location,
+      price: listings.current_price,
+      make: vehicles.make,
+      model: vehicles.model,
+      condition: vehicles.condition,
+      year: vehicles.year,
+      views_count: listings.views_count,
+      bid_count: sql<number>`COALESCE(${bidsCountSubquery.bid_count}, 0)`,
+      image_url: vehicles.image_url,
+      start_time: sql<string>`${listings.start_time}::text`,
+      end_time: sql<string>`${listings.end_time}::text`,
+    })
+    .from(listings)
+    .innerJoin(vehicles, eq(vehicles.id, listings.vehicle_id))
+    .leftJoin(bidsCountSubquery, eq(bidsCountSubquery.listing_id, listings.id))
+    .where(
+      and(
+        eq(listings.status, "active"),
+        sql`${listings.seller_id} <> ${userId}`,
+      ),
+    )
+    .orderBy(asc(listings.end_time));
+
+  return result.map((row) => ({
+    ...row,
+    price: Number(row.price),
+  })) as CandidateRow[];
 }
-
 export async function trackListingView(userId: number, listingId: number) {
   const lookback = new Date(Date.now() - 1000 * 60 * 60 * 4);
   const existing = await db
