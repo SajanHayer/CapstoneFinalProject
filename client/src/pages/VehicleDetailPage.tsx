@@ -34,6 +34,7 @@ interface ListingInfo {
   location: string;
   end_reason?: string;
   highest_bid?: number;
+  bid_count?: number;
 }
 
 export const VehicleDetailPage: React.FC = () => {
@@ -123,13 +124,14 @@ export const VehicleDetailPage: React.FC = () => {
                   return {
                     ...listing,
                     highest_bid: Number(highestBid.bid_amount),
+                    bid_count: bidsData.result.length,
                   };
                 }
               }
             } catch (err) {
               // Silently fail for individual bid fetches
             }
-            return listing;
+            return { ...listing, bid_count: 0 };
           }),
         );
 
@@ -190,38 +192,21 @@ export const VehicleDetailPage: React.FC = () => {
   };
 
   const handleSellVehicle = async (listingId: number) => {
-      toast(
-    ({ closeToast }) => (
-      <div>
-        <p className="font-semibold">Confirm sale?</p>
-        <p className="text-sm">This will mark the listing as sold.</p>
-
-        <div className="flex gap-2 mt-2">
-          <button
-            className="bg-red-500 text-white px-2 py-1 rounded"
-            onClick={() => {
-              completeSale();
-              closeToast();
-            }}
-          >
-            Confirm
-          </button>
-
-          <button
-            className="border px-2 py-1 rounded"
-            onClick={closeToast}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ),
-    {
-      autoClose: false, // important so user can click
-      closeOnClick: false,
+    // Check if there are any bids
+    const listing = listings.find((l) => l.id === listingId);
+    if (!listing || !listing.bid_count || listing.bid_count === 0) {
+      toast.error("You cannot sell a listing with no bids.");
+      return;
     }
-  );
-  async function completeSale() {
+
+    if (
+      !window.confirm(
+        "Are you sure you want to mark this listing as sold? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
     setSellingListingId(listingId);
     try {
       const res = await fetch(
@@ -254,7 +239,7 @@ export const VehicleDetailPage: React.FC = () => {
     } finally {
       setSellingListingId(null);
     }
-  }};
+  };
 
   if (loading) {
     return (
@@ -656,11 +641,12 @@ export const VehicleDetailPage: React.FC = () => {
                                   padding: "6px 10px",
                                   backgroundColor: "#27ae60",
                                 }}
-                                disabled={sellingListingId === listing.id}
+                                disabled={sellingListingId === listing.id || !listing.bid_count}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleSellVehicle(listing.id);
                                 }}
+                                title={!listing.bid_count ? "Cannot sell with no bids" : "Mark listing as sold"}
                               >
                                 {sellingListingId === listing.id
                                   ? "Processing..."

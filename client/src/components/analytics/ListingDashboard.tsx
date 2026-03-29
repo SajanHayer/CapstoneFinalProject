@@ -236,7 +236,6 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
         toast.success("Listing removed!");
       }
     } catch (err) {
-      toast.error("Action failed. Please try again.");
       toast.error("Failed to perform action. Please try again.");
     } finally {
       setActionLoading(false);

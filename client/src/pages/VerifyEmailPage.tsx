@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 
@@ -9,23 +10,22 @@ export const VerifyEmailPage: React.FC = () => {
 
   const email = searchParams.get("email") || "";
   const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
 
     if (!email) {
-      setError("Missing email. Please register again.");
+      toast.error("Missing email. Please register again.");
       return;
     }
 
     if (!code || code.length !== 5) {
-      setError("Please enter the 5-digit verification code.");
+      toast.error("Please enter the 5-digit verification code.");
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("http://localhost:8080/api/auth/verify-email", {
@@ -37,18 +37,20 @@ export const VerifyEmailPage: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Verification failed");
+        toast.error(data.message || "Verification failed");
         return;
       }
 
-      setMessage("Email verified successfully. You can now log in.");
+      toast.success("Email verified successfully! Redirecting to login...");
 
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (err) {
-      setError("Server error");
+      toast.error("Server error. Please try again.");
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,13 +70,11 @@ export const VerifyEmailPage: React.FC = () => {
             onChange={(e) =>
               setCode(e.target.value.replace(/\D/g, "").slice(0, 5))
             }
+            disabled={isSubmitting}
           />
 
-          {error && <p className="form-error">{error}</p>}
-          {message && <p style={{ color: "green" }}>{message}</p>}
-
-          <Button type="submit" className="auth-submit">
-            Verify Email
+          <Button type="submit" className="auth-submit" disabled={isSubmitting}>
+            {isSubmitting ? "Verifying..." : "Verify Email"}
           </Button>
         </form>
 
