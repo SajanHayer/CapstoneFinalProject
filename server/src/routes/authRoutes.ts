@@ -4,7 +4,7 @@ import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
-
+import { stripe } from "../services/stripe";
 export const authRouter = Router();
 
 authRouter.post("/register", async (req, res) => {
@@ -27,15 +27,21 @@ authRouter.post("/register", async (req, res) => {
       return res.status(409).json({ message: "User already Exists" });
     }
     const password_hash = await hashPassword(password);
-
+    // console.log(stripe.customers)
+    // console.log(stripe)
+    const customer = await stripe.customers.create({
+      name: name,
+      email: email,
+    });
     const [user] = await db
       .insert(users)
-      .values({ email, password_hash, name, role })
+      .values({ email, password_hash, name, role, customer_id: customer.id })
       .returning({
         id: users.id,
         email: users.email,
         name: users.name,
         role: users.role,
+        is_verified: users.is_verified,
       });
 
     res.status(201).json({ user });
@@ -53,7 +59,6 @@ authRouter.post("/login", async (req, res) => {
     const [user] = await db.select().from(users).where(eq(users.email, email));
 
     if (!user) {
-      console.log("user");
       return res.status(401).json({ message: "User does not exist" });
     }
 
@@ -70,6 +75,7 @@ authRouter.post("/login", async (req, res) => {
       id: user.id,
       email: user.email,
       role: user.role,
+      is_verified: user.is_verified,
     });
 
     // Store token in HTTP-only cookie

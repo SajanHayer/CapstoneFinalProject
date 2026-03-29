@@ -8,6 +8,7 @@ import {
   numeric,
   pgEnum,
   json,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 // =====================
@@ -64,6 +65,8 @@ export const users = pgTable("users", {
   password_hash: text("password_hash").notNull(),
   role: userRoleEnum("role").notNull().default("buyer"),
   created_at: timestamp("created_at").defaultNow().notNull(),
+  customer_id: varchar("customer_id", { length: 255 }),
+  is_verified: boolean("is_verified").default(false),
 });
 
 // =====================
@@ -104,9 +107,15 @@ export const listings = pgTable("listings", {
   type: listingTypeEnum("type").notNull(),
 
   start_price: numeric("start_price", { precision: 12, scale: 2 }).notNull(),
-  reserve_price: numeric("reserve_price", { precision: 12, scale: 2 }).notNull(),
+  reserve_price: numeric("reserve_price", {
+    precision: 12,
+    scale: 2,
+  }).notNull(),
   buy_now_price: numeric("buy_now_price", { precision: 12, scale: 2 }),
-  current_price: numeric("current_price", { precision: 12, scale: 2 }).notNull(),
+  current_price: numeric("current_price", {
+    precision: 12,
+    scale: 2,
+  }).notNull(),
 
   start_time: timestamp("start_time").notNull(),
   end_time: timestamp("end_time").notNull(),

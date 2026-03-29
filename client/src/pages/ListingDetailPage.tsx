@@ -218,6 +218,11 @@ export const ListingDetailPage: React.FC = () => {
   }
 
   const handlePlaceBid = () => {
+    if (!user?.is_verified) {
+      toast.error("Please verify your account by adding a card before bidding");
+      return;
+    }
+
     if (!bidAmount || !userLocation) {
       toast.error("Please enter both a bid amount and your location");
       return;
@@ -461,15 +466,18 @@ export const ListingDetailPage: React.FC = () => {
                 disabled={
                   bidAmount <= currentHighestBid ||
                   !isAuctionActive ||
-                  !userLocation
+                  !userLocation ||
+                  !user?.is_verified
                 }
                 className="bid-button"
               >
-                {isAuctionUpcoming
-                  ? "Auction Not Started"
-                  : isAuctionActive
-                    ? "Place a Bid"
-                    : "Auction Ended"}
+                {!user?.is_verified && isAuctionActive
+                  ? "Add Card to Bid"
+                  : isAuctionUpcoming
+                    ? "Auction Not Started"
+                    : isAuctionActive
+                      ? "Place a Bid"
+                      : "Auction Ended"}
               </button>
             </div>
           </aside>

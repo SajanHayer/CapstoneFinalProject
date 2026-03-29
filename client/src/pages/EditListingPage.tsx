@@ -95,7 +95,9 @@ export const EditListingPage: React.FC = () => {
           location: l.location ?? "",
         });
       } catch (e: any) {
-        toast.error(e instanceof Error ? e.message : "Failed to load listing details");
+        toast.error(
+          e instanceof Error ? e.message : "Failed to load listing details",
+        );
         setError(e?.message ?? "Failed to load listing.");
       } finally {
         setLoading(false);

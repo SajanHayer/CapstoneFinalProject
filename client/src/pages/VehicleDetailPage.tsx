@@ -135,7 +135,8 @@ export const VehicleDetailPage: React.FC = () => {
 
         setListings(listingsWithBids);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Failed to load data";
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load data";
         setError(errorMsg);
         toast.error(errorMsg);
       } finally {
@@ -180,7 +181,9 @@ export const VehicleDetailPage: React.FC = () => {
 
       toast.success("Listing removed successfully!");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove listing");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to remove listing",
+      );
     } finally {
       setCancellingListingId(null);
     }
@@ -245,7 +248,9 @@ export const VehicleDetailPage: React.FC = () => {
 
       toast.success("Sale completed successfully! Payment is pending.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to complete sale");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to complete sale",
+      );
     } finally {
       setSellingListingId(null);
     }

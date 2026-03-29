@@ -64,7 +64,8 @@ export const YouWonPage: React.FC = () => {
           email: sellerData.user.email,
         });
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Failed to load information";
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load information";
         setError(errorMsg);
         toast.error(errorMsg);
       } finally {

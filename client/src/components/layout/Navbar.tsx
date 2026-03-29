@@ -6,7 +6,8 @@ import { useTheme } from "../../context/ThemeContext";
 
 export const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, isGuest, logout, exitGuest } = useAuth();
+  const { user, isLoggedIn, isGuest, logout, exitGuest } = useAuth();
+  console.log(user?.is_verified);
   const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -37,7 +38,11 @@ export const Navbar: React.FC = () => {
             <NavLink to="/heatmap" className="nav-link">
               Heat Map
             </NavLink>
-
+            {!user?.is_verified && (
+              <NavLink to="/add-card" className="nav-link">
+                Add Card
+              </NavLink>
+            )}
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}

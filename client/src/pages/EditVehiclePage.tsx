@@ -81,7 +81,8 @@ export const EditVehiclePage: React.FC = () => {
 
         setExistingImages(vehicle.image_url || []);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Failed to load vehicle";
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load vehicle";
         setError(errorMsg);
         toast.error(errorMsg);
       } finally {
@@ -169,7 +170,8 @@ export const EditVehiclePage: React.FC = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        const errorMsg = data.message || `Failed to update vehicle (${res.status})`;
+        const errorMsg =
+          data.message || `Failed to update vehicle (${res.status})`;
         toast.error(errorMsg);
         throw new Error(errorMsg);
       }

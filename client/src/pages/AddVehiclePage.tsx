@@ -147,8 +147,6 @@ export const AddVehiclePage: React.FC = () => {
         )}
       </div>
 
-    
-
       {/* Main */}
       <div className="av-grid">
         {/* Form */}

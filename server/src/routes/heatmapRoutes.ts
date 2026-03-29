@@ -19,11 +19,14 @@ heatmapRouter.get("/", requireAuth, async (req, res) => {
     const safePoints = Array.isArray(points) ? points : [];
 
     if (!Array.isArray(points)) {
-      console.error(`[HeatmapRoute] Invalid response from heatmap service:`, typeof points);
+      console.error(
+        `[HeatmapRoute] Invalid response from heatmap service:`,
+        typeof points,
+      );
     }
 
     console.log(
-      `[HeatmapRoute] Returning ${safePoints.length} heatmap points in ${Date.now() - startedAt}ms`
+      `[HeatmapRoute] Returning ${safePoints.length} heatmap points in ${Date.now() - startedAt}ms`,
     );
 
     res.json({ metric, points: safePoints });
@@ -32,4 +35,3 @@ heatmapRouter.get("/", requireAuth, async (req, res) => {
     res.status(500).json({ message: "Failed to generate heatmap data" });
   }
 });
-
