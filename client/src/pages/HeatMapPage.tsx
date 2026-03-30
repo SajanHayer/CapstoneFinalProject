@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Circle,
   GoogleMap,
@@ -15,17 +16,25 @@ type HeatPoint = {
   weight: number;
   location: string;
   imageUrl: string | null;
+  listingId: string;
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const HEATMAP_REQUEST_TIMEOUT_MS = 15000;
-const GOOGLE_MAP_LIBRARIES: "visualization"[] = ["visualization"];
+const GOOGLE_MAP_LIBRARIES = ["visualization"] as const;
 
 const containerStyle: React.CSSProperties = {
   width: "100%",
   height: "70vh",
   borderRadius: 12,
+};
+
+type Bounds = {
+  neLat: number;
+  neLng: number;
+  swLat: number;
+  swLng: number;
 };
 
 const MapContent: React.FC<{
@@ -37,6 +46,9 @@ const MapContent: React.FC<{
   debugInfo: string;
   center: { lat: number; lng: number };
   onRetry: () => void;
+  bounds: Bounds | null;
+  onBoundsChange: (bounds: Bounds) => void;
+  navigate: ReturnType<typeof useNavigate>;
 }> = ({
   metric,
   onMetricChange,
@@ -46,8 +58,12 @@ const MapContent: React.FC<{
   debugInfo,
   center,
   onRetry,
+  bounds,
+  onBoundsChange,
+  navigate,
 }) => {
   const [hoveredPoint, setHoveredPoint] = useState<HeatPoint | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
 
   const heatmapData = useMemo(() => {
     if (
@@ -84,7 +100,7 @@ const MapContent: React.FC<{
     <div style={{ padding: 16 }}>
       <h2 style={{ marginBottom: 8 }}>Market Heat Map</h2>
       <p style={{ marginTop: 0, opacity: 0.8 }}>
-        Visualize hotspots by {metric} (from your listings activity).
+        View active listings in your area.
       </p>
 
       <div
@@ -96,7 +112,7 @@ const MapContent: React.FC<{
           flexWrap: "wrap",
         }}
       >
-        <label>
+        {/* <label>
           Metric:&nbsp;
           <select
             value={metric}
@@ -108,7 +124,7 @@ const MapContent: React.FC<{
             <option value="bids">Bids</option>
             <option value="transactions">Transactions</option>
           </select>
-        </label>
+        </label> */}
 
         {loading && <span style={{ color: "#ff9800" }}>Loading...</span>}
         {!loading && error && (
@@ -136,7 +152,7 @@ const MapContent: React.FC<{
           </span>
         )}
       </div>
-
+{/* 
       {debugInfo && (
         <div
           style={{
@@ -150,7 +166,7 @@ const MapContent: React.FC<{
         >
           {debugInfo}
         </div>
-      )}
+      )} */}
 
       <GoogleMap
         mapContainerStyle={containerStyle}
@@ -160,6 +176,24 @@ const MapContent: React.FC<{
           disableDefaultUI: false,
           zoomControl: true,
           mapTypeControl: true,
+        }}
+        onLoad={(map) => {
+          mapRef.current = map;
+        }}
+        onBoundsChanged={() => {
+          if (mapRef.current) {
+            const bounds = mapRef.current.getBounds();
+            if (bounds) {
+              const ne = bounds.getNorthEast();
+              const sw = bounds.getSouthWest();
+              onBoundsChange({
+                neLat: ne.lat(),
+                neLng: ne.lng(),
+                swLat: sw.lat(),
+                swLng: sw.lng(),
+              });
+            }
+          }
         }}
       >
         {heatmapData.length > 0 && (
@@ -190,6 +224,9 @@ const MapContent: React.FC<{
                   : current,
               )
             }
+            onClick={() => {
+              navigate(`/listings/${point.listingId}`);
+            }}
           />
         ))}
         {hoveredPoint && (
@@ -222,6 +259,23 @@ const MapContent: React.FC<{
                 {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
                 {hoveredPoint.weight}
               </div>
+              <button
+                onClick={() => navigate(`/listings/${hoveredPoint.listingId}`)}
+                style={{
+                  marginTop: 12,
+                  width: "100%",
+                  padding: "8px",
+                  backgroundColor: "#2196F3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  fontSize: "0.9em",
+                  fontWeight: 600,
+                }}
+              >
+                View Listing
+              </button>
             </div>
           </InfoWindow>
         )}
@@ -249,13 +303,16 @@ const MapContent: React.FC<{
 };
 
 export const HeatMapPage: React.FC = () => {
+  const navigate = useNavigate();
   const [metric, setMetric] = useState<Metric>("views");
   const [points, setPoints] = useState<HeatPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState("");
   const [retryNonce, setRetryNonce] = useState(0);
+  const [bounds, setBounds] = useState<Bounds | null>(null);
   const requestIdRef = useRef(0);
+  const boundsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { isLoaded: isMapsLoaded, loadError } = useJsApiLoader({
     id: "heatmap-google-maps-script",
     googleMapsApiKey: MAPS_KEY,
@@ -265,12 +322,29 @@ export const HeatMapPage: React.FC = () => {
   const center = useMemo(() => ({ lat: 51.0447, lng: -114.0719 }), []);
 
   useEffect(() => {
-    console.log("[HeatMap] Component mounted");
+    // console.log("[HeatMap] Component mounted");
 
     return () => {
-      console.log("[HeatMap] Component unmounted");
+      // console.log("[HeatMap] Component unmounted");
+      if (boundsTimeoutRef.current) {
+        clearTimeout(boundsTimeoutRef.current);
+      }
     };
   }, []);
+
+  const handleBoundsChange = (newBounds: Bounds) => {
+    setBounds(newBounds);
+    
+    // Debounce the fetch by 500ms to avoid too many requests while dragging
+    if (boundsTimeoutRef.current) {
+      clearTimeout(boundsTimeoutRef.current);
+    }
+    
+    boundsTimeoutRef.current = setTimeout(() => {
+      // Trigger a new fetch by incrementing retryNonce
+      setRetryNonce((current) => current + 1);
+    }, 500);
+  };
 
   useEffect(() => {
     const requestId = ++requestIdRef.current;
@@ -288,12 +362,22 @@ export const HeatMapPage: React.FC = () => {
       setError(null);
       setDebugInfo(`Loading ${metric} heatmap...`);
 
-      const url = `${API_BASE}/api/heatmap?metric=${metric}`;
-      console.log(`[HeatMap] [request ${requestId}] Fetch start`, {
-        metric,
-        url,
-        retryNonce,
-      });
+      // Build query parameters with bounds if available
+      const params = new URLSearchParams({ metric });
+      if (bounds) {
+        params.append("neLat", bounds.neLat.toString());
+        params.append("neLng", bounds.neLng.toString());
+        params.append("swLat", bounds.swLat.toString());
+        params.append("swLng", bounds.swLng.toString());
+      }
+
+      const url = `${API_BASE}/api/heatmap?${params.toString()}`;
+      // console.log(`[HeatMap] [request ${requestId}] Fetch start`, {
+      //   metric,
+      //   bounds,
+      //   url,
+      //   retryNonce,
+      // });
 
       try {
         const response = await fetch(url, {
@@ -325,13 +409,19 @@ export const HeatMapPage: React.FC = () => {
               point.imageUrl.trim().length > 0
                 ? point.imageUrl
                 : null,
+            listingId:
+              typeof point.listingId === "string" &&
+              point.listingId.trim().length > 0
+                ? point.listingId
+                : "",
           }))
           .filter((point: HeatPoint) => {
             const isValid =
               Number.isFinite(point.lat) &&
               Number.isFinite(point.lng) &&
               Number.isFinite(point.weight) &&
-              point.weight > 0;
+              point.weight > 0 &&
+              point.listingId.length > 0;
 
             if (!isValid) {
               console.warn("[HeatMap] Invalid point filtered out:", point);
@@ -341,16 +431,16 @@ export const HeatMapPage: React.FC = () => {
           });
 
         if (!isActive || requestId !== requestIdRef.current) {
-          console.log(
-            `[HeatMap] [request ${requestId}] Ignoring stale success`,
-          );
+          // console.log(
+          //   `[HeatMap] [request ${requestId}] Ignoring stale success`,
+          // );
           return;
         }
 
-        console.log(`[HeatMap] [request ${requestId}] Fetch success`, {
-          received: rawPoints.length,
-          valid: validPoints.length,
-        });
+        // console.log(`[HeatMap] [request ${requestId}] Fetch success`, {
+        //   received: rawPoints.length,
+        //   valid: validPoints.length,
+        // });
 
         setPoints(validPoints);
         setDebugInfo(
@@ -358,14 +448,14 @@ export const HeatMapPage: React.FC = () => {
         );
       } catch (caughtError) {
         if (!isActive || requestId !== requestIdRef.current) {
-          console.log(
-            `[HeatMap] [request ${requestId}] Ignoring stale failure`,
-          );
+          // console.log(
+          //   `[HeatMap] [request ${requestId}] Ignoring stale failure`,
+          // );
           return;
         }
 
         if (controller.signal.aborted && !didTimeout) {
-          console.log(`[HeatMap] [request ${requestId}] Fetch aborted`);
+          // console.log(`[HeatMap] [request ${requestId}] Fetch aborted`);
           return;
         }
 
@@ -396,10 +486,10 @@ export const HeatMapPage: React.FC = () => {
     return () => {
       isActive = false;
       window.clearTimeout(timeoutId);
-      console.log(`[HeatMap] [request ${requestId}] Cleanup`);
+      // console.log(`[HeatMap] [request ${requestId}] Cleanup`);
       controller.abort();
     };
-  }, [metric, retryNonce]);
+  }, [metric, bounds, retryNonce]);
 
   if (!MAPS_KEY) {
     return (
@@ -440,6 +530,9 @@ export const HeatMapPage: React.FC = () => {
       debugInfo={debugInfo}
       center={center}
       onRetry={() => setRetryNonce((current) => current + 1)}
+      bounds={bounds}
+      onBoundsChange={handleBoundsChange}
+      navigate={navigate}
     />
   );
 };

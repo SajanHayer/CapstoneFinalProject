@@ -4,12 +4,20 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 
 type Metric = "views" | "bids" | "transactions";
 
+type Bounds = {
+  neLat: number;
+  neLng: number;
+  swLat: number;
+  swLng: number;
+};
+
 type HeatmapPoint = {
   lat: number;
   lng: number;
   weight: number;
   location: string;
   imageUrl: string | null;
+  listingId: string;
 };
 
 const GEOCODING_TIMEOUT_MS = 8000;
@@ -116,6 +124,7 @@ async function backfillListingLatLng(batchSize = 25): Promise<void> {
 
 export async function getHeatmapPoints(
   metricRaw: string,
+  bounds?: Bounds | null,
 ): Promise<HeatmapPoint[]> {
   const metric = assertMetric(metricRaw);
 
@@ -140,6 +149,7 @@ export async function getHeatmapPoints(
   if (metric === "views") {
     rows = await db.execute(sql`
       SELECT
+        l.id AS listing_id,
         l.latitude AS lat,
         l.longitude AS lng,
         l.location AS location,
@@ -155,6 +165,7 @@ export async function getHeatmapPoints(
   if (metric === "bids") {
     rows = await db.execute(sql`
       SELECT
+        l.id AS listing_id,
         l.latitude AS lat,
         l.longitude AS lng,
         l.location AS location,
@@ -172,6 +183,7 @@ export async function getHeatmapPoints(
   if (metric === "transactions") {
     rows = await db.execute(sql`
       SELECT
+        l.id AS listing_id,
         l.latitude AS lat,
         l.longitude AS lng,
         l.location AS location,
@@ -223,6 +235,8 @@ export async function getHeatmapPoints(
             ? r.location.trim()
             : "Unknown location",
         imageUrl: firstImage,
+        listingId:
+          typeof r.listing_id === "string" ? r.listing_id : String(r.listing_id || ""),
       };
     })
     .filter((p) => {
@@ -230,15 +244,40 @@ export async function getHeatmapPoints(
         Number.isFinite(p.lat) &&
         Number.isFinite(p.lng) &&
         Number.isFinite(p.weight) &&
-        p.weight > 0;
+        p.weight > 0 &&
+        p.listingId.length > 0;
       if (!isValid) {
         console.warn(`[Heatmap] Filtered invalid point:`, p);
       }
       return isValid;
     });
 
-  console.log(
-    `[Heatmap] Generated ${points.length} valid points for metric: ${metric}`,
-  );
+  // console.log(
+  //   `[Heatmap] Generated ${points.length} valid points for metric: ${metric}`,
+  // );
+
+  // Filter by bounds if provided
+  if (bounds) {
+    const filteredPoints = points.filter((p) => {
+      // Check if point is within bounds
+      // NE = northeast (top-right), SW = southwest (bottom-left)
+      const isWithinLatitude =
+        p.lat >= Math.min(bounds.swLat, bounds.neLat) &&
+        p.lat <= Math.max(bounds.swLat, bounds.neLat);
+
+      const isWithinLongitude =
+        p.lng >= Math.min(bounds.swLng, bounds.neLng) &&
+        p.lng <= Math.max(bounds.swLng, bounds.neLng);
+
+      return isWithinLatitude && isWithinLongitude;
+    });
+
+    // console.log(
+    //   `[Heatmap] Filtered to ${filteredPoints.length} points within bounds`,
+    //   bounds,
+    // );
+    return filteredPoints;
+  }
+
   return points;
 }
