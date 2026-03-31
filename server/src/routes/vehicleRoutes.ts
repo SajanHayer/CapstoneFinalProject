@@ -34,6 +34,10 @@ vehicleRouter.post(
         condition,
         status,
         description,
+        vin,
+        style,
+        engine_size,
+        engine_size_unit,
       } = req.body;
       console.log(status);
 
@@ -92,6 +96,10 @@ vehicleRouter.post(
           status: "available",
           description,
           image_url: uploadedUrls,
+          vin,
+          style,
+          engine_size: engine_size ? Number(engine_size) : null,
+          engine_size_unit,
         })
         .returning();
 
@@ -205,6 +213,10 @@ vehicleRouter.put(
         condition,
         description,
         existingImages,
+        vin,
+        style,
+        engine_size,
+        engine_size_unit,
       } = req.body;
 
       if (!make || !model || !Number(year) || !price) {
@@ -259,6 +271,10 @@ vehicleRouter.put(
           condition,
           description,
           image_url: allImages,
+          vin,
+          style,
+          engine_size: engine_size ? Number(engine_size) : null,
+          engine_size_unit,
         })
         .where(eq(vehicles.id, vehicleId))
         .returning();

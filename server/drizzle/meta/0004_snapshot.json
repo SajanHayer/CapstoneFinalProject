@@ -1,6 +1,6 @@
 {
-  "id": "eca12252-50a8-4f7a-b9e6-8b3560e37992",
-  "prevId": "a7f183e4-0b53-40ca-919d-6da20fdb0d79",
+  "id": "8f4e192b-8c0d-4f1e-b5eb-014d1e29a262",
+  "prevId": "bd7f7fc6-cb63-4403-9ca7-2c9c9153f933",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -67,6 +67,78 @@
           "tableTo": "users",
           "columnsFrom": [
             "bidder_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.listing_interactions": {
+      "name": "listing_interactions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "listing_id": {
+          "name": "listing_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interaction_type": {
+          "name": "interaction_type",
+          "type": "interaction_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "occurred_at": {
+          "name": "occurred_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "listing_interactions_listing_id_listings_id_fk": {
+          "name": "listing_interactions_listing_id_listings_id_fk",
+          "tableFrom": "listing_interactions",
+          "tableTo": "listings",
+          "columnsFrom": [
+            "listing_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "listing_interactions_user_id_users_id_fk": {
+          "name": "listing_interactions_user_id_users_id_fk",
+          "tableFrom": "listing_interactions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -170,6 +242,18 @@
         "location": {
           "name": "location",
           "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "numeric(10, 7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "numeric(10, 7)",
           "primaryKey": false,
           "notNull": false
         },
@@ -375,6 +459,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "customer_id": {
+          "name": "customer_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_verified": {
+          "name": "is_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
         }
       },
       "indexes": {},
@@ -465,6 +562,30 @@
           "primaryKey": false,
           "notNull": true
         },
+        "vin": {
+          "name": "vin",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "style": {
+          "name": "style",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engine_size": {
+          "name": "engine_size",
+          "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engine_size_unit": {
+          "name": "engine_size_unit",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -497,6 +618,14 @@
     }
   },
   "enums": {
+    "public.interaction_type": {
+      "name": "interaction_type",
+      "schema": "public",
+      "values": [
+        "view",
+        "bid"
+      ]
+    },
     "public.listing_end_reason": {
       "name": "listing_end_reason",
       "schema": "public",
@@ -504,7 +633,8 @@
         "success",
         "unmet",
         "nobids",
-        "pending"
+        "pending",
+        "cancelled"
       ]
     },
     "public.listing_status": {

@@ -42,7 +42,13 @@ export const LoginPage: React.FC = () => {
       const userEmail = data.user.email;
       const userRole = data.user.role;
       const userId = data.user.id;
-      login({ email: userEmail, role: userRole, id: userId });
+      const isVerified = data.user.is_verified;
+      login({
+        email: userEmail,
+        role: userRole,
+        id: userId,
+        is_verified: isVerified,
+      });
       toast.success("Login successful!");
       navigate("/listings");
     } catch (err) {
