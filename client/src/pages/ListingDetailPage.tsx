@@ -50,6 +50,38 @@ export const ListingDetailPage: React.FC = () => {
   const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
   const [userLocation, setUserLocation] = useState<string>("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Get user's location on component mount
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoords({ lat, lng });
+
+        // Try to get city name from coordinates using reverse geocoding
+        fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            // Extract city and state/province from the response
+            const city = data.address?.city || data.address?.town || data.address?.village || "";
+            const state = data.address?.state || "";
+            if (city && state) {
+              setUserLocation(`${city}, ${state}`);
+            } else if (city) {
+              setUserLocation(city);
+            }
+          })
+          .catch((err) => console.log("Reverse geocoding failed:", err));
+      },
+      (error) => {
+        console.log("Geolocation error:", error);
+      },
+    );
+  }, []);
 
   useEffect(() => {
     const fetchVehicle = async () => {

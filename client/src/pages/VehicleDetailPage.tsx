@@ -619,18 +619,22 @@ export const VehicleDetailPage: React.FC = () => {
                           );
                         }
 
-                        if (isEnded && !isCancelled) {
-                          return (
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "8px",
-                                flexWrap: "wrap",
-                                marginTop: "10px",
-                                paddingTop: "10px",
-                                borderTop: "1px solid #e0e0e0",
-                              }}
-                            >
+                        if (isCancelled) {
+                          return null;
+                        }
+
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                              marginTop: "10px",
+                              paddingTop: "10px",
+                              borderTop: "1px solid #e0e0e0",
+                            }}
+                          >
+                            {isEnded && (
                               <Button
                                 variant="primary"
                                 style={{
@@ -657,29 +661,28 @@ export const VehicleDetailPage: React.FC = () => {
                                   ? "Processing..."
                                   : "💰 Sell Vehicle"}
                               </Button>
-                              <Button
-                                variant="outline"
-                                style={{
-                                  flex: 1,
-                                  fontSize: "12px",
-                                  padding: "6px 10px",
-                                  color: "#dc2626",
-                                  borderColor: "#dc2626",
-                                }}
-                                disabled={cancellingListingId === listing.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveListing(listing.id);
-                                }}
-                              >
-                                {cancellingListingId === listing.id
-                                  ? "Removing..."
-                                  : "🗑️ Remove Listing"}
-                              </Button>
-                            </div>
-                          );
-                        }
-                        return null;
+                            )}
+                            <Button
+                              variant="outline"
+                              style={{
+                                flex: 1,
+                                fontSize: "12px",
+                                padding: "6px 10px",
+                                color: "#dc2626",
+                                borderColor: "#dc2626",
+                              }}
+                              disabled={cancellingListingId === listing.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveListing(listing.id);
+                              }}
+                            >
+                              {cancellingListingId === listing.id
+                                ? "Removing..."
+                                : "🗑️ Remove Listing"}
+                            </Button>
+                          </div>
+                        );
                       })()}
                     </div>
                   ))}
