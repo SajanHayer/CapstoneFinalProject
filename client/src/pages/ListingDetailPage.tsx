@@ -19,6 +19,10 @@ type VechileInfo = {
   status: "available" | "pending" | "sold";
   description: string | "";
   image_url: string[] | File[]; // array of image URLs or path to image or img
+  vin?: string;
+  style?: string;
+  engine_size?: number;
+  engine_size_unit?: string;
 };
 
 type BiddingInfo = {
@@ -314,6 +318,21 @@ export const ListingDetailPage: React.FC = () => {
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
+    },
+    {
+      title: "VIN",
+      value: vehicle.vin || "N/A",
+    },
+    {
+      title: "Style",
+      value: vehicle.style || "N/A",
+    },
+    {
+      title: "Engine Size",
+      value:
+        vehicle.engine_size && vehicle.engine_size_unit
+          ? `${vehicle.engine_size} ${vehicle.engine_size_unit}`
+          : "N/A",
     },
   ];
 

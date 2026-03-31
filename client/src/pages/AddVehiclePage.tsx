@@ -14,6 +14,10 @@ type VehicleDraft = {
   condition: string;
   status: string;
   description: string;
+  vin: string;
+  style: string;
+  engine_size: string;
+  engine_size_unit: string;
 };
 
 const MAX_IMAGES = 8;
@@ -31,6 +35,10 @@ export const AddVehiclePage: React.FC = () => {
     condition: "used",
     status: "Active",
     description: "",
+    vin: "",
+    style: "",
+    engine_size: "",
+    engine_size_unit: "L",
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -93,6 +101,10 @@ export const AddVehiclePage: React.FC = () => {
       fd.append("condition", form.condition);
       fd.append("status", form.status);
       fd.append("description", form.description.trim());
+      fd.append("vin", form.vin.trim());
+      fd.append("style", form.style.trim());
+      fd.append("engine_size", form.engine_size.trim());
+      fd.append("engine_size_unit", form.engine_size_unit);
 
       images.forEach((file) => fd.append("images", file));
 
@@ -187,6 +199,41 @@ export const AddVehiclePage: React.FC = () => {
               value={form.mileage_hours}
               type="number"
               onChange={(v) => update("mileage_hours", v)}
+            />
+          </div>
+
+          <div className="av-grid-3">
+            <LabeledInput
+              label="VIN"
+              value={form.vin}
+              placeholder="e.g., 1HGBH41JXMN109186"
+              onChange={(v) => update("vin", v)}
+            />
+            <LabeledInput
+              label="Style"
+              value={form.style}
+              placeholder="e.g., Sport, Touring"
+              onChange={(v) => update("style", v)}
+            />
+            <LabeledInput
+              label="Engine Size"
+              value={form.engine_size}
+              type="number"
+              placeholder="e.g., 2.5"
+              onChange={(v) => update("engine_size", v)}
+            />
+          </div>
+
+          <div className="av-grid-1">
+            <LabeledSelect
+              label="Engine Size Unit"
+              value={form.engine_size_unit}
+              onChange={(v) => update("engine_size_unit", v)}
+              options={[
+                { label: "Liters (L)", value: "L" },
+                { label: "Cubic Centimeters (CC)", value: "CC" },
+                { label: "Horsepower (HP)", value: "HP" },
+              ]}
             />
           </div>
 

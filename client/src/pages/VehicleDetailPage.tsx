@@ -16,6 +16,10 @@ interface VehicleDetails {
   status: string;
   description: string;
   image_url: string[];
+  vin?: string;
+  style?: string;
+  engine_size?: number;
+  engine_size_unit?: string;
 }
 
 interface ListingInfo {
@@ -288,6 +292,21 @@ export const VehicleDetailPage: React.FC = () => {
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
+    },
+    {
+      title: "VIN",
+      value: vehicle.vin || "N/A",
+    },
+    {
+      title: "Style",
+      value: vehicle.style || "N/A",
+    },
+    {
+      title: "Engine Size",
+      value:
+        vehicle.engine_size && vehicle.engine_size_unit
+          ? `${vehicle.engine_size} ${vehicle.engine_size_unit}`
+          : "N/A",
     },
   ];
 

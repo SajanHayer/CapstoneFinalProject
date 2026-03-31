@@ -29,6 +29,13 @@
       "when": 1774736590091,
       "tag": "0003_exotic_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1774939317822,
+      "tag": "0004_peaceful_guardsmen",
+      "breakpoints": true
     }
   ]
 }

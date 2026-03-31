@@ -90,6 +90,10 @@ export const vehicles = pgTable("vehicles", {
   status: vehicleStatusEnum("status").notNull(),
   description: text("description").notNull(),
   image_url: json("image_url").notNull(), // ["url1", "url2"]
+  vin: varchar("vin", { length: 255 }),
+  style: varchar("style", { length: 255 }),
+  engine_size: numeric("engine_size", { precision: 8, scale: 2 }),
+  engine_size_unit: varchar("engine_size_unit", { length: 10 }), // HP, CC, or L
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
