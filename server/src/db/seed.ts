@@ -375,6 +375,18 @@ async function seed() {
 
     const now = new Date();
 
+    // Different neighborhoods/areas within Calgary
+    const calgaryLocations = [
+      { lat: "51.0447", lon: "-114.0719" }, // Downtown
+      { lat: "51.1088", lon: "-114.1300" }, // SW Calgary
+      { lat: "51.0896", lon: "-113.9900" }, // SE Calgary
+      { lat: "51.1500", lon: "-114.1500" }, // NW Calgary
+      { lat: "51.1700", lon: "-113.9700" }, // NE Calgary
+      { lat: "51.0200", lon: "-114.0500" }, // South Calgary
+      { lat: "51.2000", lon: "-114.0200" }, // North Calgary
+      { lat: "51.0800", lon: "-114.1100" }, // Midtown
+    ];
+
     // Create active listings based on reserve prices
     const activeListings = await db
       .insert(listings)
@@ -384,6 +396,17 @@ async function seed() {
           const start = Math.max(500, Math.round(reserve * 0.8));
           const current = Math.max(start, Math.round(reserve * 0.88));
           const buyNow = Math.round(reserve * 1.12);
+          const location = calgaryLocations[index % calgaryLocations.length];
+          
+          // Last two listings: 3 days and 7 days
+          let endTime;
+          if (index === insertedVehicles.length - 2) {
+            endTime = secondsFromNow(3 * 24 * 60 * 60); // 3 days
+          } else if (index === insertedVehicles.length - 1) {
+            endTime = secondsFromNow(7 * 24 * 60 * 60); // 7 days
+          } else {
+            endTime = secondsFromNow(60 * (index + 1));
+          }
 
           return {
             vehicle_id: vehicle.id,
@@ -394,12 +417,12 @@ async function seed() {
             buy_now_price: buyNow.toFixed(2),
             current_price: current.toFixed(2),
             start_time: now,
-            end_time: secondsFromNow(60 * (index + 1)),
+            end_time: endTime,
             status: "active" as const,
             views_count: 12 + index * 7,
             location: "Calgary, AB",
-            latitude: "51.0447",
-            longitude: "-114.0719",
+            latitude: location.lat,
+            longitude: location.lon,
           };
         }),
       )

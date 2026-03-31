@@ -79,10 +79,14 @@ export const ListingDetailPage: React.FC = () => {
               setUserLocation(city);
             }
           })
-          .catch((err) => console.log("Reverse geocoding failed:", err));
+          .catch((err) => {
+            console.log("Reverse geocoding failed:", err);
+            toast.error("Failed to get your location. Please enter it manually.");
+          });
       },
       (error) => {
         console.log("Geolocation error:", error);
+        toast.error("Please enable location access to place bids.");
       },
     );
   }, []);
@@ -199,10 +203,22 @@ export const ListingDetailPage: React.FC = () => {
       }
     };
 
+    const handleBidSuccess = (data: { message?: string }) => {
+      toast.success(data.message || "Bid placed successfully!");
+    };
+
+    const handleBidError = (data: { message?: string }) => {
+      toast.error(data.message || "Failed to place bid. Please try again.");
+    };
+
     socket.on("bid_update", handleBidUpdate);
+    socket.on("bid_success", handleBidSuccess);
+    socket.on("bid_error", handleBidError);
 
     return () => {
       socket.off("bid_update", handleBidUpdate);
+      socket.off("bid_success", handleBidSuccess);
+      socket.off("bid_error", handleBidError);
     };
   }, []);
 

@@ -62,6 +62,8 @@ export const VehicleDetailPage: React.FC = () => {
     (listing) => listing.statusListing !== "cancelled",
   );
 
+  const isVehicleSold = listings.some((listing) => listing.statusListing === "sold");
+
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -352,7 +354,7 @@ export const VehicleDetailPage: React.FC = () => {
             >
               + List Vehicle for Auction
             </Button>
-            {hasActiveListing && (
+            {hasActiveListing && !isVehicleSold && (
               <div
                 style={{
                   marginTop: "12px",
@@ -372,7 +374,12 @@ export const VehicleDetailPage: React.FC = () => {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
+            onClick={() => {
+              if (!isVehicleSold) {
+                navigate(`/edit-vehicle/${vehicle.id}`);
+              }
+            }}
+            disabled={isVehicleSold}
           >
             ✎ Edit Vehicle
           </Button>
@@ -585,7 +592,7 @@ export const VehicleDetailPage: React.FC = () => {
                           const isEnded =
                             listing.statusListing === "ended" ||
                             listing.statusListing === "sold";
-                          const cannotEdit = hasStarted || isEnded;
+                          const cannotEdit = hasStarted || isEnded || isVehicleSold;
 
                           return (
                             <Button
@@ -618,7 +625,9 @@ export const VehicleDetailPage: React.FC = () => {
                       {(() => {
                         const isEnded = listing.statusListing === "ended";
                         const isSold = listing.statusListing === "sold";
-                        const isCancelled = listing.end_reason === "cancelled";
+                        const isCancelled =
+                          listing.end_reason === "cancelled" ||
+                          listing.statusListing === "cancelled";
 
                         if (isSold) {
                           return (

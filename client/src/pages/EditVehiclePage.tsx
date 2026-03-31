@@ -140,17 +140,23 @@ export const EditVehiclePage: React.FC = () => {
     setOk(null);
 
     if (!form.make.trim() || !form.model.trim()) {
-      setError("Make and model are required.");
+      const msg = "Make and model are required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!form.year || Number.isNaN(Number(form.year))) {
-      setError("Year is required.");
+      const msg = "Year is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!form.price || Number.isNaN(Number(form.price))) {
-      setError("Price is required.");
+      const msg = "Price is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -192,7 +198,9 @@ export const EditVehiclePage: React.FC = () => {
         throw new Error(errorMsg);
       }
 
-      setOk("Vehicle updated successfully!");
+      const successMsg = "Vehicle updated successfully!";
+      setOk(successMsg);
+      toast.success(successMsg);
       setTimeout(() => navigate(`/vehicle/${vehicleId}`), 650);
     } catch (e: any) {
       setError(e?.message || "Failed to update vehicle.");

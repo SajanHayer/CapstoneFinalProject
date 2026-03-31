@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   GoogleMap,
   InfoWindow,
@@ -630,6 +631,7 @@ export const HeatMapPage: React.FC = () => {
           `[HeatMap] [request ${requestId}] Fetch failed`,
           caughtError,
         );
+        toast.error(message);
         setPoints([]);
         setError(message);
       } finally {
