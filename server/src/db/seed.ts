@@ -93,7 +93,8 @@ async function seed() {
         style: "Sport",
         engine_size: "937",
         price: 14988,
-        description: "2021 Ducati Monster with 3,423 km. Naked sport bike with premium Italian styling and strong midrange power. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2021 Ducati Monster with 3,423 km. Naked sport bike with premium Italian styling and strong midrange power. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2021%20Ducati%20Monster/27-img-0326.jpg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2021%20Ducati%20Monster/01-img-0359.jpg",
@@ -133,7 +134,8 @@ async function seed() {
         style: "Sport",
         engine_size: "999",
         price: 14988,
-        description: "2014 Aprilia RSV4 Factory with 15,045 km. Track-focused superbike with race-bred electronics and aggressive ergonomics. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2014 Aprilia RSV4 Factory with 15,045 km. Track-focused superbike with race-bred electronics and aggressive ergonomics. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2014%20Aprilia%20rsv4%20Factory/WhatsApp%20Image%202025-08-25%20at%2022.27.17.jpeg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2014%20Aprilia%20rsv4%20Factory/WhatsApp%20Image%202025-08-25%20at%2022.27.19%20(1).jpeg",
@@ -174,7 +176,8 @@ async function seed() {
         style: "Sport",
         engine_size: "599",
         price: 14988,
-        description: "2025 Suzuki GSX-R600 with 3,140 km. Modern supersport with crisp handling and a responsive 599cc engine. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2025 Suzuki GSX-R600 with 3,140 km. Modern supersport with crisp handling and a responsive 599cc engine. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2025%20Suzuki%20GS-r600/WhatsApp%20Image%202025-08-26%20at%2014.27.20.jpeg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2025%20Suzuki%20GS-r600/WhatsApp%20Image%202025-08-26%20at%2014.27.21%20(1).jpeg",
@@ -209,7 +212,8 @@ async function seed() {
         style: "Sport",
         engine_size: "599",
         price: 13988,
-        description: "2014 Yamaha YZF-R6 with 17,972 km. Legendary 600cc supersport known for sharp cornering and high-rev character. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2014 Yamaha YZF-R6 with 17,972 km. Legendary 600cc supersport known for sharp cornering and high-rev character. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2014%20Yahama%20r6/WhatsApp%20Image%202025-08-25%20at%2022.34.17%20(1).jpeg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2014%20Yahama%20r6/WhatsApp%20Image%202025-08-25%20at%2022.34.17%20(2).jpeg",
@@ -247,7 +251,8 @@ async function seed() {
         style: "Sport",
         engine_size: "749",
         price: 14988,
-        description: "2019 Suzuki GSX-R750 with 7,136 km. Iconic middleweight sport bike that blends 600 agility with extra power. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2019 Suzuki GSX-R750 with 7,136 km. Iconic middleweight sport bike that blends 600 agility with extra power. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2019%20Suzuki%20gsxr750/WhatsApp%20Image%202025-08-25%20at%2022.24.15.jpeg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2019%20Suzuki%20gsxr750/WhatsApp%20Image%202025-08-25%20at%2022.24.20.jpeg",
@@ -286,7 +291,8 @@ async function seed() {
         style: "Cruiser",
         engine_size: "1200",
         price: 13988,
-        description: "2006 Buell Redneck Mutant Custom with 5,789 km. Custom cruiser with a big 1200cc engine and unique one-off style. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2006 Buell Redneck Mutant Custom with 5,789 km. Custom cruiser with a big 1200cc engine and unique one-off style. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/Buell%20Mutant/WhatsApp%20Image%202025-08-25%20at%2022.21.48%20(1).jpeg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/Buell%20Mutant/WhatsApp%20Image%202025-08-25%20at%2022.21.48.jpeg",
@@ -322,7 +328,8 @@ async function seed() {
         style: "Sport",
         engine_size: "999",
         price: 14988,
-        description: "2009 Yamaha YZF-R1 with 9,761 km. Liter-bike performance with aggressive styling and proven Yamaha reliability. Clean title, ready to ride, and priced for auction interest.",
+        description:
+          "2009 Yamaha YZF-R1 with 9,761 km. Liter-bike performance with aggressive styling and proven Yamaha reliability. Clean title, ready to ride, and priced for auction interest.",
         image_url: [
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2009%20Yahama%20R1/01-img-6285.jpg",
           "https://itxmrhtersnnhleuizpv.supabase.co/storage/v1/object/public/powerbidz-images/2009%20Yahama%20R1/02-img-6286.jpg",
@@ -397,7 +404,7 @@ async function seed() {
           const current = Math.max(start, Math.round(reserve * 0.88));
           const buyNow = Math.round(reserve * 1.12);
           const location = calgaryLocations[index % calgaryLocations.length];
-          
+
           // Last two listings: 3 days and 7 days
           let endTime;
           if (index === insertedVehicles.length - 2) {
@@ -440,39 +447,45 @@ async function seed() {
     const historicListings = await db
       .insert(listings)
       .values(
-        insertedVehicles.slice(0, insertedVehicles.length - 1).map((vehicle, index) => {
-          const reserve = vehicleData[index].price;
-          const start = Math.max(500, Math.round(reserve * 0.75));
-          const metReserve = index % 3 === 0;
-          const cancelled = index % 3 === 1;
-          const current = metReserve
-            ? reserve + 250
-            : cancelled
-              ? Math.round(reserve * 0.82)
-              : Math.round(reserve * 0.93);
-
-          return {
-            vehicle_id: vehicle.id,
-            seller_id: mainSeller.id,
-            type: "auction" as const,
-            start_price: start.toFixed(2),
-            reserve_price: reserve.toFixed(2),
-            buy_now_price: Math.round(reserve * 1.1).toFixed(2),
-            current_price: current.toFixed(2),
-            start_time: new Date(historicStart.getTime() - index * 24 * 60 * 60 * 1000),
-            end_time: new Date(historicEnd.getTime() - index * 12 * 60 * 60 * 1000),
-            status: "cancelled" as const,
-            end_reason: metReserve
-              ? ("success" as const)
+        insertedVehicles
+          .slice(0, insertedVehicles.length - 1)
+          .map((vehicle, index) => {
+            const reserve = vehicleData[index].price;
+            const start = Math.max(500, Math.round(reserve * 0.75));
+            const metReserve = index % 3 === 0;
+            const cancelled = index % 3 === 1;
+            const current = metReserve
+              ? reserve + 250
               : cancelled
-                ? ("cancelled" as const)
-                : ("unmet" as const),
-            views_count: 20 + index * 6,
-            location: index % 2 === 0 ? "Calgary, AB" : "Edmonton, AB",
-            latitude: index % 2 === 0 ? "51.0447" : "53.5461",
-            longitude: index % 2 === 0 ? "-114.0719" : "-113.4938",
-          };
-        }),
+                ? Math.round(reserve * 0.82)
+                : Math.round(reserve * 0.93);
+
+            return {
+              vehicle_id: vehicle.id,
+              seller_id: mainSeller.id,
+              type: "auction" as const,
+              start_price: start.toFixed(2),
+              reserve_price: reserve.toFixed(2),
+              buy_now_price: Math.round(reserve * 1.1).toFixed(2),
+              current_price: current.toFixed(2),
+              start_time: new Date(
+                historicStart.getTime() - index * 24 * 60 * 60 * 1000,
+              ),
+              end_time: new Date(
+                historicEnd.getTime() - index * 12 * 60 * 60 * 1000,
+              ),
+              status: "cancelled" as const,
+              end_reason: metReserve
+                ? ("success" as const)
+                : cancelled
+                  ? ("cancelled" as const)
+                  : ("unmet" as const),
+              views_count: 20 + index * 6,
+              location: index % 2 === 0 ? "Calgary, AB" : "Edmonton, AB",
+              latitude: index % 2 === 0 ? "51.0447" : "53.5461",
+              longitude: index % 2 === 0 ? "-114.0719" : "-113.4938",
+            };
+          }),
       )
       .returning({ id: listings.id });
 
@@ -536,9 +549,9 @@ async function seed() {
           {
             listing_id: listing.id,
             bidder_id: user2.id,
-            bid_amount: Math.round(
-              reserve * (metReserve ? 1.0 : 0.91),
-            ).toFixed(2),
+            bid_amount: Math.round(reserve * (metReserve ? 1.0 : 0.91)).toFixed(
+              2,
+            ),
             location: "Edmonton, AB",
           },
           {
@@ -598,4 +611,3 @@ async function seed() {
 }
 
 seed();
-

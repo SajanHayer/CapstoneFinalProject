@@ -62,7 +62,9 @@ export const VehicleDetailPage: React.FC = () => {
     (listing) => listing.statusListing !== "cancelled",
   );
 
-  const isVehicleSold = listings.some((listing) => listing.statusListing === "sold");
+  const isVehicleSold = listings.some(
+    (listing) => listing.statusListing === "sold",
+  );
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -592,7 +594,8 @@ export const VehicleDetailPage: React.FC = () => {
                           const isEnded =
                             listing.statusListing === "ended" ||
                             listing.statusListing === "sold";
-                          const cannotEdit = hasStarted || isEnded || isVehicleSold;
+                          const cannotEdit =
+                            hasStarted || isEnded || isVehicleSold;
 
                           return (
                             <Button

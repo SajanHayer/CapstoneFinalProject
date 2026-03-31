@@ -188,7 +188,7 @@ export const AddVehiclePage: React.FC = () => {
               onChange={(v) => update("year", v)}
             />
             <LabeledInput
-              label="Price"
+              label="Reserve Price"
               value={form.price}
               type="number"
               placeholder="e.g., 7899"

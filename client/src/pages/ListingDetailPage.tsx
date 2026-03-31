@@ -54,7 +54,9 @@ export const ListingDetailPage: React.FC = () => {
   const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
   const [userLocation, setUserLocation] = useState<string>("");
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
 
   // Get user's location on component mount
   useEffect(() => {
@@ -71,7 +73,11 @@ export const ListingDetailPage: React.FC = () => {
           .then((res) => res.json())
           .then((data) => {
             // Extract city and state/province from the response
-            const city = data.address?.city || data.address?.town || data.address?.village || "";
+            const city =
+              data.address?.city ||
+              data.address?.town ||
+              data.address?.village ||
+              "";
             const state = data.address?.state || "";
             if (city && state) {
               setUserLocation(`${city}, ${state}`);
@@ -81,7 +87,9 @@ export const ListingDetailPage: React.FC = () => {
           })
           .catch((err) => {
             console.log("Reverse geocoding failed:", err);
-            toast.error("Failed to get your location. Please enter it manually.");
+            toast.error(
+              "Failed to get your location. Please enter it manually.",
+            );
           });
       },
       (error) => {

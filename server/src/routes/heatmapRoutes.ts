@@ -20,13 +20,21 @@ heatmapRouter.get("/", requireAuth, async (req, res) => {
 
   try {
     const metric = (req.query.metric as string) || "views";
-    
+
     // Parse bounds if provided
     let bounds: Bounds | null = null;
-    const neLat = req.query.neLat ? parseFloat(req.query.neLat as string) : null;
-    const neLng = req.query.neLng ? parseFloat(req.query.neLng as string) : null;
-    const swLat = req.query.swLat ? parseFloat(req.query.swLat as string) : null;
-    const swLng = req.query.swLng ? parseFloat(req.query.swLng as string) : null;
+    const neLat = req.query.neLat
+      ? parseFloat(req.query.neLat as string)
+      : null;
+    const neLng = req.query.neLng
+      ? parseFloat(req.query.neLng as string)
+      : null;
+    const swLat = req.query.swLat
+      ? parseFloat(req.query.swLat as string)
+      : null;
+    const swLng = req.query.swLng
+      ? parseFloat(req.query.swLng as string)
+      : null;
 
     if (
       neLat !== null &&
