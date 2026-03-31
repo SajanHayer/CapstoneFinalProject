@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight, Gauge, MapPin, TimerReset } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import type { Listing } from "../../pages/ListingsPage";
 import { formatTimeRemaining } from "../../lib/timeUtils";
 
 export function ListingRowCard({ listing }: { listing: Listing }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+
+  const isAdminView =
+    location.pathname === "/admin/listings" && user?.role === "admin";
 
   useEffect(() => {
     if (listing.status === "EXPIRED") return;
@@ -48,14 +54,79 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
     return "listing-row-badge listing-row-badge-ended";
   }, [listing.status]);
 
+  const handleRowClick = () => {
+    if (isAdminView) {
+      navigate(`/edit-listing/${listing.id}`);
+      return;
+    }
+
+    navigate(`/listings/${listing.id}`);
+  };
+
+  const handleCancelListing = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this listing?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/listings/remove/${listing.id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to cancel listing");
+      }
+
+      alert("Listing cancelled successfully");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel listing");
+    }
+  };
+
+  const handleCompleteSale = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to complete this sale?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/listings/${listing.id}/sale`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to complete sale");
+      }
+
+      alert("Sale completed successfully");
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to complete sale");
+    }
+  };
+
   return (
     <article
       className="listing-row"
-      onClick={() => navigate(`/listings/${listing.id}`)}
+      onClick={handleRowClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter") navigate(`/listings/${listing.id}`);
+        if (e.key === "Enter") handleRowClick();
       }}
     >
       <div className="listing-row-media">
@@ -86,7 +157,7 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
             {listing.location}
           </span>
           {(listing.status === "ACTIVE" || listing.status === "UPCOMING") &&
-          timeRemaining ? (
+            timeRemaining ? (
             <span className="row-pill row-pill-timer">
               <TimerReset size={14} />
               {timeRemaining}
@@ -102,15 +173,65 @@ export function ListingRowCard({ listing }: { listing: Listing }) {
         <div className="listing-row-price">
           ${listing.currentPrice.toLocaleString()}
         </div>
-        <div className="listing-row-actions">
-          <button
-            className="btn btn-primary listing-row-cta"
-            onClick={() => navigate(`/listings/${listing.id}`)}
-            type="button"
-          >
-            View listing
-            <ArrowRight size={16} />
-          </button>
+
+        <div
+          className="listing-row-actions"
+          style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
+        >
+          {isAdminView ? (
+            <>
+              <button
+                className="btn btn-outline listing-row-cta"
+                onClick={() => navigate(`/listings/${listing.id}`)}
+                type="button"
+              >
+                View
+              </button>
+
+              <button
+                className="btn btn-primary listing-row-cta"
+                onClick={() => navigate(`/edit-listing/${listing.id}`)}
+                type="button"
+              >
+                Edit
+                <ArrowRight size={16} />
+              </button>
+
+              <button
+                className="btn btn-outline listing-row-cta"
+                onClick={() =>
+                  navigate(`/seller/${user?.id}/analytics?listingId=${listing.id}`)
+                }
+                type="button"
+              >
+                Analytics
+              </button>
+              <button
+                className="btn btn-outline listing-row-cta"
+                onClick={handleCancelListing}
+                type="button"
+              >
+                Cancel
+              </button>
+
+              <button
+                className="btn btn-outline listing-row-cta"
+                onClick={handleCompleteSale}
+                type="button"
+              >
+                Complete Sale
+              </button>
+            </>
+          ) : (
+            <button
+              className="btn btn-primary listing-row-cta"
+              onClick={() => navigate(`/listings/${listing.id}`)}
+              type="button"
+            >
+              View listing
+              <ArrowRight size={16} />
+            </button>
+          )}
         </div>
       </div>
     </article>

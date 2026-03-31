@@ -24,6 +24,7 @@ async function seed() {
           "alice@example.com",
           "bob@example.com",
           "charlie@example.com",
+          "admin@example.com",
         ]),
       );
 
@@ -55,10 +56,19 @@ async function seed() {
           is_verified: true,
           email_verified: true,
         },
+        {
+          name: "Admin",
+          email: "admin@example.com",
+          password_hash: await hashPassword("Admin1234@@"),
+          role: "admin",
+          is_verified: true,
+          email_verified: true,
+        },
+
       ])
       .returning({ id: users.id });
 
-    const [user1, user2, user3] = insertedUsers;
+    const [user1, user2, user3, adminUser] = insertedUsers;
 
     // ---------------- Vehicles (Powersports + Motorcycles) ----------------
     const insertedVehicles = await db

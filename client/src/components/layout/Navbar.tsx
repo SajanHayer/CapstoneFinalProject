@@ -37,11 +37,19 @@ export const Navbar: React.FC = () => {
             <NavLink to="/heatmap" className="nav-link">
               Heat Map
             </NavLink>
-            {!user?.is_verified && (
-              <NavLink to="/add-card" className="nav-link">
-                Add Card
-              </NavLink>
+            
+            {user?.role === "admin" && (
+              <>
+                <NavLink to="/admin/listings" className="nav-link">
+                  Admin Panel
+                </NavLink>
+
+                <NavLink to="/admin/users" className="nav-link">
+                  Users
+                </NavLink>
+              </>
             )}
+
             {/* <NavLink to="/favourites" className="nav-link">
               Favourites
             </NavLink> */}

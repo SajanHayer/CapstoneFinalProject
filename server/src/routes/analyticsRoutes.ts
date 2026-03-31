@@ -7,35 +7,38 @@ export const analyticsRouter = Router();
 /**
  * GET /api/analytics/bids/summary
  *
- * If the request is authenticated and the user is a seller/admin, the response
- * is scoped to that seller's listings.
+ * Scope rules:
+ * - guest: global demo analytics
+ * - seller: only their own listings
+ * - admin: full platform analytics
  *
- * Otherwise, it returns a global summary (useful for Guest/Demo mode).
+ * Sensitive personal bidder info is NOT returned.
  */
 analyticsRouter.get("/bids/summary", async (req, res) => {
-  // Auth is optional here (guest can view demo analytics).
-  // We'll try to decode the cookie if present, but we won't block.
+  let authUser: any = null;
   let sellerId: number | null = null;
+  let scope: "global" | "seller" | "admin" = "global";
+
   try {
-    // requireAuth throws/returns response; we can't call it directly.
-    // Instead, we check if a cookie exists and, if so, verify via a tiny middleware call.
-    // The simplest approach in this codebase: attempt a protected fetch path via jwt verification.
-    // We'll reuse requireAuth but capture the result by invoking it manually.
-    await new Promise<void>((resolve, reject) => {
-      // @ts-ignore
+    await new Promise<void>((resolve) => {
       requireAuth(req, res, () => resolve());
     });
 
-    const u = (req as any).user;
-    if (u?.id && (u?.role === "seller" || u?.role === "admin")) {
-      sellerId = Number(u.id);
+    authUser = (req as any).user;
+
+    if (authUser?.role === "seller" && authUser?.id) {
+      sellerId = Number(authUser.id);
+      scope = "seller";
+    } else if (authUser?.role === "admin") {
+      scope = "admin";
     }
   } catch {
+    authUser = null;
     sellerId = null;
+    scope = "global";
   }
 
   try {
-    // Totals
     const totalsResult = await query(
       `
       SELECT
@@ -57,7 +60,6 @@ analyticsRouter.get("/bids/summary", async (req, res) => {
       avg_bid_amount: 0,
     };
 
-    // Per-listing rollups
     const byListingResult = await query(
       `
       SELECT
@@ -77,13 +79,11 @@ analyticsRouter.get("/bids/summary", async (req, res) => {
       sellerId ? [sellerId] : undefined,
     );
 
-    // Recent bids
     const recentBidsResult = await query(
       `
       SELECT
         b.id::int AS id,
         b.listing_id::int AS listing_id,
-        b.bidder_id::int AS bidder_id,
         b.bid_amount::numeric AS bid_amount,
         b.bid_time AS bid_time,
         b.location AS location
@@ -96,8 +96,8 @@ analyticsRouter.get("/bids/summary", async (req, res) => {
       sellerId ? [sellerId] : undefined,
     );
 
-    res.json({
-      scope: sellerId ? "seller" : "global",
+    return res.json({
+      scope,
       totals: {
         bidCount: Number(totals.bid_count ?? 0),
         uniqueBidders: Number(totals.unique_bidders ?? 0),
@@ -115,14 +115,14 @@ analyticsRouter.get("/bids/summary", async (req, res) => {
       recentBids: recentBidsResult.rows.map((r) => ({
         id: Number(r.id),
         listingId: Number(r.listing_id),
-        bidderId: Number(r.bidder_id),
         bidAmount: Number(r.bid_amount),
         bidTime: r.bid_time,
         location: r.location,
+        bidderId: null,
       })),
     });
   } catch (err) {
     console.error("Analytics error:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 });

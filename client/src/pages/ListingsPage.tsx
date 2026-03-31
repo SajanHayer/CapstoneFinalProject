@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
+import { useLocation } from "react-router-dom";
+
 export type ListingStatus = "UPCOMING" | "ACTIVE" | "EXPIRED";
 
 export interface Listing {
@@ -203,6 +205,10 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
 
 export const ListingsPage: React.FC = () => {
   const { isLoggedIn, user } = useAuth();
+  const locationRouter = useLocation();
+
+  const isAdminView =
+    locationRouter.pathname === "/admin/listings" && user?.role === "admin";
 
   const [status, setStatus] = useState<ListingStatus>("ACTIVE");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -233,7 +239,11 @@ export const ListingsPage: React.FC = () => {
       }
       setError(null);
 
-      const res = await fetch("http://localhost:8080/api/listings", {
+      const endpoint = isAdminView
+        ? "http://localhost:8080/api/listings/admin/all"
+        : "http://localhost:8080/api/listings";
+
+      const res = await fetch(endpoint, {
         credentials: "include",
       });
 
@@ -299,10 +309,10 @@ export const ListingsPage: React.FC = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdminView]);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (!user?.id || isAdminView) {
       setRecommendedListings([]);
       return;
     }
@@ -355,7 +365,7 @@ export const ListingsPage: React.FC = () => {
     };
 
     void fetchRecommendations();
-  }, [user?.id]);
+  }, [user?.id, isAdminView]);
 
   const makeCounts = useMemo(() => {
     return listings.reduce<Record<string, number>>((acc, listing) => {
@@ -457,9 +467,13 @@ export const ListingsPage: React.FC = () => {
     <section className="market-page">
       <header className="market-header">
         <div>
-          <h1 className="market-title">Browse vehicles</h1>
+          <h1 className="market-title">
+            {isAdminView ? "Admin listing management" : "Browse vehicles"}
+          </h1>
           <p className="market-sub">
-            Find vehicles from across Let&apos;s Ride Canada auctions and sales.
+            {isAdminView
+              ? "View all marketplace listings, including internal admin-visible inventory states."
+              : "Find vehicles from across Let&apos;s Ride Canada auctions and sales."}
           </p>
         </div>
 
@@ -514,7 +528,7 @@ export const ListingsPage: React.FC = () => {
         )}
       </div>
 
-      {isLoggedIn && (
+      {isLoggedIn && !isAdminView && (
         <section
           style={{
             marginBottom: "1.5rem",
@@ -783,7 +797,7 @@ export const ListingsPage: React.FC = () => {
             )}
           </div>
 
-          {!isLoggedIn && (
+          {!isLoggedIn && !isAdminView && (
             <div className="sidebar-hint">
               Tip: Browse in Guest mode, then sign in to bid, watch, and save
               alerts.
@@ -798,11 +812,13 @@ export const ListingsPage: React.FC = () => {
                 {loading ? "Loading…" : `${visibleListings.length} results`}
               </div>
               <div className="results-subtext">
-                {status === "ACTIVE"
-                  ? "Live inventory updating every 30 seconds"
-                  : status === "UPCOMING"
-                    ? "Preview scheduled auctions before they go live"
-                    : "Recently closed marketplace listings"}
+                {isAdminView
+                  ? "Admin view of marketplace inventory"
+                  : status === "ACTIVE"
+                    ? "Live inventory updating every 30 seconds"
+                    : status === "UPCOMING"
+                      ? "Preview scheduled auctions before they go live"
+                      : "Recently closed marketplace listings"}
               </div>
             </div>
 

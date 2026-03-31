@@ -2,8 +2,8 @@ import { Router } from "express";
 import { db } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
-import { users } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { users, listings, bids, transactions } from "../db/schema";
+import { eq, asc, inArray } from "drizzle-orm";
 import { stripe } from "../services/stripe";
 import { sendVerificationEmail } from "../utils/email";
 
@@ -15,6 +15,14 @@ const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 const generateVerificationCode = (): string => {
   return Math.floor(10000 + Math.random() * 90000).toString();
 };
+
+async function getAuthUser(req: any, res: any) {
+  await new Promise<void>((resolve) => {
+    requireAuth(req, res, () => resolve());
+  });
+
+  return req.user;
+}
 
 // ================= REGISTER =================
 authRouter.post("/register", async (req, res) => {
@@ -232,32 +240,97 @@ authRouter.get("/users/:id", async (req, res) => {
   }
 });
 
-// GET /api/users/:id -> Get user info by ID
-authRouter.get("/users/:id", async (req, res) => {
+// ================= ADMIN: GET ALL USERS =================
+authRouter.get("/admin/users", async (req, res) => {
   try {
-    const userId = Number(req.params.id);
+    const authUser = await getAuthUser(req, res);
 
-    if (isNaN(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
+    if (!authUser || authUser.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
     }
 
-    const [user] = await db
+    const allUsers = await db
       .select({
         id: users.id,
         name: users.name,
         email: users.email,
         role: users.role,
+        is_verified: users.is_verified,
+        email_verified: users.email_verified,
       })
       .from(users)
-      .where(eq(users.id, userId));
+      .orderBy(asc(users.id));
 
-    if (!user) {
+    res.json({ users: allUsers });
+  } catch (err) {
+    console.error("Admin get users error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= ADMIN: DELETE USER =================
+// ================= ADMIN: DELETE USER =================
+authRouter.delete("/admin/users/:id", async (req, res) => {
+  try {
+    const authUser = await getAuthUser(req, res);
+    const userId = Number(req.params.id);
+
+    if (!authUser || authUser.role !== "admin") {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+
+    if (!Number.isFinite(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    if (Number(authUser.id) === userId) {
+      return res
+        .status(400)
+        .json({ message: "Admin cannot delete their own account" });
+    }
+
+    const existing = await db
+      .select({ id: users.id, role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!existing.length) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json({ user });
+    // Get all listings owned by this user
+    const ownedListings = await db
+      .select({ id: listings.id })
+      .from(listings)
+      .where(eq(listings.seller_id, userId));
+
+    const ownedListingIds = ownedListings.map((l) => l.id);
+
+    // Delete transactions directly tied to this user
+    await db.delete(transactions).where(eq(transactions.buyer_id, userId));
+    await db.delete(transactions).where(eq(transactions.seller_id, userId));
+
+    // Delete bids placed by this user
+    await db.delete(bids).where(eq(bids.bidder_id, userId));
+
+    // Delete transactions and bids tied to listings owned by this user
+    if (ownedListingIds.length > 0) {
+      await db
+        .delete(transactions)
+        .where(inArray(transactions.listing_id, ownedListingIds));
+
+      await db.delete(bids).where(inArray(bids.listing_id, ownedListingIds));
+
+      await db.delete(listings).where(inArray(listings.id, ownedListingIds));
+    }
+
+    // Finally delete the user
+    await db.delete(users).where(eq(users.id, userId));
+
+    res.json({ message: "User deleted successfully" });
   } catch (err) {
-    console.error("Get user error:", err);
+    console.error("Admin delete user error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

@@ -11,22 +11,31 @@ import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
-import { HeatMapPage } from "../pages/HeatMapPage";
-
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
-import { VehicleDetailPage } from "../pages/VehicleDetailPage";
-import { EditVehiclePage } from "../pages/EditVehiclePage";
-import { YouWonPage } from "../pages/YouWonPage";
-import { AddCardPage } from "../pages/AddCardPage";
+import { useAuth } from "../context/AuthContext";
+import AdminUsersPage from "../pages/AdminUsersPage";
 
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISH_KEY);
+// 🔒 Admin Route Wrapper (INLINE - no new file needed)
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user || user.role !== "admin") {
+    return <div className="p-10 text-center">Not authorized</div>;
+  }
+
+  return <>{children}</>;
+};
+
+
 
 export const AppRouter: React.FC = () => {
+  console.log("APP ROUTER LOADED");
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -35,33 +44,36 @@ export const AppRouter: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-      {/* Public browsing (Guest-friendly) */}
+      {/* Public browsing */}
       <Route path="/listings" element={<ListingsPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
       <Route path="/favourites" element={<FavouritesPage />} />
       <Route path="/analytics" element={<AnalyticsDashboardPage />} />
 
+      <Route
+        path="/admin/listings"
+        element={
+          <AdminRoute>
+            <ListingsPage />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        }
+      />
+
       {/* Auth-only */}
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
-        <Route path="/you-won/:listingId" element={<YouWonPage />} />
-        <Route path="/vehicle/:vehicleId" element={<VehicleDetailPage />} />
         <Route path="/add-vehicle" element={<AddVehiclePage />} />
-        <Route
-          path="/add-card"
-          element={
-            <Elements stripe={stripePromise}>
-              <AddCardPage />
-            </Elements>
-          }
-        />
-        <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
-        <Route path="/heatmap" element={<HeatMapPage />} />
-        <Route
-          path="/seller/:sellerId/analytics"
-          element={<SellerAnalyticsPage />}
-        />
+        <Route path="/seller/:sellerId/analytics" element={<SellerAnalyticsPage />} />
         <Route path="/edit-listing/:listingId" element={<EditListingPage />} />
       </Route>
     </Routes>
