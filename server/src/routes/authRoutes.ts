@@ -2,7 +2,7 @@ import { Router } from "express";
 import { db } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
-import { users, listings, bids, transactions } from "../db/schema";
+import { users, listings, bids, transactions, vehicles, listingInteractions } from "../db/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 import { stripe } from "../services/stripe";
 import { sendVerificationEmail } from "../utils/email";
@@ -269,7 +269,6 @@ authRouter.get("/admin/users", async (req, res) => {
 });
 
 // ================= ADMIN: DELETE USER =================
-// ================= ADMIN: DELETE USER =================
 authRouter.delete("/admin/users/:id", async (req, res) => {
   try {
     const authUser = await getAuthUser(req, res);
@@ -307,28 +306,52 @@ authRouter.delete("/admin/users/:id", async (req, res) => {
 
     const ownedListingIds = ownedListings.map((l) => l.id);
 
-    // Delete transactions directly tied to this user
+    // Get all vehicles owned by this user
+    const ownedVehicles = await db
+      .select({ id: vehicles.id })
+      .from(vehicles)
+      .where(eq(vehicles.user_id, userId));
+
+    const ownedVehicleIds = ownedVehicles.map((v) => v.id);
+
+    // ========== DELETION ORDER (respecting FK constraints) ==========
+    // 1. Delete listing interactions (references user_id and listing_id)
+    await db.delete(listingInteractions).where(eq(listingInteractions.user_id, userId));
+    if (ownedListingIds.length > 0) {
+      await db
+        .delete(listingInteractions)
+        .where(inArray(listingInteractions.listing_id, ownedListingIds));
+    }
+
+    // 2. Delete bids (references bidder_id and listing_id)
+    await db.delete(bids).where(eq(bids.bidder_id, userId));
+    if (ownedListingIds.length > 0) {
+      await db.delete(bids).where(inArray(bids.listing_id, ownedListingIds));
+    }
+
+    // 3. Delete transactions (references buyer_id, seller_id, and listing_id)
     await db.delete(transactions).where(eq(transactions.buyer_id, userId));
     await db.delete(transactions).where(eq(transactions.seller_id, userId));
-
-    // Delete bids placed by this user
-    await db.delete(bids).where(eq(bids.bidder_id, userId));
-
-    // Delete transactions and bids tied to listings owned by this user
     if (ownedListingIds.length > 0) {
       await db
         .delete(transactions)
         .where(inArray(transactions.listing_id, ownedListingIds));
+    }
 
-      await db.delete(bids).where(inArray(bids.listing_id, ownedListingIds));
-
+    // 4. Delete listings (references seller_id and vehicle_id)
+    if (ownedListingIds.length > 0) {
       await db.delete(listings).where(inArray(listings.id, ownedListingIds));
     }
 
-    // Finally delete the user
+    // 5. Delete vehicles (references user_id)
+    if (ownedVehicleIds.length > 0) {
+      await db.delete(vehicles).where(inArray(vehicles.id, ownedVehicleIds));
+    }
+
+    // 6. Finally delete the user
     await db.delete(users).where(eq(users.id, userId));
 
-    res.json({ message: "User deleted successfully" });
+    res.json({ message: "User and all associated data deleted successfully" });
   } catch (err) {
     console.error("Admin delete user error:", err);
     res.status(500).json({ message: "Server error" });
