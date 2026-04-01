@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { enterGuest } = useAuth();
+  const { enterGuest, isLoggedIn } = useAuth();
   return (
     <section className="landing">
       <div className="landing-hero">
@@ -17,21 +17,36 @@ export const LandingPage: React.FC = () => {
           Canada.
         </p>
         <div className="landing-actions">
-          <Link to="/register">
-            <Button variant="outline">Join as a Buyer</Button>
-          </Link>
-          <Link to="/register">
-            <Button variant="outline">Join as a Seller</Button>
-          </Link>
-          <button
-            className="btn btn-outline"
-            onClick={() => {
-              enterGuest();
-              navigate("/listings");
-            }}
-          >
-            Continue as Guest
-          </button>
+          {!isLoggedIn && (
+            <>
+              <Link to="/register">
+                <Button variant="outline">Join as a Buyer</Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="outline">Join as a Seller</Button>
+              </Link>
+            </>
+          )}
+          {isLoggedIn && (
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate("/listings")}
+              type="button"
+            >
+              Browse Listings
+            </button>
+          )}
+          {!isLoggedIn && (
+            <button
+              className="btn btn-outline"
+              onClick={() => {
+                enterGuest();
+                navigate("/listings");
+              }}
+            >
+              Continue as Guest
+            </button>
+          )}
         </div>
 
         <div

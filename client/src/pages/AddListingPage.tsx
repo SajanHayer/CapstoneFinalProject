@@ -173,6 +173,7 @@ export const AddListingPage: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           ...data,
           start_time: startTime,

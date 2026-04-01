@@ -71,6 +71,7 @@ export const AccountPage: React.FC = () => {
 
         const res = await fetch(
           `http://localhost:8080/api/vehicles/user/${user.id}`,
+          { credentials: "include" },
         );
 
         if (!res.ok) {
@@ -154,6 +155,7 @@ export const AccountPage: React.FC = () => {
 
         const res = await fetch(
           `http://localhost:8080/api/listings/bids/user/all/${user.id}`,
+          { credentials: "include" },
         );
 
         if (!res.ok) {
@@ -218,6 +220,7 @@ export const AccountPage: React.FC = () => {
           // Check if user has a transaction for this listing
           const transRes = await fetch(
             `http://localhost:8080/api/listings/transactions/check/${bid.listing_id}/${user?.id}`,
+            { credentials: "include" },
           );
           if (transRes.ok) {
             const transData = await transRes.json();

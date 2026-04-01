@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import { Button } from "../components/common/Button";
 import { localToUTC, utcToLocalDateTimeString } from "../lib/dateUtils";
@@ -15,6 +16,8 @@ type ListingEditForm = {
 export const EditListingPage: React.FC = () => {
   const navigate = useNavigate();
   const { listingId } = useParams();
+  const { user } = useAuth();
+  const cancelPath = user?.role === "admin" ? "/admin/listings" : "/account";
 
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
@@ -59,7 +62,9 @@ export const EditListingPage: React.FC = () => {
 
       try {
         // ✅ uses listingAnalytics GET route: { result: {...} }
-        const res = await fetch(`${API_BASE}/${listingId}`);
+        const res = await fetch(`${API_BASE}/${listingId}`, {
+          credentials: "include",
+        });
 
         if (!res.ok) {
           const text = await res.text();
@@ -129,6 +134,7 @@ export const EditListingPage: React.FC = () => {
       // ✅ PATCH should be implemented in listingAnalytics router
       const res = await fetch(`${API_BASE}/${listingId}`, {
         method: "PATCH",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -145,7 +151,7 @@ export const EditListingPage: React.FC = () => {
       }
 
       toast.success("Listing updated successfully!");
-      navigate("/account");
+      navigate(cancelPath);
     } catch (e: any) {
       toast.error(e instanceof Error ? e.message : "Failed to update listing");
       setError(e?.message ?? "Failed to save changes.");
@@ -156,7 +162,7 @@ export const EditListingPage: React.FC = () => {
 
   if (loading) return <div style={{ padding: 24 }}>Loading edit page…</div>;
 
-  if (hasStarted) {
+  if (hasStarted && user?.role !== "admin") {
     return (
       <div style={{ padding: 24, maxWidth: 900 }}>
         <h1>Edit Auction</h1>
@@ -177,8 +183,8 @@ export const EditListingPage: React.FC = () => {
           </p>
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-          <Button variant="outline" onClick={() => navigate("/account")}>
-            Back to Account
+          <Button variant="outline" onClick={() => navigate(cancelPath)}>
+            {user?.role === "admin" ? "Back to Admin Listings" : "Cancel"}
           </Button>
         </div>
       </div>
@@ -291,8 +297,8 @@ export const EditListingPage: React.FC = () => {
       </div>
 
       <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-        <Button variant="outline" onClick={() => navigate("/account")}>
-          Cancel
+        <Button variant="outline" onClick={() => navigate(cancelPath)}>
+          {user?.role === "admin" ? "Back to Admin Listings" : "Cancel"}
         </Button>
         <Button variant="primary" onClick={onSave} disabled={saving}>
           {saving ? "Saving..." : "Save Changes"}

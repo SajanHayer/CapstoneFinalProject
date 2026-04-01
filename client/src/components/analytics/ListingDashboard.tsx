@@ -139,6 +139,7 @@ export const ListingDashboard: React.FC<ListingDashboardProps> = ({
         // Fetch bids
         const bidsRes = await fetch(
           `http://localhost:8080/api/listings-analytics/${listingId}/bids`,
+          { credentials: "include" },
         );
         const bidsJson = await bidsRes.json();
         setBids(Array.isArray(bidsJson.result) ? bidsJson.result : []);

@@ -97,6 +97,7 @@ export const ListingDetailPage: React.FC = () => {
         // Fetch listing by listing ID
         const listingRes = await fetch(
           `http://localhost:8080/api/listings/${id}`,
+          { credentials: "include" },
         );
         const listingData = await listingRes.json();
         const fetchedListing = listingData.listing;
@@ -113,6 +114,7 @@ export const ListingDetailPage: React.FC = () => {
         // Fetch vehicle details using vehicle_id from listing
         const vehicleRes = await fetch(
           `http://localhost:8080/api/vehicles/${fetchedListing.vehicle_id}`,
+          { credentials: "include" },
         );
         const vehicleData = await vehicleRes.json();
         setVehicle(vehicleData.vehicle);
@@ -120,6 +122,7 @@ export const ListingDetailPage: React.FC = () => {
         // Fetch highest bidder info
         const bidsRes = await fetch(
           `http://localhost:8080/api/listings/${id}/all/bids`,
+          { credentials: "include" },
         );
         const bidsData = await bidsRes.json();
         if (bidsData.result && bidsData.result.length > 0) {

@@ -75,6 +75,7 @@ export const VehicleDetailPage: React.FC = () => {
         // Fetch vehicle details
         const vehicleRes = await fetch(
           `http://localhost:8080/api/vehicles/${vehicleId}`,
+          { credentials: "include" },
         );
         if (!vehicleRes.ok) {
           throw new Error("Failed to fetch vehicle details");
@@ -85,6 +86,7 @@ export const VehicleDetailPage: React.FC = () => {
         // Fetch all listings for this vehicle
         const listingsRes = await fetch(
           `http://localhost:8080/api/listings/vehicle/all/${vehicleId}`,
+          { credentials: "include" },
         );
         let mappedListings: ListingInfo[] = [];
         if (listingsRes.ok) {
@@ -115,6 +117,7 @@ export const VehicleDetailPage: React.FC = () => {
             try {
               const bidsRes = await fetch(
                 `http://localhost:8080/api/listings/${listing.id}/all/bids`,
+                { credentials: "include" },
               );
               if (bidsRes.ok) {
                 const bidsData = await bidsRes.json();

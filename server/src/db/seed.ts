@@ -38,6 +38,7 @@ async function seed() {
           "bob@example.com",
           "charlie@example.com",
           "letsridecanada30@gmail.com",
+          "admin@example.com",
         ]),
       );
 
@@ -77,10 +78,19 @@ async function seed() {
           is_verified: true,
           email_verified: true,
         },
+        {
+          name: "Admin",
+          email: "admin@example.com",
+          password_hash: await hashPassword("Admin1234@@"),
+          role: "admin",
+          is_verified: true,
+          email_verified: true,
+        },
+
       ])
       .returning({ id: users.id });
 
-    const [user1, user2, user3, mainSeller] = insertedUsers;
+    const [user1, user2, user3, mainSeller, adminUser] = insertedUsers;
 
     // ---------------- Vehicles ----------------
     const vehicleData: SeedVehicle[] = [

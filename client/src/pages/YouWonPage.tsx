@@ -44,6 +44,7 @@ export const YouWonPage: React.FC = () => {
         // Fetch listing details
         const listingRes = await fetch(
           `http://localhost:8080/api/listings/${listingId}`,
+          { credentials: "include" },
         );
         if (!listingRes.ok) {
           throw new Error("Failed to fetch listing");

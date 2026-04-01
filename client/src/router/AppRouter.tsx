@@ -11,14 +11,16 @@ import { FavouritesPage } from "../pages/FavouritesPage";
 import { AddVehiclePage } from "../pages/AddVehiclePage";
 import { ProtectedRoute } from "../context/ProtectedRoute";
 import { AddListingPage } from "../pages/AddListingPage";
-import { HeatMapPage } from "../pages/HeatMapPage";
-
 import { AnalyticsDashboardPage } from "../pages/AnalyticsDashboardPage";
 import { SellerAnalyticsPage } from "../pages/SellerAnalyticsPage";
 import { EditListingPage } from "../pages/EditListingPage";
+import { useAuth } from "../context/AuthContext";
+import AdminUsersPage from "../pages/AdminUsersPage";
+// Restored routes - these pages still exist and are referenced by frontend
+import { HeatMapPage } from "../pages/HeatMapPage";
+import { YouWonPage } from "../pages/YouWonPage";
 import { VehicleDetailPage } from "../pages/VehicleDetailPage";
 import { EditVehiclePage } from "../pages/EditVehiclePage";
-import { YouWonPage } from "../pages/YouWonPage";
 import { AddCardPage } from "../pages/AddCardPage";
 
 import { Elements } from "@stripe/react-stripe-js";
@@ -26,7 +28,24 @@ import { loadStripe } from "@stripe/stripe-js";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISH_KEY);
 
+// 🔒 Admin Route Wrapper (INLINE - no new file needed)
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user || user.role !== "admin") {
+    return <div className="p-10 text-center">Not authorized</div>;
+  }
+
+  return <>{children}</>;
+};
+
+
+
 export const AppRouter: React.FC = () => {
+  console.log("APP ROUTER LOADED");
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -35,13 +54,33 @@ export const AppRouter: React.FC = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-      {/* Public browsing (Guest-friendly) */}
+      {/* Public browsing */}
       <Route path="/listings" element={<ListingsPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
       <Route path="/favourites" element={<FavouritesPage />} />
       <Route path="/analytics" element={<AnalyticsDashboardPage />} />
 
-      {/* Auth-only */}
+      {/* Admin listing management view */}
+      <Route
+        path="/admin/listings"
+        element={
+          <AdminRoute>
+            <ListingsPage />
+          </AdminRoute>
+        }
+      />
+
+      {/* Admin users management */}
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        }
+      />
+
+      {/* Auth-only routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<AccountPage />} />
         <Route path="/you-won/:listingId" element={<YouWonPage />} />
@@ -58,10 +97,7 @@ export const AppRouter: React.FC = () => {
         <Route path="/edit-vehicle/:vehicleId" element={<EditVehiclePage />} />
         <Route path="/add-listing" element={<AddListingPage />} />
         <Route path="/heatmap" element={<HeatMapPage />} />
-        <Route
-          path="/seller/:sellerId/analytics"
-          element={<SellerAnalyticsPage />}
-        />
+        <Route path="/seller/:sellerId/analytics" element={<SellerAnalyticsPage />} />
         <Route path="/edit-listing/:listingId" element={<EditListingPage />} />
       </Route>
     </Routes>
