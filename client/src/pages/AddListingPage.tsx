@@ -14,6 +14,7 @@ type Vehicle = {
   make: string;
   model: string;
   year: number;
+  price?: number;
   hasActiveListing?: boolean;
 };
 
@@ -40,6 +41,7 @@ export const AddListingPage: React.FC = () => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
+  const [userLocation, setUserLocation] = useState<string>("");
   const [selectedVehicleHasActiveListing, setSelectedVehicleHasActiveListing] =
     useState(false);
   const { register, handleSubmit, watch, setValue } = useForm<AddListingProps>({
@@ -66,8 +68,12 @@ export const AddListingPage: React.FC = () => {
     if (selectedVehicleId && vehicles.length > 0) {
       const selected = vehicles.find((v) => v.id === selectedVehicleId);
       setSelectedVehicleHasActiveListing(selected?.hasActiveListing || false);
+      // Auto-fill reserve price with vehicle price
+      if (selected?.price) {
+        setValue("reserve_price", selected.price);
+      }
     }
-  }, [selectedVehicleId, vehicles]);
+  }, [selectedVehicleId, vehicles, setValue]);
 
   // Get minimum datetime (now) in correct format for datetime-local
   const getMinDateTime = () => {
@@ -86,19 +92,57 @@ export const AddListingPage: React.FC = () => {
     return startTime;
   };
 
-  // Fetch user's vehicles
+  // Fetch user's vehicles and location
   useEffect(() => {
     const fetchUserVehicles = async () => {
       if (!user?.id) {
         setLoading(false);
         return;
       }
-      navigator.geolocation.getCurrentPosition((position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        setCoords({ lat, lng });
-        // console.log(lat, lng);
-      });
+
+      // Get user's location
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setCoords({ lat, lng });
+
+          // Try to get city name from coordinates using reverse geocoding
+          fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              // Extract city and state/province from the response
+              const city =
+                data.address?.city ||
+                data.address?.town ||
+                data.address?.village ||
+                "";
+              const state = data.address?.state || "";
+              if (city && state) {
+                setUserLocation(`${city}, ${state}`);
+                // Auto-fill location in form
+                setValue("location", `${city}, ${state}`);
+              } else if (city) {
+                setUserLocation(city);
+                setValue("location", city);
+              }
+            })
+            .catch((err) => {
+              console.log("Reverse geocoding failed:", err);
+              toast.error(
+                "Failed to get your location. Please enter it manually.",
+              );
+            });
+        },
+        (error) => {
+          console.log("Geolocation error:", error);
+          toast.error(
+            "Please enable location access to auto-fill your location.",
+          );
+        },
+      );
 
       try {
         const res2 = await fetch(
@@ -106,42 +150,9 @@ export const AddListingPage: React.FC = () => {
           { credentials: "include" },
         );
         const data = await res2.json();
-        // const vehicleDetails = data.vehicle;
-        // console.log("Raw vehicle data fo vehicleIdFromParams:", data.vehicle);
-        const { id, make, model, year } = data.vehicle;
-        const vehicleDetails: Vehicle = { id, make, model, year };
+        const { id, make, model, year, price } = data.vehicle;
+        const vehicleDetails: Vehicle = { id, make, model, year, price };
         setVehicles([vehicleDetails]);
-
-        // setVehicles(vehicleDetails);
-        // if (res.ok) {
-        //   const data = await res.json();
-        //   console.log("Raw vehicles data from API:", vehicleIdFromParams);
-        //   console.log("Fetched vehicles data:", data);
-        //   // Extract all vehicles and check for active listings
-        //   if (data.result && Array.isArray(data.result)) {
-        //     const allVehicles = data.result
-        //       .map((item: any) => ({
-        //         id: item.vehicles.id,
-        //         make: item.vehicles.make,
-        //         model: item.vehicles.model,
-        //         year: item.vehicles.year,
-        //         hasActiveListing:
-        //           item.listings &&
-        //           item.listings.length > 0 &&
-        //           item.listings.some(
-        //             (listing: any) =>
-        //               listing.status === "active" ||
-        //               (new Date(listing.start_time) <= new Date() &&
-        //                 new Date(listing.end_time) >= new Date()),
-        //           ),
-        //       }))
-        //       .filter(
-        //         (v: Vehicle, idx: number, arr: Vehicle[]) =>
-        //           arr.findIndex((vehicle) => vehicle.id === v.id) === idx,
-        //       );
-        //     setVehicles(allVehicles);
-        //   }
-        // }
       } catch (err) {
         toast.error("Failed to load vehicle information. Please try again.");
       } finally {
@@ -150,7 +161,7 @@ export const AddListingPage: React.FC = () => {
     };
 
     fetchUserVehicles();
-  }, [user?.id]);
+  }, [user?.id, setValue]);
 
   const onSubmit = async (data: AddListingProps) => {
     // console.log("Form data:", data);

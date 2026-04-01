@@ -16,6 +16,10 @@ interface VehicleDetails {
   status: string;
   description: string;
   image_url: string[];
+  vin?: string;
+  style?: string;
+  engine_size?: number;
+  engine_size_unit?: string;
 }
 
 interface ListingInfo {
@@ -56,6 +60,10 @@ export const VehicleDetailPage: React.FC = () => {
   // Check if vehicle has an active listing
   const hasActiveListing = listings.some(
     (listing) => listing.statusListing !== "cancelled",
+  );
+
+  const isVehicleSold = listings.some(
+    (listing) => listing.statusListing === "sold",
   );
 
   useEffect(() => {
@@ -289,6 +297,21 @@ export const VehicleDetailPage: React.FC = () => {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
     },
+    {
+      title: "VIN",
+      value: vehicle.vin || "N/A",
+    },
+    {
+      title: "Style",
+      value: vehicle.style || "N/A",
+    },
+    {
+      title: "Engine Size",
+      value:
+        vehicle.engine_size && vehicle.engine_size_unit
+          ? `${vehicle.engine_size} ${vehicle.engine_size_unit}`
+          : "N/A",
+    },
   ];
 
   return (
@@ -333,7 +356,7 @@ export const VehicleDetailPage: React.FC = () => {
             >
               + List Vehicle for Auction
             </Button>
-            {hasActiveListing && (
+            {hasActiveListing && !isVehicleSold && (
               <div
                 style={{
                   marginTop: "12px",
@@ -353,7 +376,12 @@ export const VehicleDetailPage: React.FC = () => {
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate(`/edit-vehicle/${vehicle.id}`)}
+            onClick={() => {
+              if (!isVehicleSold) {
+                navigate(`/edit-vehicle/${vehicle.id}`);
+              }
+            }}
+            disabled={isVehicleSold}
           >
             ✎ Edit Vehicle
           </Button>
@@ -566,7 +594,8 @@ export const VehicleDetailPage: React.FC = () => {
                           const isEnded =
                             listing.statusListing === "ended" ||
                             listing.statusListing === "sold";
-                          const cannotEdit = hasStarted || isEnded;
+                          const cannotEdit =
+                            hasStarted || isEnded || isVehicleSold;
 
                           return (
                             <Button
@@ -599,7 +628,9 @@ export const VehicleDetailPage: React.FC = () => {
                       {(() => {
                         const isEnded = listing.statusListing === "ended";
                         const isSold = listing.statusListing === "sold";
-                        const isCancelled = listing.end_reason === "cancelled";
+                        const isCancelled =
+                          listing.end_reason === "cancelled" ||
+                          listing.statusListing === "cancelled";
 
                         if (isSold) {
                           return (
@@ -619,18 +650,22 @@ export const VehicleDetailPage: React.FC = () => {
                           );
                         }
 
-                        if (isEnded && !isCancelled) {
-                          return (
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: "8px",
-                                flexWrap: "wrap",
-                                marginTop: "10px",
-                                paddingTop: "10px",
-                                borderTop: "1px solid #e0e0e0",
-                              }}
-                            >
+                        if (isCancelled) {
+                          return null;
+                        }
+
+                        return (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                              flexWrap: "wrap",
+                              marginTop: "10px",
+                              paddingTop: "10px",
+                              borderTop: "1px solid #e0e0e0",
+                            }}
+                          >
+                            {isEnded && (
                               <Button
                                 variant="primary"
                                 style={{
@@ -657,29 +692,28 @@ export const VehicleDetailPage: React.FC = () => {
                                   ? "Processing..."
                                   : "💰 Sell Vehicle"}
                               </Button>
-                              <Button
-                                variant="outline"
-                                style={{
-                                  flex: 1,
-                                  fontSize: "12px",
-                                  padding: "6px 10px",
-                                  color: "#dc2626",
-                                  borderColor: "#dc2626",
-                                }}
-                                disabled={cancellingListingId === listing.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveListing(listing.id);
-                                }}
-                              >
-                                {cancellingListingId === listing.id
-                                  ? "Removing..."
-                                  : "🗑️ Remove Listing"}
-                              </Button>
-                            </div>
-                          );
-                        }
-                        return null;
+                            )}
+                            <Button
+                              variant="outline"
+                              style={{
+                                flex: 1,
+                                fontSize: "12px",
+                                padding: "6px 10px",
+                                color: "#dc2626",
+                                borderColor: "#dc2626",
+                              }}
+                              disabled={cancellingListingId === listing.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveListing(listing.id);
+                              }}
+                            >
+                              {cancellingListingId === listing.id
+                                ? "Removing..."
+                                : "🗑️ Remove Listing"}
+                            </Button>
+                          </div>
+                        );
                       })()}
                     </div>
                   ))}

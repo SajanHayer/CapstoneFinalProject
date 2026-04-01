@@ -59,7 +59,7 @@ const abortControllerRef = useRef<AbortController | null>(null);
 ```typescript
 // Properly ignore expected AbortErrors
 if (e instanceof Error && e.name === 'AbortError') {
-  console.log(`[HeatMap] Request was aborted`);
+//   console.log(`[HeatMap] Request was aborted`);
   return;
 }
 ```
