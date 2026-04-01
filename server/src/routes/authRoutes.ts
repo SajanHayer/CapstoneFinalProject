@@ -2,10 +2,10 @@ import { Router } from "express";
 import { db } from "../db/db";
 import { hashPassword, comparePassword, signToken } from "../utils/auth";
 import { requireAuth } from "../middleware/requireAuth";
-import { users, listings, bids, transactions } from "../db/schema";
+import { users, listings, bids, transactions, vehicles, listingInteractions } from "../db/schema";
 import { eq, asc, inArray } from "drizzle-orm";
 import { stripe } from "../services/stripe";
-import { sendVerificationEmail } from "../utils/email";
+import { sendVerificationEmail, sendUserDeletionEmail } from "../utils/email";
 
 export const authRouter = Router();
 
@@ -269,11 +269,11 @@ authRouter.get("/admin/users", async (req, res) => {
 });
 
 // ================= ADMIN: DELETE USER =================
-// ================= ADMIN: DELETE USER =================
 authRouter.delete("/admin/users/:id", async (req, res) => {
   try {
     const authUser = await getAuthUser(req, res);
     const userId = Number(req.params.id);
+    const { reason } = req.body;
 
     if (!authUser || authUser.role !== "admin") {
       return res.status(403).json({ message: "Admin access required" });
@@ -283,6 +283,10 @@ authRouter.delete("/admin/users/:id", async (req, res) => {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
+    if (!reason || !String(reason).trim()) {
+      return res.status(400).json({ message: "Deletion reason is required" });
+    }
+
     if (Number(authUser.id) === userId) {
       return res
         .status(400)
@@ -290,7 +294,12 @@ authRouter.delete("/admin/users/:id", async (req, res) => {
     }
 
     const existing = await db
-      .select({ id: users.id, role: users.role })
+      .select({
+        id: users.id,
+        role: users.role,
+        name: users.name,
+        email: users.email,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -298,6 +307,32 @@ authRouter.delete("/admin/users/:id", async (req, res) => {
     if (!existing.length) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    const targetUser = existing[0];
+
+    if (targetUser.role === "admin") {
+      return res.status(400).json({ message: "Admin accounts cannot be deleted" });
+    }
+
+    console.log("Deleting user route hit");
+    console.log("req.body:", req.body);
+    console.log("target user:", targetUser);
+    console.log("About to send deletion email");
+
+    // await sendUserDeletionEmail(
+    //   targetUser.email,
+    //   targetUser.name,
+    //   String(reason).trim()
+    // );
+
+    console.log("Deletion email sent successfully");
+
+    // Send deletion email before deleting the account
+    await sendUserDeletionEmail(
+      targetUser.email,
+      targetUser.name,
+      String(reason).trim()
+    );
 
     // Get all listings owned by this user
     const ownedListings = await db
@@ -307,28 +342,59 @@ authRouter.delete("/admin/users/:id", async (req, res) => {
 
     const ownedListingIds = ownedListings.map((l) => l.id);
 
-    // Delete transactions directly tied to this user
+    // Get all vehicles owned by this user
+    const ownedVehicles = await db
+      .select({ id: vehicles.id })
+      .from(vehicles)
+      .where(eq(vehicles.user_id, userId));
+
+    const ownedVehicleIds = ownedVehicles.map((v) => v.id);
+
+    // ========== DELETION ORDER (respecting FK constraints) ==========
+    // 1. Delete listing interactions
+    await db
+      .delete(listingInteractions)
+      .where(eq(listingInteractions.user_id, userId));
+
+    if (ownedListingIds.length > 0) {
+      await db
+        .delete(listingInteractions)
+        .where(inArray(listingInteractions.listing_id, ownedListingIds));
+    }
+
+    // 2. Delete bids
+    await db.delete(bids).where(eq(bids.bidder_id, userId));
+
+    if (ownedListingIds.length > 0) {
+      await db.delete(bids).where(inArray(bids.listing_id, ownedListingIds));
+    }
+
+    // 3. Delete transactions
     await db.delete(transactions).where(eq(transactions.buyer_id, userId));
     await db.delete(transactions).where(eq(transactions.seller_id, userId));
 
-    // Delete bids placed by this user
-    await db.delete(bids).where(eq(bids.bidder_id, userId));
-
-    // Delete transactions and bids tied to listings owned by this user
     if (ownedListingIds.length > 0) {
       await db
         .delete(transactions)
         .where(inArray(transactions.listing_id, ownedListingIds));
+    }
 
-      await db.delete(bids).where(inArray(bids.listing_id, ownedListingIds));
-
+    // 4. Delete listings
+    if (ownedListingIds.length > 0) {
       await db.delete(listings).where(inArray(listings.id, ownedListingIds));
     }
 
-    // Finally delete the user
+    // 5. Delete vehicles
+    if (ownedVehicleIds.length > 0) {
+      await db.delete(vehicles).where(inArray(vehicles.id, ownedVehicleIds));
+    }
+
+    // 6. Finally delete the user
     await db.delete(users).where(eq(users.id, userId));
 
-    res.json({ message: "User deleted successfully" });
+    res.json({
+      message: "User and all associated data deleted successfully",
+    });
   } catch (err) {
     console.error("Admin delete user error:", err);
     res.status(500).json({ message: "Server error" });

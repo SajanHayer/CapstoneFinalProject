@@ -62,7 +62,9 @@ export const VehicleDetailPage: React.FC = () => {
     (listing) => listing.statusListing !== "cancelled",
   );
 
-  const isVehicleSold = listings.some((listing) => listing.statusListing === "sold");
+  const isVehicleSold = listings.some(
+    (listing) => listing.statusListing === "sold",
+  );
 
   useEffect(() => {
     if (!vehicleId) return;
@@ -417,7 +419,7 @@ export const VehicleDetailPage: React.FC = () => {
             {vehicle.image_url &&
               Array.isArray(vehicle.image_url) &&
               vehicle.image_url.length > 0 && (
-                <div className="gallery-section">
+                <div className="gallery-section detail-gallery-shell">
                   <ImageGallery
                     images={vehicle.image_url.map((img) =>
                       typeof img === "string" ? img : URL.createObjectURL(img),
@@ -595,7 +597,8 @@ export const VehicleDetailPage: React.FC = () => {
                           const isEnded =
                             listing.statusListing === "ended" ||
                             listing.statusListing === "sold";
-                          const cannotEdit = hasStarted || isEnded || isVehicleSold;
+                          const cannotEdit =
+                            hasStarted || isEnded || isVehicleSold;
 
                           return (
                             <Button
@@ -744,3 +747,5 @@ export const VehicleDetailPage: React.FC = () => {
     </section>
   );
 };
+
+export default VehicleDetailPage;

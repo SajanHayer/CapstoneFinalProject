@@ -131,12 +131,16 @@ export const AddListingPage: React.FC = () => {
             })
             .catch((err) => {
               console.log("Reverse geocoding failed:", err);
-              toast.error("Failed to get your location. Please enter it manually.");
+              toast.error(
+                "Failed to get your location. Please enter it manually.",
+              );
             });
         },
         (error) => {
           console.log("Geolocation error:", error);
-          toast.error("Please enable location access to auto-fill your location.");
+          toast.error(
+            "Please enable location access to auto-fill your location.",
+          );
         },
       );
 

@@ -236,7 +236,9 @@ export async function getHeatmapPoints(
             : "Unknown location",
         imageUrl: firstImage,
         listingId:
-          typeof r.listing_id === "string" ? r.listing_id : String(r.listing_id || ""),
+          typeof r.listing_id === "string"
+            ? r.listing_id
+            : String(r.listing_id || ""),
       };
     })
     .filter((p) => {

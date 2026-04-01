@@ -1,11 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import {
-  GoogleMap,
-  InfoWindow,
-  useJsApiLoader,
-} from "@react-google-maps/api";
+import { GoogleMap, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
 import { GoogleMapsOverlay as DeckGLOverlay } from "@deck.gl/google-maps";
 import { ScatterplotLayer } from "@deck.gl/layers";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
@@ -55,7 +51,9 @@ const MapContent: React.FC<{
   setRetryNonce: (fn: (current: number) => number) => void;
   previousBoundsRef: React.MutableRefObject<Bounds | null>;
   previousZoomRef: React.MutableRefObject<number>;
-  boundsTimeoutRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
+  boundsTimeoutRef: React.MutableRefObject<ReturnType<
+    typeof setTimeout
+  > | null>;
   navigate: ReturnType<typeof useNavigate>;
 }> = ({
   metric,
@@ -80,14 +78,16 @@ const MapContent: React.FC<{
   const [selectedPoint, setSelectedPoint] = useState<HeatPoint | null>(null);
   // === FIX 5: Track zoom to conditionally show points ===
   const [currentZoom, setCurrentZoom] = useState<number>(10);
-  
+
   const mapRef = useRef<google.maps.Map | null>(null);
   const deckglOverlayRef = useRef<DeckGLOverlay | null>(null);
   const currentZoomRef = useRef<number>(10);
-  
+
   // === FIX 2: Hover stickiness - debounce clearing with ref ===
-  const clearHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
+  const clearHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
   // Helper to clear hover with delay
   const clearHoverWithDelay = (delayMs: number = 150) => {
     if (clearHoverTimeoutRef.current) {
@@ -97,7 +97,7 @@ const MapContent: React.FC<{
       setHoveredPoint(null);
     }, delayMs);
   };
-  
+
   // Helper to cancel pending clear
   const cancelClearHover = () => {
     if (clearHoverTimeoutRef.current) {
@@ -120,7 +120,7 @@ const MapContent: React.FC<{
       const map = mapRef.current;
       const bounds = map.getBounds();
       const zoom = map.getZoom() || 10;
-      
+
       // === FIX 5: Update zoom state for layer visibility ===
       currentZoomRef.current = zoom;
       setCurrentZoom(zoom);
@@ -199,52 +199,52 @@ const MapContent: React.FC<{
       // === FIX 5: Only show scatterplot when sufficiently zoomed (zoom >= 13) ===
       currentZoomRef.current >= 13 &&
         scatterplotLayerData.length > 0 &&
-      new ScatterplotLayer({
-        id: "scatterplot-layer",
-        data: scatterplotLayerData,
-        getPosition: (d: any) => d.position,
-        // === FIX 3: Increase interaction area even more ===
-        // Increased from 12 to 16 pixels for better visibility
-        getRadius: () => 16,
-        getColor: () => [255, 128, 0],
-        pickable: true,
-        autoHighlight: true,
-        highlightColor: [0, 150, 255],
-        // Further increased highlight size for better visual feedback
-        highlightSize: 4,
-        lineWidthUnits: "pixels",
-        stroked: true,
-        getLineColor: () => [255, 255, 255],
-        getLineWidth: () => 2,
-        // Performance optimizations
-        fp64: false,
-        // === FIX 3: Make picking even more forgiving ===
-        // Increased from 15 to 25 pixels for easier targeting
-        pickingRadius: 25,
-        // === FIX 2 & 1: Hover with stickiness - update state ===
-        onHover: (info: any) => {
-          if (info.object) {
-            // Only update if target actually changed (avoid spam)
-            if (hoveredPoint?.listingId !== info.object.listingId) {
-              setHoveredPoint(info.object);
-              cancelClearHover();
+        new ScatterplotLayer({
+          id: "scatterplot-layer",
+          data: scatterplotLayerData,
+          getPosition: (d: any) => d.position,
+          // === FIX 3: Increase interaction area even more ===
+          // Increased from 12 to 16 pixels for better visibility
+          getRadius: () => 16,
+          getColor: () => [255, 128, 0],
+          pickable: true,
+          autoHighlight: true,
+          highlightColor: [0, 150, 255],
+          // Further increased highlight size for better visual feedback
+          highlightSize: 4,
+          lineWidthUnits: "pixels",
+          stroked: true,
+          getLineColor: () => [255, 255, 255],
+          getLineWidth: () => 2,
+          // Performance optimizations
+          fp64: false,
+          // === FIX 3: Make picking even more forgiving ===
+          // Increased from 15 to 25 pixels for easier targeting
+          pickingRadius: 25,
+          // === FIX 2 & 1: Hover with stickiness - update state ===
+          onHover: (info: any) => {
+            if (info.object) {
+              // Only update if target actually changed (avoid spam)
+              if (hoveredPoint?.listingId !== info.object.listingId) {
+                setHoveredPoint(info.object);
+                cancelClearHover();
+              }
+            } else {
+              // Hover lost - apply delay before clearing
+              clearHoverWithDelay(150);
             }
-          } else {
-            // Hover lost - apply delay before clearing
-            clearHoverWithDelay(150);
-          }
-        },
-        // === FIX 4: Don't rely on hover alone - add click to lock popup ===
-        onClick: (info: any) => {
-          if (info.object?.listingId) {
-            setSelectedPoint(info.object);
-          }
-        },
-        updateTriggers: {
-          getPosition: [scatterplotLayerData.length],
-          getRadius: [],
-        },
-      }),
+          },
+          // === FIX 4: Don't rely on hover alone - add click to lock popup ===
+          onClick: (info: any) => {
+            if (info.object?.listingId) {
+              setSelectedPoint(info.object);
+            }
+          },
+          updateTriggers: {
+            getPosition: [scatterplotLayerData.length],
+            getRadius: [],
+          },
+        }),
     ].filter(Boolean);
   }, [heatmapLayerData, scatterplotLayerData, navigate, currentZoom]);
 
@@ -350,97 +350,114 @@ const MapContent: React.FC<{
           onIdle={handleMapIdle}
           onZoomChanged={onMapZoomChanged}
         >
-        {/* === FIX 7: Make popup independent - use selected OR hovered ===
+          {/* === FIX 7: Make popup independent - use selected OR hovered ===
             === FIX 6: Show popup for selected or hovered (independent states) === */}
-        {(selectedPoint || hoveredPoint) && (
-          <InfoWindow
-            position={{ lat: (selectedPoint || hoveredPoint)!.lat, lng: (selectedPoint || hoveredPoint)!.lng }}
-            onCloseClick={() => {
-              // Only close selected (not hovering state - they're independent)
-              setSelectedPoint(null);
-            }}
-          >
-            <div style={{ minWidth: 160, maxWidth: 200, fontSize: "0.8em" }}>
-              {(selectedPoint || hoveredPoint)?.imageUrl && (
-                <img
-                  src={(selectedPoint || hoveredPoint)!.imageUrl || ""}
-                  alt={(selectedPoint || hoveredPoint)!.location}
+          {(selectedPoint || hoveredPoint) && (
+            <InfoWindow
+              position={{
+                lat: (selectedPoint || hoveredPoint)!.lat,
+                lng: (selectedPoint || hoveredPoint)!.lng,
+              }}
+              onCloseClick={() => {
+                // Only close selected (not hovering state - they're independent)
+                setSelectedPoint(null);
+              }}
+            >
+              <div style={{ minWidth: 160, maxWidth: 200, fontSize: "0.8em" }}>
+                {(selectedPoint || hoveredPoint)?.imageUrl && (
+                  <img
+                    src={(selectedPoint || hoveredPoint)!.imageUrl || ""}
+                    alt={(selectedPoint || hoveredPoint)!.location}
+                    style={{
+                      width: "100%",
+                      height: 80,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                      marginBottom: 6,
+                      display: "block",
+                    }}
+                  />
+                )}
+                <div
                   style={{
-                    width: "100%",
-                    height: 80,
-                    objectFit: "cover",
-                    borderRadius: 6,
-                    marginBottom: 6,
-                    display: "block",
-                  }}
-                />
-              )}
-              <div style={{ fontWeight: 700, marginBottom: 3, fontSize: "0.85em" }}>
-                {(selectedPoint || hoveredPoint)?.location}
-              </div>
-              <div style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 2 }}>
-                Address: {(selectedPoint || hoveredPoint)?.location}
-              </div>
-              <div style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 6 }}>
-                {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
-                {(selectedPoint || hoveredPoint)?.weight}
-              </div>
-              <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
-                <button
-                  onClick={() => navigate(`/listings/${(selectedPoint || hoveredPoint)!.listingId}`)}
-                  style={{
-                    flex: 1,
-                    padding: "6px 8px",
-                    backgroundColor: "#2196F3",
-                    color: "white",
-                    border: "none",
-                    borderRadius: 4,
-                    cursor: "pointer",
-                    fontSize: "0.75em",
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    marginBottom: 3,
+                    fontSize: "0.85em",
                   }}
                 >
-                  View Listing
-                </button>
-                {selectedPoint && (
+                  {(selectedPoint || hoveredPoint)?.location}
+                </div>
+                <div
+                  style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 2 }}
+                >
+                  Address: {(selectedPoint || hoveredPoint)?.location}
+                </div>
+                <div
+                  style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 6 }}
+                >
+                  {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
+                  {(selectedPoint || hoveredPoint)?.weight}
+                </div>
+                <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
                   <button
-                    onClick={() => setSelectedPoint(null)}
+                    onClick={() =>
+                      navigate(
+                        `/listings/${(selectedPoint || hoveredPoint)!.listingId}`,
+                      )
+                    }
                     style={{
+                      flex: 1,
                       padding: "6px 8px",
-                      backgroundColor: "#666",
+                      backgroundColor: "#2196F3",
                       color: "white",
                       border: "none",
                       borderRadius: 4,
                       cursor: "pointer",
                       fontSize: "0.75em",
+                      fontWeight: 600,
                     }}
                   >
-                    Unpin
+                    View Listing
                   </button>
-                )}
+                  {selectedPoint && (
+                    <button
+                      onClick={() => setSelectedPoint(null)}
+                      style={{
+                        padding: "6px 8px",
+                        backgroundColor: "#666",
+                        color: "white",
+                        border: "none",
+                        borderRadius: 4,
+                        cursor: "pointer",
+                        fontSize: "0.75em",
+                      }}
+                    >
+                      Unpin
+                    </button>
+                  )}
+                </div>
               </div>
+            </InfoWindow>
+          )}
+          {heatmapLayerData.length === 0 && !loading && (
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "rgba(0,0,0,0.7)",
+                color: "white",
+                padding: 16,
+                borderRadius: 8,
+                zIndex: 10,
+                pointerEvents: "none",
+              }}
+            >
+              No heatmap data available
             </div>
-          </InfoWindow>
-        )}
-        {heatmapLayerData.length === 0 && !loading && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              backgroundColor: "rgba(0,0,0,0.7)",
-              color: "white",
-              padding: 16,
-              borderRadius: 8,
-              zIndex: 10,
-              pointerEvents: "none",
-            }}
-          >
-            No heatmap data available
-          </div>
-        )}
-      </GoogleMap>
+          )}
+        </GoogleMap>
       </div>
     </div>
   );
@@ -476,7 +493,10 @@ export const HeatMapPage: React.FC = () => {
   }, []);
 
   // Calculate distance between two points in km
-  const calculateBoundsDistance = (bounds1: Bounds, bounds2: Bounds): number => {
+  const calculateBoundsDistance = (
+    bounds1: Bounds,
+    bounds2: Bounds,
+  ): number => {
     const lat1 = bounds1.neLat;
     const lng1 = bounds1.neLng;
     const lat2 = bounds2.neLat;
@@ -496,13 +516,13 @@ export const HeatMapPage: React.FC = () => {
   };
 
   // Check if bounds changed significantly (more than 10km or zoom changed by 1+)
-  const shouldFetchNewData = (
-    newBounds: Bounds,
-    newZoom: number,
-  ): boolean => {
+  const shouldFetchNewData = (newBounds: Bounds, newZoom: number): boolean => {
     if (!previousBoundsRef.current) return true;
 
-    const distance = calculateBoundsDistance(newBounds, previousBoundsRef.current);
+    const distance = calculateBoundsDistance(
+      newBounds,
+      previousBoundsRef.current,
+    );
     const zoomDifference = Math.abs(newZoom - previousZoomRef.current);
 
     return distance > 10 || zoomDifference >= 1;
