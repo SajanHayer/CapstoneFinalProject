@@ -64,7 +64,7 @@ const LineChart: React.FC<{ bids: BidPoint[] }> = ({ bids }) => {
             {sorted.map((b, i) => (
                 <circle key={i} cx={getX(i)} cy={getY(b.amount)} r={4} fill="black">
                     <title>
-                        {b.bidderName} (ID: {b.bidderId}){"\n"}${b.amount.toLocaleString()}
+                        {b.bidderName}
                         {"\n"}
                         {new Date(b.createdAt).toLocaleString()}
                     </title>

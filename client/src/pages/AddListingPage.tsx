@@ -208,19 +208,6 @@ export const AddListingPage: React.FC = () => {
           })
         }
         className="back-button"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "8px 16px",
-          marginBottom: "24px",
-          backgroundColor: "transparent",
-          border: "1px solid #e5e7eb",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "14px",
-          color: "#4b5563",
-        }}
       >
         ← Back to Vehicle
       </button>
@@ -256,14 +243,7 @@ export const AddListingPage: React.FC = () => {
                 ))}
               </Select>
               {selectedVehicleHasActiveListing && (
-                <p
-                  style={{
-                    color: "#dc2626",
-                    fontSize: "14px",
-                    marginTop: "8px",
-                    fontWeight: 500,
-                  }}
-                >
+                <p className="active-listing-warning">
                   ⚠️ This vehicle has an active listing or a recent listing that
                   has ended. Please complete or remove that listing before
                   adding a new one.
@@ -294,7 +274,7 @@ export const AddListingPage: React.FC = () => {
         {/* Pricing Section */}
         <div className="form-section">
           <h3>Pricing</h3>
-          <div className="form-grid">
+          <div className="form-grid-3">
             <Input
               label="Starting Price (75% of Reserve Price)"
               type="number"
@@ -348,12 +328,14 @@ export const AddListingPage: React.FC = () => {
         {/* Location Section */}
         <div className="form-section">
           <h3>Location</h3>
-          <Input
-            label="Location"
-            type="text"
-            placeholder="e.g., Toronto, ON"
-            {...register("location", { required: true })}
-          />
+          <div className="form-grid-1">
+            <Input
+              label="Location"
+              type="text"
+              placeholder="e.g., Toronto, ON"
+              {...register("location", { required: true })}
+            />
+          </div>
         </div>
 
         {/* Submit Button */}

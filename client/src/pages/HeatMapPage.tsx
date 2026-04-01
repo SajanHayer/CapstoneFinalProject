@@ -17,16 +17,31 @@ type HeatPoint = {
   listingId: string;
 };
 
+type City = {
+  name: string;
+  lat: number;
+  lng: number;
+};
+
+const CITIES: City[] = [
+  { name: "Calgary", lat: 51.0447, lng: -114.0719 },
+  { name: "Edmonton", lat: 53.5461, lng: -113.4938 },
+  { name: "Vancouver", lat: 49.2827, lng: -123.1207 },
+  { name: "Toronto", lat: 43.6532, lng: -79.3832 },
+  { name: "Montreal", lat: 45.5017, lng: -73.5673 },
+];
+
+const SEARCH_RADIUS_OPTIONS = [25, 50, 75, 100];
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
 const HEATMAP_REQUEST_TIMEOUT_MS = 15000;
 const GOOGLE_MAP_LIBRARIES = ["visualization"];
 
 const containerStyle: React.CSSProperties = {
-  width: "70vh",
-  height: "70vh",
+  width: "450px",
+  height: "600px",
   borderRadius: 12,
-  // OPTION 1: Force default cursor instead of grab for better hover responsiveness
   cursor: "default",
 };
 
@@ -55,6 +70,14 @@ const MapContent: React.FC<{
     typeof setTimeout
   > | null>;
   navigate: ReturnType<typeof useNavigate>;
+  selectedCity: City;
+  searchRadius: number;
+  onCityChange: (city: City) => void;
+  onSearchRadiusChange: (radius: number) => void;
+  totalListings: number;
+  listingsInRadius: number;
+  currentZoomLevel: number;
+  onZoomLevelChange: (zoom: number) => void;
 }> = ({
   metric,
   points,
@@ -71,6 +94,14 @@ const MapContent: React.FC<{
   previousZoomRef,
   boundsTimeoutRef,
   navigate,
+  selectedCity,
+  searchRadius,
+  onCityChange,
+  onSearchRadiusChange,
+  totalListings,
+  listingsInRadius,
+  currentZoomLevel,
+  onZoomLevelChange,
 }) => {
   // === FIX 1: State for hovered item (not ref) - triggers UI update ===
   const [hoveredPoint, setHoveredPoint] = useState<HeatPoint | null>(null);
@@ -124,6 +155,7 @@ const MapContent: React.FC<{
       // === FIX 5: Update zoom state for layer visibility ===
       currentZoomRef.current = zoom;
       setCurrentZoom(zoom);
+      onZoomLevelChange(zoom);
 
       if (bounds) {
         const ne = bounds.getNorthEast();
@@ -284,180 +316,433 @@ const MapContent: React.FC<{
     // Keep selectedPoint - it's independent
   }, [metric, points]);
 
+  // === City Search State ===
+  const [citySearchInput, setCitySearchInput] = useState("");
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+
+  const filteredCities = useMemo(() => {
+    return CITIES.filter((city) =>
+      city.name.toLowerCase().includes(citySearchInput.toLowerCase())
+    );
+  }, [citySearchInput]);
+
   return (
     <div style={{ padding: "16px 0" }}>
       <div style={{ paddingLeft: 16, paddingRight: 16, marginBottom: 16 }}>
-        <h2 style={{ marginBottom: 8 }}>Market Heat Map</h2>
+        <h2 style={{ marginBottom: 8 }}>Market Activity Heatmap</h2>
         <p style={{ marginTop: 0, opacity: 0.8 }}>
-          View active listings in your area.
+          View active listing intensity and market demand across your area
         </p>
+      </div>
 
+      {/* Main container with sidebar + map */}
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          paddingLeft: 16,
+          paddingRight: 16,
+        }}
+      >
+        {/* Left Sidebar */}
         <div
           style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-            marginBottom: 12,
-            flexWrap: "wrap",
+            width: 320,
+            backgroundColor: "#f5f5f5",
+            borderRadius: 12,
+            padding: 20,
+            height: "fit-content",
           }}
         >
-          {loading && <span style={{ color: "#ff9800" }}>Loading...</span>}
-          {!loading && error && (
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span style={{ color: "red" }}>{error}</span>
-              <button
-                onClick={onRetry}
+          {/* City Filter */}
+          <div style={{ marginBottom: 24, position: "relative" }}>
+            <label
+              style={{
+                display: "block",
+                fontWeight: 600,
+                marginBottom: 8,
+                fontSize: "0.95em",
+              }}
+            >
+              City
+            </label>
+            <input
+              type="text"
+              placeholder="Search cities..."
+              value={citySearchInput}
+              onChange={(e) => setCitySearchInput(e.target.value)}
+              onFocus={() => setShowCityDropdown(true)}
+              onBlur={() => setTimeout(() => setShowCityDropdown(false), 150)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: "0.95em",
+                border: "1px solid #ddd",
+                borderRadius: 6,
+                backgroundColor: "white",
+                boxSizing: "border-box",
+              }}
+            />
+{showCityDropdown && filteredCities.length > 0 && (
+              <div
                 style={{
-                  padding: "4px 12px",
-                  backgroundColor: "#2196F3",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  backgroundColor: "white",
+                  border: "1px solid #ddd",
+                  borderRadius: 6,
+                  maxHeight: 200,
+                  overflowY: "auto",
+                  zIndex: 10,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                }}
+              >
+                {filteredCities.map((city) => (
+                  <div
+                    key={city.name}
+                    onClick={() => {
+                      onCityChange(city);
+                      setCitySearchInput("");
+                      setShowCityDropdown(false);
+                    }}
+                    style={{
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      backgroundColor:
+                        selectedCity.name === city.name ? "#e8f0fe" : "white",
+                      borderBottom: "1px solid #f0f0f0",
+                      fontSize: "0.95em",
+                      transition: "background-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f0f0f0";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        selectedCity.name === city.name ? "#e8f0fe" : "white";
+                    }}
+                  >
+                    {city.name}
+                  </div>
+                ))}
+              </div>
+            )}
+            {showCityDropdown && filteredCities.length === 0 && citySearchInput && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: 4,
+                  backgroundColor: "white",
+                  border: "1px solid #ddd",
+                  borderRadius: 6,
+                  padding: "10px 12px",
+                  zIndex: 10,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                  color: "#999",
                   fontSize: "0.9em",
                 }}
               >
-                Retry
-              </button>
-            </div>
-          )}
-          {!loading && !error && (
-            <span style={{ opacity: 0.8 }}>
-              {points.length} points rendered
-            </span>
-          )}
-        </div>
-      </div>
+                No cities found
+              </div>
+            )}
+          </div>
 
-      <div style={{ marginLeft: "-3%", marginRight: "-3%", marginBottom: 16 }}>
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={center}
-          zoom={10}
-          options={{
-            disableDefaultUI: false,
-            zoomControl: true,
-            mapTypeControl: true,
-            // === CURSOR OVERRIDE: Force default curry to make map feel non-draggable ===
-            // draggableCursor: cursor when hovering over draggable area (map body)
-            draggableCursor: "default",
-            // draggingCursor: cursor while actively dragging
-            draggingCursor: "default",
-          }}
-          onLoad={(map) => {
-            mapRef.current = map;
-          }}
-          onIdle={handleMapIdle}
-          onZoomChanged={onMapZoomChanged}
-        >
-          {/* === FIX 7: Make popup independent - use selected OR hovered ===
-            === FIX 6: Show popup for selected or hovered (independent states) === */}
-          {(selectedPoint || hoveredPoint) && (
-            <InfoWindow
-              position={{
-                lat: (selectedPoint || hoveredPoint)!.lat,
-                lng: (selectedPoint || hoveredPoint)!.lng,
-              }}
-              onCloseClick={() => {
-                // Only close selected (not hovering state - they're independent)
-                setSelectedPoint(null);
+          {/* Search Radius Filter */}
+          <div style={{ marginBottom: 24 }}>
+            <label
+              style={{
+                display: "block",
+                fontWeight: 600,
+                marginBottom: 8,
+                fontSize: "0.95em",
               }}
             >
-              <div style={{ minWidth: 160, maxWidth: 200, fontSize: "0.8em" }}>
-                {(selectedPoint || hoveredPoint)?.imageUrl && (
-                  <img
-                    src={(selectedPoint || hoveredPoint)!.imageUrl || ""}
-                    alt={(selectedPoint || hoveredPoint)!.location}
-                    style={{
-                      width: "100%",
-                      height: 80,
-                      objectFit: "cover",
-                      borderRadius: 6,
-                      marginBottom: 6,
-                      display: "block",
-                    }}
-                  />
-                )}
+              Search Radius
+            </label>
+            <select
+              value={searchRadius}
+              onChange={(e) => onSearchRadiusChange(Number(e.target.value))}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: "0.95em",
+                border: "1px solid #ddd",
+                borderRadius: 6,
+                backgroundColor: "white",
+                cursor: "pointer",
+              }}
+            >
+              {SEARCH_RADIUS_OPTIONS.map((radius) => (
+                <option key={radius} value={radius}>
+                  {radius} km
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Current Location Info */}
+          <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "1px solid #ddd" }}>
+            <h3 style={{ fontSize: "0.95em", marginBottom: 12, fontWeight: 600 }}>
+              Current Location
+            </h3>
+            <div style={{ fontSize: "0.85em" }}>
+              <p style={{ margin: "6px 0", fontWeight: 500 }}>
+                Selected City: <strong>{selectedCity.name}</strong>
+              </p>
+              {/* <p style={{ margin: "6px 0", fontSize: "0.8em", opacity: 0.7 }}>
+                City Coordinates:
+                <br />
+                {selectedCity.lat.toFixed(4)}°, {selectedCity.lng.toFixed(4)}°
+              </p> */}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "1px solid #ddd" }}>
+            <p style={{ margin: "8px 0", fontSize: "0.95em" }}>
+              <strong>Total Listings:</strong> {totalListings}
+            </p>
+            <p style={{ margin: "8px 0", fontSize: "0.95em" }}>
+              <strong>Within Radius:</strong> {listingsInRadius}
+            </p>
+            <p style={{ margin: "8px 0", fontSize: "0.95em" }}>
+              <strong>Zoom Level:</strong> {currentZoomLevel}
+            </p>
+          </div>
+
+          {/* Activity Intensity Legend */}
+          <div>
+            <h3 style={{ fontSize: "0.95em", marginBottom: 12, fontWeight: 600 }}>
+              Activity Intensity
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div
                   style={{
-                    fontWeight: 700,
-                    marginBottom: 3,
-                    fontSize: "0.85em",
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#bd002e",
+                    borderRadius: 3,
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>Very High</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#e31a1a",
+                    borderRadius: 3,
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>High</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#fd8d3c",
+                    borderRadius: 3,
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>Medium</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#fecc5c",
+                    borderRadius: 3,
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>Low</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#ffffb2",
+                    borderRadius: 3,
+                    border: "1px solid #ddd",
+                  }}
+                />
+                <span style={{ fontSize: "0.85em" }}>Very Low</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Map Area */}
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "center",
+              marginBottom: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            {loading && <span style={{ color: "#ff9800" }}>Loading...</span>}
+            {!loading && error && (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ color: "red" }}>{error}</span>
+                <button
+                  onClick={onRetry}
+                  style={{
+                    padding: "4px 12px",
+                    backgroundColor: "#2196F3",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 4,
+                    cursor: "pointer",
+                    fontSize: "0.9em",
                   }}
                 >
-                  {(selectedPoint || hoveredPoint)?.location}
-                </div>
-                <div
-                  style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 2 }}
-                >
-                  Address: {(selectedPoint || hoveredPoint)?.location}
-                </div>
-                <div
-                  style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 6 }}
-                >
-                  {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
-                  {(selectedPoint || hoveredPoint)?.weight}
-                </div>
-                <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `/listings/${(selectedPoint || hoveredPoint)!.listingId}`,
-                      )
-                    }
+                  Retry
+                </button>
+              </div>
+            )}
+            {!loading && !error && (
+              <span style={{ opacity: 0.8 }}>
+                {points.length} points rendered
+              </span>
+            )}
+          </div>
+
+          <GoogleMap
+            mapContainerStyle={containerStyle}
+            center={center}
+            zoom={10}
+            options={{
+              disableDefaultUI: false,
+              zoomControl: true,
+              mapTypeControl: true,
+              draggableCursor: "default",
+              draggingCursor: "default",
+            }}
+            onLoad={(map) => {
+              mapRef.current = map;
+            }}
+            onIdle={handleMapIdle}
+            onZoomChanged={onMapZoomChanged}
+          >
+            {(selectedPoint || hoveredPoint) && (
+              <InfoWindow
+                position={{
+                  lat: (selectedPoint || hoveredPoint)!.lat,
+                  lng: (selectedPoint || hoveredPoint)!.lng,
+                }}
+                onCloseClick={() => {
+                  setSelectedPoint(null);
+                }}
+              >
+                <div style={{ minWidth: 160, maxWidth: 200, fontSize: "0.8em" }}>
+                  {(selectedPoint || hoveredPoint)?.imageUrl && (
+                    <img
+                      src={(selectedPoint || hoveredPoint)!.imageUrl || ""}
+                      alt={(selectedPoint || hoveredPoint)!.location}
+                      style={{
+                        width: "100%",
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 6,
+                        marginBottom: 6,
+                        display: "block",
+                      }}
+                    />
+                  )}
+                  <div
                     style={{
-                      flex: 1,
-                      padding: "6px 8px",
-                      backgroundColor: "#2196F3",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: "pointer",
-                      fontSize: "0.75em",
-                      fontWeight: 600,
+                      fontWeight: 700,
+                      marginBottom: 3,
+                      fontSize: "0.85em",
                     }}
                   >
-                    View Listing
-                  </button>
-                  {selectedPoint && (
+                    {(selectedPoint || hoveredPoint)?.location}
+                  </div>
+                  <div
+                    style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 2 }}
+                  >
+                    Address: {(selectedPoint || hoveredPoint)?.location}
+                  </div>
+                  <div
+                    style={{ fontSize: "0.75em", opacity: 0.85, marginBottom: 6 }}
+                  >
+                    {metric.charAt(0).toUpperCase() + metric.slice(1)} intensity:{" "}
+                    {(selectedPoint || hoveredPoint)?.weight}
+                  </div>
+                  <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
                     <button
-                      onClick={() => setSelectedPoint(null)}
+                      onClick={() =>
+                        navigate(
+                          `/listings/${(selectedPoint || hoveredPoint)!.listingId}`,
+                        )
+                      }
                       style={{
+                        flex: 1,
                         padding: "6px 8px",
-                        backgroundColor: "#666",
+                        backgroundColor: "#2196F3",
                         color: "white",
                         border: "none",
                         borderRadius: 4,
                         cursor: "pointer",
                         fontSize: "0.75em",
+                        fontWeight: 600,
                       }}
                     >
-                      Unpin
+                      View Listing
                     </button>
-                  )}
+                    {selectedPoint && (
+                      <button
+                        onClick={() => setSelectedPoint(null)}
+                        style={{
+                          padding: "6px 8px",
+                          backgroundColor: "#666",
+                          color: "white",
+                          border: "none",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                          fontSize: "0.75em",
+                        }}
+                      >
+                        Unpin
+                      </button>
+                    )}
+                  </div>
                 </div>
+              </InfoWindow>
+            )}
+            {heatmapLayerData.length === 0 && !loading && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: "rgba(0,0,0,0.7)",
+                  color: "white",
+                  padding: 16,
+                  borderRadius: 8,
+                  zIndex: 10,
+                  pointerEvents: "none",
+                }}
+              >
+                No heatmap data available
               </div>
-            </InfoWindow>
-          )}
-          {heatmapLayerData.length === 0 && !loading && (
-            <div
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                backgroundColor: "rgba(0,0,0,0.7)",
-                color: "white",
-                padding: 16,
-                borderRadius: 8,
-                zIndex: 10,
-                pointerEvents: "none",
-              }}
-            >
-              No heatmap data available
-            </div>
-          )}
-        </GoogleMap>
+            )}
+          </GoogleMap>
+        </div>
       </div>
     </div>
   );
@@ -471,6 +756,10 @@ export const HeatMapPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
   const [bounds, setBounds] = useState<Bounds | null>(null);
+  const [selectedCity, setSelectedCity] = useState<City>(CITIES[0]);
+  const [searchRadius, setSearchRadius] = useState(50);
+  const [currentZoomLevel, setCurrentZoomLevel] = useState(10);
+  
   const requestIdRef = useRef(0);
   const boundsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const previousBoundsRef = useRef<Bounds | null>(null);
@@ -482,7 +771,7 @@ export const HeatMapPage: React.FC = () => {
     libraries: GOOGLE_MAP_LIBRARIES as unknown as ["visualization"],
   });
 
-  const center = useMemo(() => ({ lat: 51.0447, lng: -114.0719 }), []);
+  const center = useMemo(() => ({ lat: selectedCity.lat, lng: selectedCity.lng }), [selectedCity]);
 
   useEffect(() => {
     return () => {
@@ -530,6 +819,16 @@ export const HeatMapPage: React.FC = () => {
 
   const handleMapZoomChanged = () => {
     isZoomingRef.current = true;
+  };
+
+  const handleCityChange = (city: City) => {
+    setSelectedCity(city);
+    setPoints([]); // Clear existing points
+    previousBoundsRef.current = null; // Reset bounds
+  };
+
+  const handleSearchRadiusChange = (radius: number) => {
+    setSearchRadius(radius);
   };
 
   useEffect(() => {
@@ -719,6 +1018,14 @@ export const HeatMapPage: React.FC = () => {
       previousZoomRef={previousZoomRef}
       boundsTimeoutRef={boundsTimeoutRef}
       navigate={navigate}
+      selectedCity={selectedCity}
+      searchRadius={searchRadius}
+      onCityChange={handleCityChange}
+      onSearchRadiusChange={handleSearchRadiusChange}
+      totalListings={points.length}
+      listingsInRadius={points.length}
+      currentZoomLevel={currentZoomLevel}
+      onZoomLevelChange={setCurrentZoomLevel}
     />
   );
 };

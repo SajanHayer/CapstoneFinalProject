@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type ImageGalleryProps = {
@@ -12,6 +12,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [thumbnailScrollIndex, setThumbnailScrollIndex] = useState<number>(0);
+  const VISIBLE_THUMBNAILS = 8;
 
   if (!images || images.length === 0) {
     return (
@@ -46,6 +48,24 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
     if (e) e.stopPropagation();
     setIsModalOpen(false);
   };
+
+  const handleThumbnailPrev = () => {
+    setThumbnailScrollIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleThumbnailNext = () => {
+    const maxIndex = Math.max(0, images.length - VISIBLE_THUMBNAILS);
+    setThumbnailScrollIndex((prev) => Math.min(maxIndex, prev + 1));
+  };
+
+  // Auto-scroll thumbnail list when selected index changes
+  useEffect(() => {
+    if (selectedIndex < thumbnailScrollIndex) {
+      setThumbnailScrollIndex(selectedIndex);
+    } else if (selectedIndex >= thumbnailScrollIndex + VISIBLE_THUMBNAILS) {
+      setThumbnailScrollIndex(selectedIndex - VISIBLE_THUMBNAILS + 1);
+    }
+  }, [selectedIndex, thumbnailScrollIndex]);
 
   return (
     <>
@@ -104,27 +124,48 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
 
         {/* Thumbnail Strip */}
         {images.length > 1 && (
-          <div className="gallery-thumbnails">
-            {images.map((url, index) => (
-              <div
-                key={index}
-                className={`gallery-thumbnail ${
-                  index === selectedIndex ? "active" : ""
-                }`}
-                onClick={() => setSelectedIndex(index)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") setSelectedIndex(index);
-                }}
-              >
-                <img
-                  src={url}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="thumbnail-image"
-                />
-              </div>
-            ))}
+          <div className="gallery-thumbnails-container">
+            <button
+              onClick={handleThumbnailPrev}
+              className="gallery-thumbnails-nav gallery-thumbnails-nav-prev"
+              aria-label="Previous thumbnails"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="gallery-thumbnails">
+              {images
+                .slice(thumbnailScrollIndex, thumbnailScrollIndex + VISIBLE_THUMBNAILS)
+                .map((url, index) => {
+                  const actualIndex = thumbnailScrollIndex + index;
+                  return (
+                    <div
+                      key={actualIndex}
+                      className={`gallery-thumbnail ${
+                        actualIndex === selectedIndex ? "active" : ""
+                      }`}
+                      onClick={() => setSelectedIndex(actualIndex)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") setSelectedIndex(actualIndex);
+                      }}
+                    >
+                      <img
+                        src={url}
+                        alt={`Thumbnail ${actualIndex + 1}`}
+                        className="thumbnail-image"
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+            <button
+              onClick={handleThumbnailNext}
+              className="gallery-thumbnails-nav gallery-thumbnails-nav-next"
+              aria-label="Next thumbnails"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
         )}
       </div>

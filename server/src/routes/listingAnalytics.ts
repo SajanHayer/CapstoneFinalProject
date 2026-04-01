@@ -144,8 +144,8 @@ router.get("/:listingId/bids", async (req, res) => {
           r.bid_time instanceof Date
             ? r.bid_time.toISOString()
             : String(r.bid_time),
-        bidderId: null,
-        bidderName: "Hidden",
+        bidderId: r.bidder_id,
+        bidderName: r.bidder_name,
       })),
     });
   } catch (e: any) {

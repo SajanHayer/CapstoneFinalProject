@@ -205,18 +205,26 @@
 }
 
 /* Thumbnail Strip */
+.gallery-thumbnails-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .gallery-thumbnails {
   display: flex;
   gap: 0.75rem;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-  scroll-behavior: smooth;
+  flex: 1;
+  overflow: hidden;
+  padding: 0.25rem 0;
 }
 
 .gallery-thumbnail {
   flex-shrink: 0;
-  width: 80px;
-  height: 80px;
+  width: 85px;
+  height: 85px;
+  min-width: 85px;
   border: 2px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
@@ -242,6 +250,29 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Thumbnail Navigation Buttons */
+.gallery-thumbnails-nav {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.gallery-thumbnails-nav:hover {
+  background: var(--accent);
+  color: white;
+  transform: scale(1.1);
 }
 
 /* Gallery Main Container Hint */
