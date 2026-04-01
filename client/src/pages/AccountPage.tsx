@@ -247,36 +247,74 @@ export const AccountPage: React.FC = () => {
     setWonListingId(listingId);
   };
 
+  const displayName = user?.email
+    ? user.email
+        .split("@")[0]
+        .replace(/[._-]+/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    : "Collector";
+
+  const initials = displayName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <section className="account-page">
       <div className="account-container">
         {/* Left Side - Profile */}
-        <div className="account-profile">
-          <div className="profile-header">
-            <div className="profile-avatar">
-              <span>👤</span>
+                <div className="account-profile account-profile-upgraded">
+          <div className="account-profile-hero">
+            <div className="profile-avatar profile-avatar-upgraded">
+              <span>{initials}</span>
             </div>
+
             <div className="profile-info">
-              <h1>Collector Name</h1>
-              <p className="profile-role">Member</p>
+              <h1>{displayName}</h1>
+              <p className="profile-role">
+                {user?.role === "admin" ? "Administrator" : "Marketplace Member"}
+              </p>
+            </div>
+          </div>
+
+          <div className="account-mini-stats">
+            <div className="account-mini-stat">
+              <span className="account-mini-stat-label">Garage</span>
+              <strong>{garageVehicles.length}</strong>
+            </div>
+            <div className="account-mini-stat">
+              <span className="account-mini-stat-label">Bids</span>
+              <strong>{userBids.length}</strong>
             </div>
           </div>
 
           <div className="profile-details">
-            <h3>Contact Information</h3>
+            <h3>Account Overview</h3>
+
             <div className="detail-item">
-              <span className="detail-label">Email:</span>
+              <span className="detail-label">Email</span>
+              <span className="detail-value">{user?.email || "user@example.com"}</span>
+            </div>
+
+            <div className="detail-item">
+              <span className="detail-label">Role</span>
               <span className="detail-value">
-                {user?.email || "user@example.com"}
+                {user?.role === "admin" ? "Administrator" : "Member"}
               </span>
             </div>
+
             <div className="detail-item">
-              <span className="detail-label">Member Since:</span>
-              <span className="detail-value">January 2024</span>
+              <span className="detail-label">Verification</span>
+              <span className={`detail-badge ${user?.is_verified ? "verified" : "pending"}`}>
+                {user?.is_verified ? "Verified" : "Pending"}
+              </span>
             </div>
+
             <div className="detail-item">
-              <span className="detail-label">Account Status:</span>
-              <span className="detail-value active">Active</span>
+              <span className="detail-label">Status</span>
+              <span className="detail-badge active">Active</span>
             </div>
           </div>
 
@@ -292,28 +330,42 @@ export const AccountPage: React.FC = () => {
         {/* Right Side - Content */}
         <div className="account-content">
           {/* Tabs */}
-          <div className="tabs-header">
-            <div className="tabs">
-              <button
-                className={`tab ${activeTab === "garage" ? "active" : ""}`}
-                onClick={() => setActiveTab("garage")}
-              >
-                Garage
-              </button>
-              <button
-                className={`tab ${activeTab === "bids" ? "active" : ""}`}
-                onClick={() => setActiveTab("bids")}
-              >
-                Bids
-              </button>
+          <div className="tabs-header tabs-header-upgraded">
+            <div>
+              <h2 className="account-section-title">
+                {activeTab === "garage" ? "Your Garage" : "Your Bids"}
+              </h2>
+              <p className="account-section-subtitle">
+                {activeTab === "garage"
+                  ? "Manage your vehicles and quickly check listing activity."
+                  : "Track your auction activity, outcomes, and next actions."}
+              </p>
             </div>
-            <Button
-              variant="primary"
-              onClick={() => navigate("/add-vehicle")}
-              className="add-vehicle-btn"
-            >
-              + Add Vehicle
-            </Button>
+
+            <div className="tabs-actions">
+              <div className="tabs">
+                <button
+                  className={`tab ${activeTab === "garage" ? "active" : ""}`}
+                  onClick={() => setActiveTab("garage")}
+                >
+                  Garage
+                </button>
+                <button
+                  className={`tab ${activeTab === "bids" ? "active" : ""}`}
+                  onClick={() => setActiveTab("bids")}
+                >
+                  Bids
+                </button>
+              </div>
+
+              <Button
+                variant="primary"
+                onClick={() => navigate("/add-vehicle")}
+                className="add-vehicle-btn"
+              >
+                + Add Vehicle
+              </Button>
+            </div>
           </div>
 
           {error && <p className="error-text">{error}</p>}

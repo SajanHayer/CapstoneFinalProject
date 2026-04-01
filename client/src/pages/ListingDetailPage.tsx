@@ -18,7 +18,7 @@ type VechileInfo = {
   condition: "new" | "used";
   status: "available" | "pending" | "sold";
   description: string | "";
-  image_url: string[] | File[]; // array of image URLs or path to image or img
+  image_url: string[] | File[];
   vin?: string;
   style?: string;
   engine_size?: number;
@@ -58,7 +58,6 @@ export const ListingDetailPage: React.FC = () => {
     null,
   );
 
-  // Get user's location on component mount
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -66,13 +65,11 @@ export const ListingDetailPage: React.FC = () => {
         const lng = position.coords.longitude;
         setCoords({ lat, lng });
 
-        // Try to get city name from coordinates using reverse geocoding
         fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
         )
           .then((res) => res.json())
           .then((data) => {
-            // Extract city and state/province from the response
             const city =
               data.address?.city ||
               data.address?.town ||
@@ -102,7 +99,6 @@ export const ListingDetailPage: React.FC = () => {
   useEffect(() => {
     const fetchVehicle = async () => {
       try {
-        // Fetch listing by listing ID
         const listingRes = await fetch(
           `http://localhost:8080/api/listings/${id}`,
         );
@@ -118,20 +114,17 @@ export const ListingDetailPage: React.FC = () => {
         setListing(fetchedListing);
         setCurrentHighestBid(Number(fetchedListing.current_price));
 
-        // Fetch vehicle details using vehicle_id from listing
         const vehicleRes = await fetch(
           `http://localhost:8080/api/vehicles/${fetchedListing.vehicle_id}`,
         );
         const vehicleData = await vehicleRes.json();
         setVehicle(vehicleData.vehicle);
 
-        // Fetch highest bidder info
         const bidsRes = await fetch(
           `http://localhost:8080/api/listings/${id}/all/bids`,
         );
         const bidsData = await bidsRes.json();
         if (bidsData.result && bidsData.result.length > 0) {
-          // Find highest bid
           const highestBid = bidsData.result.reduce((max: any, bid: any) =>
             Number(bid.bid_amount) > Number(max.bid_amount) ? bid : max,
           );
@@ -148,7 +141,7 @@ export const ListingDetailPage: React.FC = () => {
       }
     };
     fetchVehicle();
-  }, [id]); // when id changes, refetch vehicle
+  }, [id]);
 
   useEffect(() => {
     if (!user?.id || !id) return;
@@ -176,7 +169,6 @@ export const ListingDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (!listing) return;
-    // join room using LISTING ID, not vehicle ID
     socket.connect();
     socket.emit("join_auction", listing.id);
     return () => {
@@ -194,7 +186,6 @@ export const ListingDetailPage: React.FC = () => {
       setCurrentHighestBid(data.amount);
       if (data.bidder_id) setHighestBidderId(data.bidder_id);
       if (data.end_time) {
-        // Update end_time if auction was extended
         setListing((prev) =>
           prev
             ? {
@@ -301,7 +292,6 @@ export const ListingDetailPage: React.FC = () => {
     setBidAmount(0);
   };
 
-  // Determine listing status
   const getListingStatus = () => {
     if (!listing) return null;
     const now = new Date();
@@ -309,8 +299,9 @@ export const ListingDetailPage: React.FC = () => {
     const endTime = new Date(listing.end_time);
 
     if (now < startTime) return "UPCOMING";
-    if (now >= startTime && now < endTime && listing.status === "active")
+    if (now >= startTime && now < endTime && listing.status === "active") {
       return "ACTIVE";
+    }
     return "EXPIRED";
   };
 
@@ -318,7 +309,6 @@ export const ListingDetailPage: React.FC = () => {
   const isAuctionActive = listingStatus === "ACTIVE";
   const isAuctionUpcoming = listingStatus === "UPCOMING";
 
-  // Grouped vehicle information
   const vehicleBasics = [
     { title: "Year", value: String(vehicle.year) },
     { title: "Make", value: vehicle.make },
@@ -335,10 +325,6 @@ export const ListingDetailPage: React.FC = () => {
       value:
         vehicle.condition.charAt(0).toUpperCase() + vehicle.condition.slice(1),
     },
-    // {
-    //   title: "Price",
-    //   value: vehicle.price ? `$${Number(vehicle.price).toFixed(2)}` : "N/A",
-    // },
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
@@ -363,12 +349,10 @@ export const ListingDetailPage: React.FC = () => {
   return (
     <section className="listing-detail-page">
       <div className="listing-detail-container">
-        {/* Back Link */}
         <Link to="/listings" className="back-link">
           ← Back to listings
         </Link>
 
-        {/* Header Section */}
         <div className="listing-header-card">
           <div>
             <h1 className="listing-title">
@@ -392,13 +376,11 @@ export const ListingDetailPage: React.FC = () => {
         </div>
 
         <div className="listing-content-grid">
-          {/* Main Content - Left Side */}
           <div className="listing-main">
-            {/* Image Gallery */}
             {vehicle.image_url &&
               Array.isArray(vehicle.image_url) &&
               vehicle.image_url.length > 0 && (
-                <div className="gallery-section">
+                <div className="gallery-section detail-gallery-shell">
                   <ImageGallery
                     images={vehicle.image_url.map((img) =>
                       typeof img === "string" ? img : URL.createObjectURL(img),
@@ -408,7 +390,6 @@ export const ListingDetailPage: React.FC = () => {
                 </div>
               )}
 
-            {/* Vehicle Details */}
             <div className="details-grid">
               <div className="details-card">
                 <h3>Basic Information</h3>
@@ -435,7 +416,6 @@ export const ListingDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Description Card */}
             {vehicle.description && (
               <div className="description-card">
                 <h3>Description</h3>
@@ -443,18 +423,15 @@ export const ListingDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Bid History - Show for all auctions */}
             <div className="description-card" style={{ marginTop: "24px" }}>
               <BidHistory listingId={id} />
             </div>
           </div>
 
-          {/* Bidding Section - Right Side */}
           <aside className="listing-sidebar">
             <div className="bid-card">
               <h2>Auction Information</h2>
 
-              {/* Time Remaining - Only show for ACTIVE auctions */}
               {isAuctionActive && (
                 <div className="time-remaining">
                   <p className="time-label">Time Remaining</p>
@@ -462,7 +439,6 @@ export const ListingDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Price Information */}
               {listing && (
                 <div className="pricing-section">
                   <div className="price-row">
@@ -483,14 +459,9 @@ export const ListingDetailPage: React.FC = () => {
                       ${Number(listing.buy_now_price || 0).toFixed(2)}
                     </span>
                   </div>
-                  {/* <div className="price-row">
-                    <span className="price-label">Views</span>
-                    <span className="price-value">{listing.views_count}</span>
-                  </div> */}
                 </div>
               )}
 
-              {/* Bid Input */}
               {isAuctionUpcoming && (
                 <div className="bid-info-message">
                   This auction hasn't started yet. Check back when it goes live
@@ -533,7 +504,6 @@ export const ListingDetailPage: React.FC = () => {
                 />
               </div>
 
-              {/* Place Bid Button */}
               <button
                 onClick={handlePlaceBid}
                 disabled={
@@ -559,3 +529,5 @@ export const ListingDetailPage: React.FC = () => {
     </section>
   );
 };
+
+export default ListingDetailPage;

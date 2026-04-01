@@ -416,7 +416,7 @@ export const VehicleDetailPage: React.FC = () => {
             {vehicle.image_url &&
               Array.isArray(vehicle.image_url) &&
               vehicle.image_url.length > 0 && (
-                <div className="gallery-section">
+                <div className="gallery-section detail-gallery-shell">
                   <ImageGallery
                     images={vehicle.image_url.map((img) =>
                       typeof img === "string" ? img : URL.createObjectURL(img),
@@ -744,3 +744,5 @@ export const VehicleDetailPage: React.FC = () => {
     </section>
   );
 };
+
+export default VehicleDetailPage;

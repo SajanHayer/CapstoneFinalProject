@@ -1,5 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Mail,
+  Shield,
+  Trash2,
+  User2,
+  Users,
+} from "lucide-react";
 
 type AdminUser = {
   id: number;
@@ -10,6 +19,20 @@ type AdminUser = {
   email_verified: boolean;
 };
 
+const pillStyle = (background: string, color: string): React.CSSProperties => ({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 10px",
+  borderRadius: 999,
+  background,
+  color,
+  fontSize: 12,
+  fontWeight: 700,
+  letterSpacing: "0.02em",
+  border: "1px solid var(--border)",
+});
+
 const AdminUsersPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +41,7 @@ const AdminUsersPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [deleteReason, setDeleteReason] = useState("");
+  const [search, setSearch] = useState("");
 
   const fetchUsers = async () => {
     try {
@@ -101,100 +125,442 @@ const AdminUsersPage: React.FC = () => {
     }
   };
 
+  const filteredUsers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return users;
+
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q) ||
+        user.role.toLowerCase().includes(q) ||
+        String(user.id).includes(q),
+    );
+  }, [users, search]);
+
+  const stats = useMemo(() => {
+    return {
+      total: users.length,
+      admins: users.filter((u) => u.role === "admin").length,
+      verifiedAccounts: users.filter((u) => u.is_verified).length,
+      verifiedEmails: users.filter((u) => u.email_verified).length,
+    };
+  }, [users]);
+
   if (loading) {
-    return <div style={{ padding: 24 }}>Loading users…</div>;
+    return (
+      <div
+        style={{
+          padding: 24,
+          color: "var(--text)",
+        }}
+      >
+        Loading users…
+      </div>
+    );
   }
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: 8 }}>Admin Users</h1>
-      <p style={{ opacity: 0.75, marginBottom: 20 }}>
-        View all users, their roles, verification status, and remove accounts.
-      </p>
-
-      <div style={{ overflowX: "auto" }}>
-        <table
+    <section
+      style={{
+        padding: "1.5rem 0 2rem",
+        color: "var(--text)",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 1400,
+          margin: "0 auto",
+          display: "grid",
+          gap: "1.25rem",
+        }}
+      >
+        <div
           style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            background: "white",
-            borderRadius: 12,
-            overflow: "hidden",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+            border: "1px solid var(--border)",
+            borderRadius: 24,
+            padding: "1.5rem",
+            background:
+              "linear-gradient(135deg, rgba(37,99,235,0.16), rgba(124,58,237,0.16)), var(--card)",
+            boxShadow: "var(--shadow)",
+            backdropFilter: "var(--backdrop)",
+            WebkitBackdropFilter: "var(--backdrop)",
           }}
         >
-          <thead>
-            <tr style={{ background: "#f3f4f6", textAlign: "left" }}>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>ID</th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>Name</th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>Email</th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>Role</th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>
-                Verified
-              </th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>
-                Email Verified
-              </th>
-              <th style={{ padding: 12, borderBottom: "1px solid #ddd" }}>
-                Actions
-              </th>
-            </tr>
-          </thead>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+              alignItems: "flex-start",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 12px",
+                  borderRadius: 999,
+                  background: "rgba(15,23,42,0.16)",
+                  border: "1px solid var(--border)",
+                  marginBottom: 14,
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                <Shield size={16} />
+                Admin Control Panel
+              </div>
 
-          <tbody>
-            {users.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  style={{ padding: 20, textAlign: "center", opacity: 0.7 }}
+              <h1
+                style={{
+                  fontSize: "2rem",
+                  margin: "0 0 8px",
+                  color: "var(--text)",
+                }}
+              >
+                User Management
+              </h1>
+
+              <p
+                style={{
+                  margin: 0,
+                  color: "var(--muted)",
+                  maxWidth: 700,
+                  lineHeight: 1.6,
+                }}
+              >
+                Review platform users, check verification state, and remove
+                accounts when necessary.
+              </p>
+            </div>
+
+            <div
+              style={{
+                minWidth: 260,
+                flex: "1 1 260px",
+                maxWidth: 360,
+              }}
+            >
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email, role, or ID..."
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  border: "1px solid var(--border)",
+                  background: "var(--card2)",
+                  color: "var(--text)",
+                  outline: "none",
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          {[
+            {
+              label: "Total users",
+              value: stats.total,
+              icon: <Users size={18} />,
+            },
+            {
+              label: "Admins",
+              value: stats.admins,
+              icon: <Shield size={18} />,
+            },
+            {
+              label: "Verified accounts",
+              value: stats.verifiedAccounts,
+              icon: <CheckCircle2 size={18} />,
+            },
+            {
+              label: "Verified emails",
+              value: stats.verifiedEmails,
+              icon: <Mail size={18} />,
+            },
+          ].map((item) => (
+            <div
+              key={item.label}
+              style={{
+                border: "1px solid var(--border)",
+                borderRadius: 20,
+                padding: "1rem 1.1rem",
+                background: "var(--card)",
+                boxShadow: "var(--shadow)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  color: "var(--accent)",
+                  marginBottom: 10,
+                }}
+              >
+                {item.icon}
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: "var(--muted)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  marginBottom: 8,
+                  fontWeight: 700,
+                }}
+              >
+                {item.label}
+              </div>
+              <div
+                style={{
+                  fontSize: "1.7rem",
+                  fontWeight: 800,
+                  color: "var(--text)",
+                }}
+              >
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            border: "1px solid var(--border)",
+            borderRadius: 24,
+            overflow: "hidden",
+            background: "var(--card)",
+            boxShadow: "var(--shadow)",
+          }}
+        >
+          <div
+            style={{
+              padding: "1rem 1.25rem",
+              borderBottom: "1px solid var(--border)",
+              background: "var(--card2)",
+              color: "var(--muted)",
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            {filteredUsers.length} user{filteredUsers.length === 1 ? "" : "s"} shown
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: 900,
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    textAlign: "left",
+                    background: "rgba(127,127,127,0.08)",
+                  }}
                 >
-                  No users found.
-                </td>
-              </tr>
-            ) : (
-              users.map((user) => (
-                <tr key={user.id}>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.id}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.name}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.email}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.role}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.is_verified ? "Yes" : "No"}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    {user.email_verified ? "Yes" : "No"}
-                  </td>
-                  <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
-                    <button
-                      onClick={() => openDeleteModal(user)}
-                      disabled={deletingUserId === user.id}
-                      type="button"
+                  {["User", "Email", "Role", "Account", "Email Status", "Actions"].map(
+                    (heading) => (
+                      <th
+                        key={heading}
+                        style={{
+                          padding: "14px 16px",
+                          borderBottom: "1px solid var(--border)",
+                          color: "var(--muted)",
+                          fontSize: 12,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.08em",
+                        }}
+                      >
+                        {heading}
+                      </th>
+                    ),
+                  )}
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
                       style={{
-                        padding: "8px 14px",
-                        borderRadius: 8,
-                        border: "1px solid #dc2626",
-                        background: "white",
-                        color: "#dc2626",
-                        cursor: "pointer",
-                        fontWeight: 600,
+                        padding: 30,
+                        textAlign: "center",
+                        color: "var(--muted)",
                       }}
                     >
-                      {deletingUserId === user.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                      No users found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 42,
+                              height: 42,
+                              borderRadius: 14,
+                              background:
+                                "linear-gradient(135deg, var(--accent), var(--accent2))",
+                              color: "white",
+                              display: "grid",
+                              placeItems: "center",
+                              fontWeight: 800,
+                              boxShadow: "0 10px 20px var(--ring)",
+                            }}
+                          >
+                            <User2 size={18} />
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                color: "var(--text)",
+                                marginBottom: 2,
+                              }}
+                            >
+                              {user.name}
+                            </div>
+                            <div
+                              style={{
+                                color: "var(--muted)",
+                                fontSize: 13,
+                              }}
+                            >
+                              ID #{user.id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                          color: "var(--text)",
+                        }}
+                      >
+                        {user.email}
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <span
+                          style={
+                            user.role === "admin"
+                              ? pillStyle("rgba(124,58,237,0.16)", "var(--accent2)")
+                              : pillStyle("rgba(37,99,235,0.14)", "var(--accent)")
+                          }
+                        >
+                          <Shield size={13} />
+                          {user.role}
+                        </span>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <span
+                          style={
+                            user.is_verified
+                              ? pillStyle("rgba(34,197,94,0.14)", "#16a34a")
+                              : pillStyle("rgba(245,158,11,0.14)", "#d97706")
+                          }
+                        >
+                          {user.is_verified ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                          {user.is_verified ? "Verified" : "Pending"}
+                        </span>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <span
+                          style={
+                            user.email_verified
+                              ? pillStyle("rgba(34,197,94,0.14)", "#16a34a")
+                              : pillStyle("rgba(239,68,68,0.14)", "var(--error)")
+                          }
+                        >
+                          {user.email_verified ? <CheckCircle2 size={13} /> : <Mail size={13} />}
+                          {user.email_verified ? "Email verified" : "Unverified"}
+                        </span>
+                      </td>
+
+                      <td
+                        style={{
+                          padding: "16px",
+                          borderBottom: "1px solid var(--border)",
+                        }}
+                      >
+                        <button
+                          onClick={() => openDeleteModal(user)}
+                          disabled={deletingUserId === user.id}
+                          type="button"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "10px 14px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(239,68,68,0.35)",
+                            background: "rgba(239,68,68,0.10)",
+                            color: "var(--error)",
+                            cursor: "pointer",
+                            fontWeight: 700,
+                          }}
+                        >
+                          <Trash2 size={15} />
+                          {deletingUserId === user.id ? "Deleting..." : "Delete"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {showDeleteModal && selectedUser && (
@@ -202,7 +568,8 @@ const AdminUsersPage: React.FC = () => {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.45)",
+            background: "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(6px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -213,11 +580,13 @@ const AdminUsersPage: React.FC = () => {
           <div
             style={{
               width: "100%",
-              maxWidth: 500,
-              background: "white",
-              borderRadius: 16,
+              maxWidth: 520,
+              background: "var(--cardSolid)",
+              color: "var(--text)",
+              borderRadius: 22,
               padding: 24,
-              boxShadow: "0 20px 50px rgba(0,0,0,0.18)",
+              border: "1px solid var(--border)",
+              boxShadow: "var(--shadow)",
             }}
           >
             <h2 style={{ marginTop: 0, marginBottom: 10 }}>Delete User</h2>
@@ -226,7 +595,7 @@ const AdminUsersPage: React.FC = () => {
               You are deleting <strong>{selectedUser.name}</strong>
             </p>
 
-            <p style={{ marginTop: 0, marginBottom: 16, color: "#666" }}>
+            <p style={{ marginTop: 0, marginBottom: 16, color: "var(--muted)" }}>
               {selectedUser.email}
             </p>
 
@@ -235,7 +604,7 @@ const AdminUsersPage: React.FC = () => {
               style={{
                 display: "block",
                 marginBottom: 8,
-                fontWeight: 600,
+                fontWeight: 700,
               }}
             >
               Reason for deletion
@@ -249,13 +618,15 @@ const AdminUsersPage: React.FC = () => {
               placeholder="Write the reason that will be emailed to the user..."
               style={{
                 width: "100%",
-                borderRadius: 10,
-                border: "1px solid #d1d5db",
+                borderRadius: 14,
+                border: "1px solid var(--border)",
                 padding: 12,
                 resize: "vertical",
                 fontSize: 14,
                 outline: "none",
                 boxSizing: "border-box",
+                background: "var(--card2)",
+                color: "var(--text)",
               }}
             />
 
@@ -272,11 +643,12 @@ const AdminUsersPage: React.FC = () => {
                 onClick={closeDeleteModal}
                 style={{
                   padding: "10px 16px",
-                  borderRadius: 10,
-                  border: "1px solid #d1d5db",
-                  background: "white",
+                  borderRadius: 12,
+                  border: "1px solid var(--border)",
+                  background: "var(--card2)",
+                  color: "var(--text)",
                   cursor: "pointer",
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
                 Cancel
@@ -288,23 +660,21 @@ const AdminUsersPage: React.FC = () => {
                 disabled={deletingUserId === selectedUser.id}
                 style={{
                   padding: "10px 16px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#dc2626",
-                  color: "white",
+                  borderRadius: 12,
+                  border: "1px solid rgba(239,68,68,0.35)",
+                  background: "rgba(239,68,68,0.12)",
+                  color: "var(--error)",
                   cursor: "pointer",
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
-                {deletingUserId === selectedUser.id
-                  ? "Deleting..."
-                  : "Delete User"}
+                {deletingUserId === selectedUser.id ? "Deleting..." : "Confirm Delete"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
