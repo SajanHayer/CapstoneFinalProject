@@ -55,9 +55,6 @@ export const AccountPage: React.FC = () => {
     null,
   );
   const [wonListingId, setWonListingId] = useState<number | null>(null);
-  const [endedListingAlert, setEndedListingAlert] = useState<string | null>(
-    null,
-  );
   const [transactionBidIds, setTransactionBidIds] = useState<Set<number>>(
     new Set(),
   );
@@ -239,8 +236,7 @@ export const AccountPage: React.FC = () => {
   const handleBidItemClick = (bid: BidItem) => {
     // Only block cancelled listings - allow viewing of ended auctions
     if (bid.listing.status === "cancelled") {
-      setEndedListingAlert(`This auction was cancelled by the seller.`);
-      setTimeout(() => setEndedListingAlert(null), 3000);
+      toast.info("This auction was cancelled by the seller.");
       return;
     }
 
@@ -321,21 +317,6 @@ export const AccountPage: React.FC = () => {
           </div>
 
           {error && <p className="error-text">{error}</p>}
-          {endedListingAlert && (
-            <div
-              style={{
-                padding: "12px 16px",
-                backgroundColor: "#fff3cd",
-                border: "1px solid #ffc107",
-                borderRadius: "6px",
-                color: "#856404",
-                marginBottom: "16px",
-                fontSize: "14px",
-              }}
-            >
-              ⚠️ {endedListingAlert}
-            </div>
-          )}
 
           <div className="vehicles-list">
             {activeTab === "garage" ? (

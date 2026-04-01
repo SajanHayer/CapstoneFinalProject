@@ -13,6 +13,10 @@ type VehicleDraft = {
   mileage_hours: string;
   condition: string;
   description: string;
+  vin: string;
+  style: string;
+  engine_size: string;
+  engine_size_unit: string;
 };
 
 const MAX_IMAGES = 8;
@@ -30,6 +34,10 @@ export const EditVehiclePage: React.FC = () => {
     mileage_hours: "0",
     condition: "used",
     description: "",
+    vin: "",
+    style: "",
+    engine_size: "",
+    engine_size_unit: "L",
   });
 
   const [images, setImages] = useState<File[]>([]);
@@ -77,6 +85,10 @@ export const EditVehiclePage: React.FC = () => {
           mileage_hours: String(vehicle.mileage_hours),
           condition: vehicle.condition,
           description: vehicle.description,
+          vin: vehicle.vin || "",
+          style: vehicle.style || "",
+          engine_size: vehicle.engine_size || "",
+          engine_size_unit: vehicle.engine_size_unit || "L",
         });
 
         setExistingImages(vehicle.image_url || []);
@@ -128,17 +140,23 @@ export const EditVehiclePage: React.FC = () => {
     setOk(null);
 
     if (!form.make.trim() || !form.model.trim()) {
-      setError("Make and model are required.");
+      const msg = "Make and model are required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!form.year || Number.isNaN(Number(form.year))) {
-      setError("Year is required.");
+      const msg = "Year is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     if (!form.price || Number.isNaN(Number(form.price))) {
-      setError("Price is required.");
+      const msg = "Price is required.";
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -152,6 +170,10 @@ export const EditVehiclePage: React.FC = () => {
       fd.append("mileage_hours", String(Number(form.mileage_hours || 0)));
       fd.append("condition", form.condition);
       fd.append("description", form.description.trim());
+      fd.append("vin", form.vin.trim());
+      fd.append("style", form.style.trim());
+      fd.append("engine_size", form.engine_size.trim());
+      fd.append("engine_size_unit", form.engine_size_unit);
 
       // Add existing images that weren't removed
       fd.append("existingImages", JSON.stringify(existingImages));
@@ -176,7 +198,9 @@ export const EditVehiclePage: React.FC = () => {
         throw new Error(errorMsg);
       }
 
-      setOk("Vehicle updated successfully!");
+      const successMsg = "Vehicle updated successfully!";
+      setOk(successMsg);
+      toast.success(successMsg);
       setTimeout(() => navigate(`/vehicle/${vehicleId}`), 650);
     } catch (e: any) {
       setError(e?.message || "Failed to update vehicle.");
@@ -311,6 +335,56 @@ export const EditVehiclePage: React.FC = () => {
               min="0"
             />
           </div>
+        </div>
+
+        <div className="av-grid av-grid-2">
+          <div className="av-field">
+            <label className="av-label">VIN</label>
+            <input
+              className="av-input"
+              type="text"
+              value={form.vin}
+              onChange={(e) => update("vin", e.target.value)}
+              placeholder="e.g., 1HGBH41JXMN109186"
+            />
+          </div>
+
+          <div className="av-field">
+            <label className="av-label">Style</label>
+            <input
+              className="av-input"
+              type="text"
+              value={form.style}
+              onChange={(e) => update("style", e.target.value)}
+              placeholder="e.g., Sport, Touring"
+            />
+          </div>
+        </div>
+
+        <div className="av-field">
+          <label className="av-label">Engine Size</label>
+          <input
+            className="av-input"
+            type="number"
+            value={form.engine_size}
+            onChange={(e) => update("engine_size", e.target.value)}
+            placeholder="e.g., 2.5"
+            step="0.1"
+            min="0"
+          />
+        </div>
+
+        <div className="av-field">
+          <label className="av-label">Engine Size Unit</label>
+          <select
+            className="av-input"
+            value={form.engine_size_unit}
+            onChange={(e) => update("engine_size_unit", e.target.value)}
+          >
+            <option value="L">Liters (L)</option>
+            <option value="CC">Cubic Centimeters (CC)</option>
+            <option value="HP">Horsepower (HP)</option>
+          </select>
         </div>
 
         <div className="av-field">

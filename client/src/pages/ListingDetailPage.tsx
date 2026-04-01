@@ -19,6 +19,10 @@ type VechileInfo = {
   status: "available" | "pending" | "sold";
   description: string | "";
   image_url: string[] | File[]; // array of image URLs or path to image or img
+  vin?: string;
+  style?: string;
+  engine_size?: number;
+  engine_size_unit?: string;
 };
 
 type BiddingInfo = {
@@ -50,6 +54,42 @@ export const ListingDetailPage: React.FC = () => {
   const [highestBidderId, setHighestBidderId] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("--:--:--");
   const [userLocation, setUserLocation] = useState<string>("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Get user's location on component mount
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoords({ lat, lng });
+
+        // Try to get city name from coordinates using reverse geocoding
+        fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            // Extract city and state/province from the response
+            const city = data.address?.city || data.address?.town || data.address?.village || "";
+            const state = data.address?.state || "";
+            if (city && state) {
+              setUserLocation(`${city}, ${state}`);
+            } else if (city) {
+              setUserLocation(city);
+            }
+          })
+          .catch((err) => {
+            console.log("Reverse geocoding failed:", err);
+            toast.error("Failed to get your location. Please enter it manually.");
+          });
+      },
+      (error) => {
+        console.log("Geolocation error:", error);
+        toast.error("Please enable location access to place bids.");
+      },
+    );
+  }, []);
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -163,10 +203,22 @@ export const ListingDetailPage: React.FC = () => {
       }
     };
 
+    const handleBidSuccess = (data: { message?: string }) => {
+      toast.success(data.message || "Bid placed successfully!");
+    };
+
+    const handleBidError = (data: { message?: string }) => {
+      toast.error(data.message || "Failed to place bid. Please try again.");
+    };
+
     socket.on("bid_update", handleBidUpdate);
+    socket.on("bid_success", handleBidSuccess);
+    socket.on("bid_error", handleBidError);
 
     return () => {
       socket.off("bid_update", handleBidUpdate);
+      socket.off("bid_success", handleBidSuccess);
+      socket.off("bid_error", handleBidError);
     };
   }, []);
 
@@ -282,6 +334,21 @@ export const ListingDetailPage: React.FC = () => {
     {
       title: "Status",
       value: vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1),
+    },
+    {
+      title: "VIN",
+      value: vehicle.vin || "N/A",
+    },
+    {
+      title: "Style",
+      value: vehicle.style || "N/A",
+    },
+    {
+      title: "Engine Size",
+      value:
+        vehicle.engine_size && vehicle.engine_size_unit
+          ? `${vehicle.engine_size} ${vehicle.engine_size_unit}`
+          : "N/A",
     },
   ];
 
