@@ -15,6 +15,10 @@ const AdminUsersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [deleteReason, setDeleteReason] = useState("");
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -41,21 +45,42 @@ const AdminUsersPage: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleDeleteUser = async (userId: number, name: string) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete user "${name}"?`,
-    );
+  const openDeleteModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setDeleteReason("");
+    setShowDeleteModal(true);
+  };
 
-    if (!confirmed) return;
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setSelectedUser(null);
+    setDeleteReason("");
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    const trimmedReason = deleteReason.trim();
+
+    if (!trimmedReason) {
+      toast.error("Please enter a reason for deletion");
+      return;
+    }
 
     try {
-      setDeletingUserId(userId);
+      setDeletingUserId(selectedUser.id);
 
       const res = await fetch(
-        `http://localhost:8080/api/auth/admin/users/${userId}`,
+        `http://localhost:8080/api/auth/admin/users/${selectedUser.id}`,
         {
           method: "DELETE",
           credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reason: trimmedReason,
+          }),
         },
       );
 
@@ -66,7 +91,8 @@ const AdminUsersPage: React.FC = () => {
       }
 
       toast.success("User deleted successfully");
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
+      closeDeleteModal();
     } catch (err: any) {
       console.error(err);
       toast.error(err?.message || "Failed to delete user");
@@ -81,7 +107,7 @@ const AdminUsersPage: React.FC = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Admin Users</h1>
+      <h1 style={{ fontSize: "2rem", marginBottom: 8 }}>Admin Users</h1>
       <p style={{ opacity: 0.75, marginBottom: 20 }}>
         View all users, their roles, verification status, and remove accounts.
       </p>
@@ -94,6 +120,7 @@ const AdminUsersPage: React.FC = () => {
             background: "white",
             borderRadius: 12,
             overflow: "hidden",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
           }}
         >
           <thead>
@@ -147,10 +174,18 @@ const AdminUsersPage: React.FC = () => {
                   </td>
                   <td style={{ padding: 12, borderBottom: "1px solid #eee" }}>
                     <button
-                      className="btn btn-outline"
-                      onClick={() => handleDeleteUser(user.id, user.name)}
+                      onClick={() => openDeleteModal(user)}
                       disabled={deletingUserId === user.id}
                       type="button"
+                      style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid #dc2626",
+                        background: "white",
+                        color: "#dc2626",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
                     >
                       {deletingUserId === user.id ? "Deleting..." : "Delete"}
                     </button>
@@ -161,6 +196,114 @@ const AdminUsersPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {showDeleteModal && selectedUser && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 500,
+              background: "white",
+              borderRadius: 16,
+              padding: 24,
+              boxShadow: "0 20px 50px rgba(0,0,0,0.18)",
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: 10 }}>Delete User</h2>
+
+            <p style={{ marginBottom: 8 }}>
+              You are deleting <strong>{selectedUser.name}</strong>
+            </p>
+
+            <p style={{ marginTop: 0, marginBottom: 16, color: "#666" }}>
+              {selectedUser.email}
+            </p>
+
+            <label
+              htmlFor="delete-reason"
+              style={{
+                display: "block",
+                marginBottom: 8,
+                fontWeight: 600,
+              }}
+            >
+              Reason for deletion
+            </label>
+
+            <textarea
+              id="delete-reason"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              rows={5}
+              placeholder="Write the reason that will be emailed to the user..."
+              style={{
+                width: "100%",
+                borderRadius: 10,
+                border: "1px solid #d1d5db",
+                padding: 12,
+                resize: "vertical",
+                fontSize: 14,
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 12,
+                marginTop: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: 10,
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDeleteUser}
+                disabled={deletingUserId === selectedUser.id}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#dc2626",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                {deletingUserId === selectedUser.id
+                  ? "Deleting..."
+                  : "Delete User"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
